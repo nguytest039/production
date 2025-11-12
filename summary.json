@@ -1,0 +1,208 @@
+{
+    "status": "OK",
+    "code": "SUCCESS",
+    "message": "success",
+    "data": [
+        {
+            "errorCode": "IRU000",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU013",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU014",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU018",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 2
+        },
+        {
+            "errorCode": "IRU029",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU031",
+            "machineNo": "HAPUKAIRU1_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU000",
+            "machineNo": "HAPUKAIRU1_02",
+            "totalNtf": 2
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "HAPUKAIRU1_02",
+            "totalNtf": 3
+        },
+        {
+            "errorCode": "IRU018",
+            "machineNo": "HAPUKAIRU1_02",
+            "totalNtf": 2
+        },
+        {
+            "errorCode": "IRU029",
+            "machineNo": "HAPUKAIRU1_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU031",
+            "machineNo": "HAPUKAIRU1_02",
+            "totalNtf": 2
+        },
+        {
+            "errorCode": "IRU035",
+            "machineNo": "HAPUKAIRU1_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "HAPUKAIRU2_01",
+            "totalNtf": 2
+        },
+        {
+            "errorCode": "IRU013",
+            "machineNo": "HAPUKAIRU2_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU024",
+            "machineNo": "HAPUKAIRU2_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "HAPUKAIRU3_01",
+            "totalNtf": 24
+        },
+        {
+            "errorCode": "IRU013",
+            "machineNo": "HAPUKAIRU3_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU018",
+            "machineNo": "HAPUKAIRU3_01",
+            "totalNtf": 7
+        },
+        {
+            "errorCode": "IRU029",
+            "machineNo": "HAPUKAIRU3_01",
+            "totalNtf": 4
+        },
+        {
+            "errorCode": "IRU031",
+            "machineNo": "HAPUKAIRU3_01",
+            "totalNtf": 7
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 21
+        },
+        {
+            "errorCode": "IRU013",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU015",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU018",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 16
+        },
+        {
+            "errorCode": "IRU020",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU029",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 4
+        },
+        {
+            "errorCode": "IRU031",
+            "machineNo": "HAPUKAIRU3_02",
+            "totalNtf": 5
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "M1LUNAIRU2_01",
+            "totalNtf": 19
+        },
+        {
+            "errorCode": "IRU013",
+            "machineNo": "M1LUNAIRU2_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU018",
+            "machineNo": "M1LUNAIRU2_01",
+            "totalNtf": 7
+        },
+        {
+            "errorCode": "IRU024",
+            "machineNo": "M1LUNAIRU2_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU029",
+            "machineNo": "M1LUNAIRU2_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU031",
+            "machineNo": "M1LUNAIRU2_01",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU012",
+            "machineNo": "M1LUNAIRU2_02",
+            "totalNtf": 7
+        },
+        {
+            "errorCode": "IRU013",
+            "machineNo": "M1LUNAIRU2_02",
+            "totalNtf": 9
+        },
+        {
+            "errorCode": "IRU018",
+            "machineNo": "M1LUNAIRU2_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU020",
+            "machineNo": "M1LUNAIRU2_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU029",
+            "machineNo": "M1LUNAIRU2_02",
+            "totalNtf": 1
+        },
+        {
+            "errorCode": "IRU031",
+            "machineNo": "M1LUNAIRU2_02",
+            "totalNtf": 1
+        }
+    ],
+    "size": 40
+}
