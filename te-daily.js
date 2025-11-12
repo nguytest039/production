@@ -2,7 +2,10 @@ const GLOBAL = { cft: "RING", modalView: "top5", errorInfoCache: {}, editingErro
 GLOBAL.getCft = () => GLOBAL.cft || "RING";
 const chartsList = [];
 const loadEvent = () => {
-    window.addEventListener("resize", () => applyScaleToCharts());
+    window.addEventListener("resize", () => {
+        applyScaleToCharts();
+        adjustCharts();
+    });
 
     const table2Body = document.querySelector("#table-2 tbody");
     if (table2Body) {
@@ -167,21 +170,17 @@ async function fetchErrorInfoByCodes(errorCodes = []) {
 
     if (missing.length) {
         try {
-            const url = `/production-system/api/error-info?errorCodeString=${encodeURIComponent(missing.join(","))}`;
+            const url = `/production-system/api/cnt-machine-error/error-info?errorCodeString=${encodeURIComponent(missing.join(","))}`;
             const res = await fetch(url);
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             const json = await res.json();
-            const list = Array.isArray(json?.data)
-                ? json.data
-                : Array.isArray(json?.data?.content)
-                    ? json.data.content
-                    : [];
+            const list = json.data;
             list.forEach((item) => {
-                const key = getErrorInfoKey(item?.errorCode || item?.error_code || item?.code);
+                const key = getErrorInfoKey(item.errorCode);
                 if (!key) return;
                 GLOBAL.errorInfoCache[key] = {
-                    rootCause: item?.rootCause ?? item?.rootcause ?? "",
-                    action: item?.action ?? item?.correctiveAction ?? "",
+                    rootCause: item.rootCause,
+                    action: item.action,
                     owner: item?.owner ?? "",
                     status: item?.status ?? "",
                 };
@@ -282,8 +281,7 @@ async function handleSaveErrorInfo() {
     if (hasLoader && typeof loader.load === "function") loader.load();
 
     try {
-        const res = await fetch(
-            `/production-system/api/error-info/${encodeURIComponent(editing.errorCode)}`,
+        const res = await fetch(`/production-system/api/cnt-machine-error/error-info/${encodeURIComponent(editing.errorCode)}`,
             {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -329,6 +327,39 @@ function updateRowErrorInfo(row, { rootCause, action }) {
     };
 }
 
+async function apiGetModels(station, project) {
+    const url = `/production-system/api/cnt-machine-error/model?station=${encodeURIComponent(station)}&project=${encodeURIComponent(project)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return json?.data ?? [];
+}
+
+async function loadModelOptions(station, project) {
+    try {
+        const select = document.getElementById("model");
+        if (!select || !station) return;
+        select.innerHTML = "";
+
+        const optAll = document.createElement("option");
+        optAll.value = "ALL";
+        optAll.textContent = "ALL";
+        select.appendChild(optAll);
+
+        const models = await apiGetModels(station, project);
+        if (Array.isArray(models)) {
+            models.forEach((m) => {
+                const opt = document.createElement("option");
+                opt.value = m.modelName;
+                opt.textContent = m.modelName;
+                select.appendChild(opt);
+            });
+        }
+        select.value = "ALL";
+    } catch (e) {
+        console.error("Failed to load models:", e);
+    }
+}
 
 async function drawDailyChart(data, chartId) {
     const xLabels = data.map((d) => d?.updatedAt ?? "-");
@@ -753,6 +784,7 @@ function getProjectAndStation() {
         document.getElementById("loader").classList.remove("d-none");
 
         try {
+            await loadModelOptions(station, project);
             GLOBAL.currentSelection = {
                 project,
                 station,
@@ -760,6 +792,7 @@ function getProjectAndStation() {
                 fromDate,
                 toDate,
                 workDate,
+                model: "ALL",
             };
 
             for (let i = 1; i <= 5; i++) {
@@ -800,12 +833,16 @@ function getProjectAndStation() {
     });
 }
 
-async function fetchChartDataShift({ project, station, fromDate, toDate }) {
-    const apiUrl = `/production-system/api/cnt-machine-error/ntf/shift?fromDate=${encodeURIComponent(
+async function fetchChartDataShift({ project, station, fromDate, toDate, model = "ALL" }) {
+    let apiUrl = `/production-system/api/cnt-machine-error/ntf/shift?fromDate=${encodeURIComponent(
         fromDate
     )}&toDate=${encodeURIComponent(toDate)}&station=${encodeURIComponent(station)}&projectName=${encodeURIComponent(
         project
     )}`;
+
+    if (model && model !== "ALL") {
+        apiUrl += `&model=${encodeURIComponent(model)}`;
+    }
 
     try {
         const res = await fetch(apiUrl);
@@ -876,12 +913,16 @@ async function fetchChartDataShift({ project, station, fromDate, toDate }) {
     }
 }
 
-async function fetchChartDataDate({ project, station, fromDate, toDate }) {
-    const apiUrl = `/production-system/api/cnt-machine-error/ntf/date?fromDate=${encodeURIComponent(
+async function fetchChartDataDate({ project, station, fromDate, toDate, model = "ALL" }) {
+    let apiUrl = `/production-system/api/cnt-machine-error/ntf/date?fromDate=${encodeURIComponent(
         fromDate
     )}&toDate=${encodeURIComponent(toDate)}&station=${encodeURIComponent(station)}&projectName=${encodeURIComponent(
         project
     )}`;
+
+    if (model && model !== "ALL") {
+        apiUrl += `&model=${encodeURIComponent(model)}`;
+    }
 
     try {
         const res = await fetch(apiUrl);
@@ -948,10 +989,14 @@ async function fetchChartDataDate({ project, station, fromDate, toDate }) {
     }
 }
 
-async function fetchChartDataHour({ project, station, workDate }) {
-    const apiUrl = `/production-system/api/cnt-machine-error/ntf/hour?station=${encodeURIComponent(
+async function fetchChartDataHour({ project, station, workDate, model = "ALL" }) {
+    let apiUrl = `/production-system/api/cnt-machine-error/ntf/hour?station=${encodeURIComponent(
         station
     )}&projectName=${encodeURIComponent(project)}&workDate=${encodeURIComponent(workDate)}`;
+
+    if (model && model !== "ALL") {
+        apiUrl += `&model=${encodeURIComponent(model)}`;
+    }
 
     try {
         const res = await fetch(apiUrl);
@@ -1126,7 +1171,7 @@ function modalControl() {
         ? rangePicker($dateInput, sel.fromDate, sel.toDate)
         : singlePicker($dateInput, sel.workDate);
 
-    const updateCharts = async (mode, project, station, picker) => {
+    const updateCharts = async (mode, project, station, picker, model = "ALL") => {
         if (!project || !station) return;
 
         loader.load()
@@ -1134,10 +1179,10 @@ function modalControl() {
             chartsList.forEach((_, i) => destroyChartById(`chart-${i + 1}`));
             const [chartData, top5Data] =
                 mode === "Shift"
-                    ? await fetchShiftData(project, station, picker)
+                    ? await fetchShiftData(project, station, picker, model)
                     : mode === "Day"
-                        ? await fetchDateData(project, station, picker)
-                        : await fetchHourData(project, station, picker.startDate.format("YYYY/MM/DD"));
+                        ? await fetchDateData(project, station, picker, model)
+                        : await fetchHourData(project, station, picker.startDate.format("YYYY/MM/DD"), model);
             renderTitleInfo(GLOBAL.currentSelection);
             await renderModalTable(top5Data);
 
@@ -1167,7 +1212,11 @@ function modalControl() {
                 chartsList.forEach((_, i) => destroyChartById(`chart-${i + 1}`));
                 clearTop5Table();
 
-                await updateCharts(groupByEl.value, sel.project, sel.station, picker);
+                const modelSelect = document.getElementById("model");
+                const selectedModel = modelSelect?.value || "ALL";
+                GLOBAL.currentSelection.model = selectedModel;
+
+                await updateCharts(groupByEl.value, sel.project, sel.station, picker, selectedModel);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -1228,33 +1277,33 @@ const adjustCharts = () => {
     });
 };
 
-const fetchShiftData = async (project, station, picker) => {
+const fetchShiftData = async (project, station, picker, model = "ALL") => {
     const fromDate = `${picker.startDate.format("YYYY/MM/DD")} 00:00:00`;
     const toDate = picker.endDate
         ? `${picker.endDate.format("YYYY/MM/DD")} 23:59:59`
         : `${picker.startDate.format("YYYY/MM/DD")} 23:59:59`;
 
-    const result = await fetchChartDataShift({ project, station, fromDate, toDate });
-    GLOBAL.currentSelection = { project, station, cellType: "week", fromDate, toDate };
+    const result = await fetchChartDataShift({ project, station, fromDate, toDate, model });
+    GLOBAL.currentSelection = { project, station, cellType: "week", fromDate, toDate, model };
 
     return [result?.chartDatas || [], result?.top5 || []];
 };
 
-const fetchDateData = async (project, station, picker) => {
+const fetchDateData = async (project, station, picker, model = "ALL") => {
     const fromDate = `${picker.startDate.format("YYYY/MM/DD")} 00:00:00`;
     const toDate = picker.endDate
         ? `${picker.endDate.format("YYYY/MM/DD")} 23:59:59`
         : `${picker.startDate.format("YYYY/MM/DD")} 23:59:59`;
 
-    const result = await fetchChartDataDate({ project, station, fromDate, toDate });
-    GLOBAL.currentSelection = { project, station, cellType: "date", fromDate, toDate };
+    const result = await fetchChartDataDate({ project, station, fromDate, toDate, model });
+    GLOBAL.currentSelection = { project, station, cellType: "date", fromDate, toDate, model };
 
     return [result?.chartDatas || [], result?.top5 || []];
 };
 
-const fetchHourData = async (project, station, workDate) => {
-    const result = await fetchChartDataHour({ project, station, workDate: `${workDate} 00:00:00` });
-    GLOBAL.currentSelection = { project, station, cellType: "day", workDate };
+const fetchHourData = async (project, station, workDate, model = "ALL") => {
+    const result = await fetchChartDataHour({ project, station, workDate: `${workDate} 00:00:00`, model });
+    GLOBAL.currentSelection = { project, station, cellType: "day", workDate, model };
 
     return [result?.chartDatas || [], result?.top5 || []];
 };
