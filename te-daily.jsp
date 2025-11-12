@@ -54,7 +54,13 @@
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="modal-top5" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div
+        class="modal fade no-scroll"
+        id="modal-top5"
+        tabindex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+    >
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -62,26 +68,49 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3 mb-2 align-items-center" style="min-height: 4vh">
-                        <div class="col-auto d-flex align-items-center gap-2 mt-2 flex-wrap">
-                            <div class="btn-group btn-group-sm toggle-view" role="group" id="modal-view-toggle">
-                                <button type="button" class="btn btn-outline-warning active" data-view="top5">
-                                    Top 5 Error
-                                </button>
-                                <button type="button" class="btn btn-outline-warning" data-view="summary">Summary</button>
+                    <div class="row mb-2" style="min-height: 4vh">
+                        <div class="col-12 d-flex align-items-center flex-wrap justify-content-start gap-4 mt-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="btn-group btn-group-sm toggle-view" role="group" id="modal-view-toggle">
+                                    <button type="button" class="btn btn-outline-warning active" data-view="top5">
+                                        Top 5 Error
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" data-view="summary">
+                                        Summary
+                                    </button>
+                                </div>
                             </div>
-                            <label class="filter-label mb-0 label-custom">Group By</label>
-                            <select class="form-select form-select-sm text-warning px-2" id="groupBy">
-                                <option selected>Hour</option>
-                                <option>Day</option>
-                                <option>Shift</option>
-                            </select>
-                        </div>
 
-                        <div class="col-auto d-flex align-items-center gap-2 mt-2">
-                            <label class="filter-label mb-0 label-custom">Date Range</label>
-                            <input type="text" id="dateRange" class="form-control w-auto" />
-                            <button type="button" class="btn btn-sm btn-primary" id="apply">Apply</button>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <label class="filter-label mb-0 label-custom">Model</label>
+                                <select
+                                    class="form-select form-select-sm text-warning"
+                                    id="model"
+                                    style="width: auto; min-width: 100px"
+                                ></select>
+
+                                <label class="filter-label mb-0 label-custom">Group By</label>
+                                <select
+                                    class="form-select form-select-sm text-warning"
+                                    id="groupBy"
+                                    style="width: auto; min-width: 90px"
+                                >
+                                    <option>Hour</option>
+                                    <option>Day</option>
+                                    <option selected>Shift</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <label class="filter-label mb-0 label-custom">Date Range</label>
+                                <input
+                                    type="text"
+                                    id="dateRange"
+                                    class="form-control form-control-sm text-warning"
+                                    style="width: auto; min-width: 210px"
+                                />
+                                <button type="button" class="btn btn-sm btn-primary" id="apply">Apply</button>
+                            </div>
                         </div>
                     </div>
 
@@ -92,8 +121,8 @@
                                     <th>TOP</th>
                                     <th>Error Code</th>
                                     <th>Rate</th>
-                                    <th style="width: 5%">Number of errors</th>
-                                    <th style="width: 75%">Trend Chart</th>
+                                    <th style="width: 4%">Number of errors</th>
+                                    <th style="width: 55%">Trend Chart</th>
                                     <th>Root Cause</th>
                                     <th>Corrective Action</th>
                                     <th>Owner</th>
@@ -103,7 +132,10 @@
                             <tbody></tbody>
                         </table>
                     </div>
-                    <div class="table-responsive h-100 mh-100 overflow-auto overflow-y-auto d-none" id="summary-table-wrapper">
+                    <div
+                        class="table-responsive h-100 mh-100 overflow-auto overflow-y-auto d-none"
+                        id="summary-table-wrapper"
+                    >
                         <table class="table table-sm h-100" id="summary-table">
                             <thead>
                                 <tr>
@@ -122,7 +154,7 @@
     </div>
 
     <div class="modal fade" id="modal-update" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Update Root cause/Corrective action</h5>
@@ -132,17 +164,24 @@
                     <form id="update-form" class="d-flex flex-column gap-3">
                         <div>
                             <label for="root-cause" class="form-label">Root Cause</label>
-                            <input type="text" id="root-cause" class="form-control" placeholder="Enter root cause" />
+                            <textarea
+                                name="root-cause"
+                                id="root-cause"
+                                class="form-control"
+                                placeholder="Enter root cause"
+                                rows="5"
+                            ></textarea>
                         </div>
 
                         <div>
                             <label for="corrective-action" class="form-label">Corrective Action</label>
-                            <input
-                                type="text"
+                            <textarea
+                                name="corrective-action"
                                 id="corrective-action"
                                 class="form-control"
                                 placeholder="Enter corrective action"
-                            />
+                                rows="5"
+                            ></textarea>
                         </div>
                     </form>
                 </div>
