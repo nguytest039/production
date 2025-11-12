@@ -1,0 +1,32 @@
+{
+    "status": "OK",
+    "code": "SUCCESS",
+    "message": "success",
+    "data": [
+        {
+            "errorCode": "AFT090",
+            "machineNo": "A1CYCAFT0002",
+            "fa": null,
+            "rc": null,
+            "errorId": null,
+            "startTime": "2025/10/29 08:00:00",
+            "endTime": "2025/10/29 08:59:59",
+            "uploadFlag": null,
+            "empName": null,
+            "updateTime": "2025/10/29 08:00:00",
+            "status": null,
+            "flag": null,
+            "img": null,
+            "station": "AFT",
+            "cycleTime": null,
+            "serialId": "GT53QH04543505NC",
+            "isNtf": 1,
+            "productName": null,
+            "projectName": "CYCLOPS",
+            "model": "52-005635-GCPC",
+            "customer": "RING",
+            "id": 120467
+        }
+    ],
+    "size": 1
+}
