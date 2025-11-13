@@ -7,14 +7,14 @@ const dataset = {
     toDate: "",
     cft: "RING",
 };
-const GLOBAL = {currentSelection: null};
+const GLOBAL = { currentSelection: null };
 
 const getDateRangeFromCell = (cell) => {
     const cellType = cell.dataset.cellType;
     let from = cell.dataset.from || "";
     let to = cell.dataset.to || "";
 
-    if (from && to) return {from, to};
+    if (from && to) return { from, to };
 
     if (cellType === "week") {
         const weekNum = parseInt(cell.dataset.week, 10);
@@ -26,7 +26,7 @@ const getDateRangeFromCell = (cell) => {
             to: `${dateStr.replace(/-/g, "/")} 23:59:59`,
         };
     }
-    return {from: null, to: null};
+    return { from: null, to: null };
 };
 
 const handleTableCellClick = async (cell) => {
@@ -35,10 +35,10 @@ const handleTableCellClick = async (cell) => {
     const cellType = cell.dataset.cellType;
     if (!project || !station || !cellType) return;
 
-    const {from: fromDate, to: toDate} = getDateRangeFromCell(cell);
+    const { from: fromDate, to: toDate } = getDateRangeFromCell(cell);
     if (!fromDate || !toDate) return;
 
-    Object.assign(dataset, {project, station, cellType, fromDate, toDate});
+    Object.assign(dataset, { project, station, cellType, fromDate, toDate });
 
     GLOBAL.currentSelection = {
         project,
@@ -90,14 +90,15 @@ const handleApplyBtn = () => {
         const station = GLOBAL.currentSelection?.station;
         const model = dataset.selectedModel;
 
-        if (!station || !model) {
-            alert("Thiếu thông tin station hoặc model");
+        if (!station) {
+            alert("Thiếu thông tin station");
             return;
         }
 
         loader.load();
         try {
-            const raw = await apiGetOutputDetail(dataset.fromDate, dataset.toDate, station, model, isHour);
+            const modelParam = (model === "all") ? "" : model;
+            const raw = await apiGetOutputDetail(dataset.fromDate, dataset.toDate, station, modelParam, isHour);
 
             // Kiểm tra dữ liệu rỗng
             if (!Array.isArray(raw) || raw.length === 0) {
@@ -144,7 +145,7 @@ const selectGroup = () => {
                 startDate: currentStart || new Date(Date.now() - 6 * 86400000),
                 endDate: currentEnd || new Date(),
                 autoApply: true,
-                locale: {format: "YYYY/MM/DD"},
+                locale: { format: "YYYY/MM/DD" },
             });
             dataset.cellType = "day";
 
@@ -160,7 +161,7 @@ const selectGroup = () => {
                 singleDatePicker: true,
                 startDate: singleDate,
                 autoApply: true,
-                locale: {format: "YYYY/MM/DD"},
+                locale: { format: "YYYY/MM/DD" },
             });
             dataset.cellType = "hour";
 
@@ -268,7 +269,7 @@ const utils = {
         const startDate = new Date(today);
         startDate.setDate(today.getDate() - startDaysAgo);
 
-        return Array.from({length: numDays}, (_, i) => {
+        return Array.from({ length: numDays }, (_, i) => {
             const d = new Date(startDate);
             d.setDate(startDate.getDate() + i);
             const y = d.getFullYear();
@@ -373,7 +374,7 @@ const prepareRenderData = (apiData) => {
             const items = grouped[project].sort((a, b) =>
                 a.station.toLowerCase().localeCompare(b.station.toLowerCase())
             );
-            return {project, items};
+            return { project, items };
         });
 };
 
@@ -400,11 +401,11 @@ const createStationCell = (station) => {
 const createWeekCell = (wk, wkData, project, station) => {
     const val = wkData?.targetRate != null ? `${(wkData.targetRate * 100).toFixed(2)}%` : "-";
     const cell = createCell(val, getCellClass(val));
-    Object.assign(cell.dataset, {project, station, week: wk, cellType: "week"});
+    Object.assign(cell.dataset, { project, station, week: wk, cellType: "week" });
     try {
-        const {from, to} = utils.getWeekDateRange(wk);
-        Object.assign(cell.dataset, {from, to});
-    } catch (_) {}
+        const { from, to } = utils.getWeekDateRange(wk);
+        Object.assign(cell.dataset, { from, to });
+    } catch (_) { }
     return cell;
 };
 
@@ -430,7 +431,7 @@ function renderTable(apiData) {
     const lastThreeWeeks = utils.extractWeeks(apiData).slice(-3);
     const processedData = prepareRenderData(apiData);
 
-    processedData.forEach(({project, items}) => {
+    processedData.forEach(({ project, items }) => {
         items.forEach((item, idx) => {
             const row = document.createElement("tr");
 
@@ -470,7 +471,7 @@ const initDateRangePicker = () => {
 
     $input.daterangepicker({
         autoApply: true,
-        locale: {format: "YYYY/MM/DD"},
+        locale: { format: "YYYY/MM/DD" },
     });
 
     $input.on("apply.daterangepicker", function (ev, picker) {
@@ -506,22 +507,22 @@ const api = {
     },
 
     getSummary(fromDate, toDate, customer) {
-        return this.fetchData("output/summary", {fromDate, toDate, cft: customer});
+        return this.fetchData("output/summary", { fromDate, toDate, cft: customer });
     },
 
     getModels(station, project) {
-        return this.fetchData("model", {station, project});
+        return this.fetchData("model", { station, project });
     },
 
     getOutputDetail(fromDate, toDate, station, model, isHour) {
-        return this.fetchData("output/detail", {fromDate, toDate, station, model, isHour});
+        return this.fetchData("output/detail", { fromDate, toDate, station, model, isHour });
     },
 
     async updateUph(machineNo, model, station, uph) {
-        const params = {machineNo, model, station, uph};
+        const params = { machineNo, model, station, uph };
         const queryString = new URLSearchParams(params).toString();
         const url = `/production-system/api/cnt-machine-error/uph?${queryString}`;
-        const res = await fetch(url, {method: "PUT"});
+        const res = await fetch(url, { method: "PUT" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
     },
@@ -607,6 +608,11 @@ async function getListModel(station, project) {
 
         select.innerHTML = "";
 
+        const optAll = document.createElement("option");
+        optAll.value = "all";
+        optAll.textContent = "All";
+        select.append(optAll);
+
         data.forEach((m) => {
             const opt = document.createElement("option");
             opt.value = m.modelName;
@@ -616,8 +622,8 @@ async function getListModel(station, project) {
 
         if (data.length === 0) return;
 
-        select.value = data[0].modelName;
-        dataset.selectedModel = data[0].modelName;
+        select.value = "all";
+        dataset.selectedModel = "all";
 
         const sel = GLOBAL.currentSelection || {};
         const $input = $("#dateRange");
@@ -638,7 +644,7 @@ async function getListModel(station, project) {
                 singleDatePicker: true,
                 startDate: startDate,
                 autoApply: true,
-                locale: {format: "YYYY/MM/DD"},
+                locale: { format: "YYYY/MM/DD" },
             });
 
             const dateStr = startDate.format("YYYY/MM/DD");
@@ -655,7 +661,7 @@ async function getListModel(station, project) {
                 startDate: startDate,
                 endDate: endDate,
                 autoApply: true,
-                locale: {format: "YYYY/MM/DD"},
+                locale: { format: "YYYY/MM/DD" },
             });
 
             dataset.fromDate = startDate.format("YYYY/MM/DD") + " 00:00:00";
@@ -697,7 +703,8 @@ async function getDataByHour(fromDate, toDate, station, model) {
         loader.load();
         const fd = fromDate;
         const td = toDate;
-        const raw = await apiGetOutputDetail(fd, td, station, model, true);
+        const modelParam = (model === "all") ? "" : model;
+        const raw = await apiGetOutputDetail(fd, td, station, modelParam, true);
         if (!Array.isArray(raw) || raw.length === 0) {
             setModalNoData(true);
             clearDetailTable();
@@ -719,7 +726,8 @@ async function getDataByDay(fromDate, toDate, station, model) {
         loader.load();
         const fd = fromDate;
         const td = toDate;
-        const raw = await apiGetOutputDetail(fd, td, station, model, false);
+        const modelParam = (model === "all") ? "" : model;
+        const raw = await apiGetOutputDetail(fd, td, station, modelParam, false);
         if (!Array.isArray(raw) || raw.length === 0) {
             setModalNoData(true);
             clearDetailTable();
@@ -768,7 +776,7 @@ function processDayData(data, from, to, dateArr) {
 }
 
 function calculateTargetRate(total, gap) {
-    // Target rate = output total / (output total - gap) using aggregated values.
+    // Target rate = output total / (output total - gap)
     const totalNum = Number(total);
     const gapNum = Number(gap);
     if (!Number.isFinite(totalNum) || !Number.isFinite(gapNum)) return null;
@@ -994,11 +1002,11 @@ function createTableStructure(tableId) {
     table.appendChild(thead);
     table.appendChild(tbody);
 
-    return {table, thead, tbody};
+    return { table, thead, tbody };
 }
 
 const addRow = (tbody, label, vals, seenArr, options = {}) => {
-    const {rowClass = "", formatter = (v) => v, cellClassResolver = () => "", extraCells = []} = options;
+    const { rowClass = "", formatter = (v) => v, cellClassResolver = () => "", extraCells = [] } = options;
 
     const tr = document.createElement("tr");
     if (rowClass) tr.className = rowClass;
@@ -1025,9 +1033,9 @@ const addRow = (tbody, label, vals, seenArr, options = {}) => {
 function renderDayTableVM(vm) {
     const tableElements = createTableStructure("table-2");
     if (!tableElements) return;
-    const {thead, tbody} = tableElements;
+    const { thead, tbody } = tableElements;
 
-    const {dates, title} = vm;
+    const { dates, title } = vm;
 
     const topRow = document.createElement("tr");
     const titleTh = document.createElement("th");
@@ -1056,7 +1064,7 @@ function renderDayTableVM(vm) {
         thead.appendChild(dateRow);
     }
 
-    const {machines, mtTotals, mtTargetRates, mtTotalsSeen, mtTargetSeen, uphDisplay} = vm;
+    const { machines, mtTotals, mtTargetRates, mtTotalsSeen, mtTargetSeen, uphDisplay } = vm;
 
     const createUphCell = (uphValue, machineNo) => {
         const uphTd = document.createElement("td");
@@ -1097,9 +1105,9 @@ function renderDayTableVM(vm) {
 function renderHourTableVM(vm) {
     const tableElements = createTableStructure("table-2");
     if (!tableElements) return;
-    const {thead, tbody} = tableElements;
+    const { thead, tbody } = tableElements;
 
-    const {hours, hourLabels, title} = vm;
+    const { hours, hourLabels, title } = vm;
     const labels = hourLabels || hours.map((hr) => `${String(hr).padStart(2, "0")}:00`);
 
     const topRow = document.createElement("tr");
@@ -1130,7 +1138,7 @@ function renderHourTableVM(vm) {
         thead.appendChild(hourRow);
     }
 
-    const {machines, mtTotals, mtGaps, mtTargetRates, mtTotalsSeen, mtGapsSeen, mtTargetSeen, uphDisplay} = vm;
+    const { machines, mtTotals, mtGaps, mtTargetRates, mtTotalsSeen, mtGapsSeen, mtTargetSeen, uphDisplay } = vm;
 
     const createUphCell = (uphValue, machineNo) => {
         const uphTd = document.createElement("td");
@@ -1258,7 +1266,7 @@ function rangePicker($input, fromDate, toDate) {
         startDate: start || new Date(Date.now() - 6 * 86400000),
         endDate: end || new Date(),
         autoApply: false,
-        locale: {format: "YYYY/MM/DD"},
+        locale: { format: "YYYY/MM/DD" },
     });
 }
 
@@ -1269,7 +1277,7 @@ function singlePicker($input, workDate) {
         singleDatePicker: true,
         startDate: start || new Date(),
         autoApply: false,
-        locale: {format: "YYYY/MM/DD"},
+        locale: { format: "YYYY/MM/DD" },
     });
 }
 
