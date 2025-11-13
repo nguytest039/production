@@ -49,6 +49,7 @@
     border-top: 1px solid #37567f;
     border-right: 1px solid #37567f;
     border-bottom: 1px solid #37567f;
+    overflow: auto;
 }
 
 .content-wrapper.fit {
@@ -63,10 +64,6 @@
 #modal-top5 .modal-content {
   max-height: 95vh;
   background-color: #101b2d;
-}
-
-#modal-top5 .modal-body {
-  overflow: visible;
 }
 
 .no-scroll {
@@ -234,7 +231,50 @@
 }
 
 #modal-update .modal-dialog{
-    margin-top: 10%;
+    margin-top: 5%;
+    max-height: 90vh;
+}
+
+#modal-update .modal-body{
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+}
+
+#table-2 thead th,
+#summary-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: #264b8b;
+}
+
+#summary-table-wrapper .table {
+    min-width: 600px;
+}
+
+#summary-table thead th {
+    white-space: nowrap;
+}
+
+.summary-value-cell {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* .summary-value-cell:hover {
+    background-color: rgba(255, 193, 7, 0.15);
+} */
+
+#summary-detail-modal .modal-content {
+    background-color: #101b2d;
+}
+
+#summary-detail-modal .modal-title {
+    color: #ffc107;
+}
+
+#summary-detail-modal .table-responsive {
+    max-height: 60vh;
 }
 
 #dateRange{
@@ -323,4 +363,39 @@
 
 .label-custom{
     font-size: 1rem;
+}
+
+#modal-top5 .modal-content {
+  max-height: 90vh; 
+}
+
+#modal-top5 .modal-body {
+  overflow: hidden;
+  padding: 1rem;
+}
+
+#top5-table-wrapper,
+#summary-table-wrapper {
+  max-height: calc(90vh - 170px);
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#top5-table-wrapper .table,
+#summary-table-wrapper .table {
+  margin-bottom: 0;
+}
+
+#table-2 thead th,
+#summary-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: #264b8b; 
+}
+
+body.modal-open {
+  overflow: hidden !important;
+  height: 100% !important;
 }
