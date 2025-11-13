@@ -1037,6 +1037,42 @@ function goOutFullScreen() {
         formTimeout: null,
     }
 
+    const selectionSnapshot = {
+        bu: null,
+        factory: null
+    };
+
+    function captureSelections() {
+        var currentBu = $('#btnBu').val();
+        if (currentBu !== undefined && currentBu !== null && currentBu !== '') {
+            selectionSnapshot.bu = currentBu;
+        }
+
+        var currentFactory = $('#select-factory').val();
+        if (currentFactory !== undefined && currentFactory !== null && currentFactory !== '') {
+            selectionSnapshot.factory = currentFactory;
+        }
+    }
+
+    function restoreSelections() {
+        var $buSelect = $('#btnBu');
+        var $factorySelect = $('#select-factory');
+
+        if (selectionSnapshot.bu && $buSelect.find('option').filter(function () {
+            return $(this).val() == selectionSnapshot.bu;
+        }).length) {
+            $buSelect.val(selectionSnapshot.bu);
+            _state.nameFactory = selectionSnapshot.bu;
+        }
+
+        if (selectionSnapshot.factory && $factorySelect.find('option').filter(function () {
+            return $(this).val() == selectionSnapshot.factory;
+        }).length) {
+            $factorySelect.val(selectionSnapshot.factory);
+            _state.idFac = selectionSnapshot.factory;
+        }
+    }
+
     var sBu = searchParams('nameBU');
     var idFactory = searchParams('id-bu');  
     
@@ -1089,10 +1125,14 @@ function goOutFullScreen() {
                     // $('#btnBu').val(sbuName);
 
                     if (sBu != null) {
-                        $("#btnBu [value=" + sBu + "]").attr("selected", true);
+                        $('#btnBu').val(sBu);
+                        _state.nameFactory = sBu;
+                        selectionSnapshot.bu = sBu;
                         getFactory(sBu);
                     } else {
-                        $("#btnBu [value=" + data[0] + "]").attr("selected", true);
+                        $('#btnBu').val(data[0]);
+                        _state.nameFactory = data[0];
+                        selectionSnapshot.bu = data[0];
                         getFactory(data[0]);
                     }
 
@@ -1117,6 +1157,8 @@ function goOutFullScreen() {
         // idBu = '';
         // var nameFactory = $("#btnBu").val();
         _state.nameFactory = $("#btnBu").val();
+        selectionSnapshot.bu = _state.nameFactory;
+        selectionSnapshot.factory = null;
         getFactory(_state.nameFactory); 
     });
 
@@ -1146,22 +1188,29 @@ function goOutFullScreen() {
                     }
                     // idBu = (idBu != '' ? idBu : data[0]['id']);
                     $('#select-factory').html(htmlFactory);
-                    // $('#select-factory').val(idBu);
-                    
-                    if (idFactory != null) {
-                        $("#select-factory [value=" + idFactory + "]").attr("selected", true);
-                        //  _state.idFac=idFactory
-                        // loadItem(idFactory);
 
-                        _state.idFac=idFactory;
-                        loadItem(_state.idFac);
+                    var preferredFactory = selectionSnapshot.factory || idFactory;
+                    var fallbackFactory = data[0]['id'];
+                    var matchedFactory = fallbackFactory;
 
-                    } else {
-                        $("#select-factory [value=" + data[0]['id'] + "]").attr("selected", true);
-                        _state.idFac = data[0]['id']
-                        loadItem(_state.idFac)
-                        // loadItem(data[0]['id']);
+                    if (preferredFactory != null) {
+                        for (var j = 0; j < data.length; j++) {
+                            if (data[j]['id'] == preferredFactory) {
+                                matchedFactory = preferredFactory;
+                                break;
+                            }
+                        }
                     }
+
+                    $('#select-factory').val(matchedFactory);
+                    _state.idFac = matchedFactory;
+
+                    if (idFactory != null && preferredFactory == idFactory) {
+                        idFactory = null;
+                    }
+
+                    captureSelections();
+                    loadItem(_state.idFac);
 
                     // if (idBu != null && idBu != '') {
                     // }
@@ -1189,6 +1238,7 @@ function goOutFullScreen() {
         _state.idFac=idFac;
         console.log(_state.idFac);
         loadItem(idFac);
+        captureSelections();
         window.sessionStorage.setItem('dataset', JSON.stringify(dataset));
 
     });
@@ -2781,6 +2831,8 @@ function goOutFullScreen() {
             console.log("loading");
             return; 
         }
+
+        restoreSelections();
         
         var currentTime = moment().format("YYYY/MM/DD HH:mm");
         $('#reservation').data('daterangepicker').setStartDate(currentTime);
