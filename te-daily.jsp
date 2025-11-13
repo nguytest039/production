@@ -54,13 +54,7 @@
     </div>
 
     <!-- Modal -->
-    <div
-        class="modal fade no-scroll"
-        id="modal-top5"
-        tabindex="-1"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-    >
+    <div class="modal fade" id="modal-top5" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -137,14 +131,7 @@
                         id="summary-table-wrapper"
                     >
                         <table class="table table-sm h-100" id="summary-table">
-                            <thead>
-                                <tr>
-                                    <th>Machine</th>
-                                    <th>Error Code</th>
-                                    <th>Status</th>
-                                    <th>Remarks</th>
-                                </tr>
-                            </thead>
+                            <thead></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -153,8 +140,36 @@
         </div>
     </div>
 
+    <div class="modal fade" id="summary-detail-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="summary-detail-title">Summary Detail</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="summary-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Project Name</th>
+                                    <th>Model</th>
+                                    <th>Serial ID</th>
+                                    <th>Customer</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="w-100 text-center fw-bold py-4 d-none" id="summary-detail-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-update" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Update Root cause/Corrective action</h5>
