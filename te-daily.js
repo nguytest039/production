@@ -1,4 +1,12 @@
-const GLOBAL = { cft: "RING", modalView: "top5", errorInfoCache: {}, editingError: null };
+const GLOBAL = {
+    cft: "RING",
+    modalView: "top5",
+    errorInfoCache: {},
+    editingError: null,
+    summaryFilter: { errorCode: "ALL" },
+    summaryMatrix: null,
+    summaryData: [],
+};
 GLOBAL.getCft = () => GLOBAL.cft || "RING";
 const chartsList = [];
 const loadEvent = () => {
@@ -44,6 +52,8 @@ const loadEvent = () => {
             } catch (_) { }
         });
     }
+
+    setupSummaryTableEvents();
 };
 
 const loadData = () => {
@@ -216,10 +226,12 @@ function setModalView(view) {
     if (!top5Wrapper || !summaryWrapper) return;
 
     let targetView = view === "summary" ? "summary" : "top5";
+    GLOBAL.modalView = targetView;
+
     if (targetView === "summary") {
         top5Wrapper.classList.add("d-none");
         summaryWrapper.classList.remove("d-none");
-        resetSummaryTable();
+        loadSummaryView();
     } else {
         top5Wrapper.classList.remove("d-none");
         summaryWrapper.classList.add("d-none");
@@ -232,12 +244,380 @@ function setModalView(view) {
         });
     }
 
-    GLOBAL.modalView = targetView;
+    renderTitleInfo(GLOBAL.currentSelection || {});
 }
 
-function resetSummaryTable() {
-    const tbody = document.querySelector("#summary-table tbody");
+function resetSummaryTable(message = "") {
+    const table = document.getElementById("summary-table");
+    const thead = table?.querySelector("thead");
+    const tbody = table?.querySelector("tbody");
+
+    if (thead) thead.innerHTML = "";
     if (tbody) tbody.innerHTML = "";
+
+    GLOBAL.summaryMatrix = null;
+    GLOBAL.summaryData = [];
+
+    const msgEl = getSummaryMessageElement();
+    if (msgEl) {
+        if (message) {
+            msgEl.textContent = message;
+            msgEl.classList.remove("d-none");
+        } else {
+            msgEl.classList.add("d-none");
+        }
+    }
+
+    if (table) table.classList.add("d-none");
+}
+
+function getSummaryMessageElement() {
+    let msgEl = document.getElementById("summary-table-message");
+    if (msgEl) return msgEl;
+
+    const wrapper = document.getElementById("summary-table-wrapper");
+    if (!wrapper) return null;
+
+    msgEl = document.createElement("div");
+    msgEl.id = "summary-table-message";
+    msgEl.className = "w-100 text-center fw-bold py-5 border d-none";
+    wrapper.appendChild(msgEl);
+    return msgEl;
+}
+
+function buildSummaryParams({ station, project, errorCode, model, fromDate, toDate } = {}) {
+    const params = new URLSearchParams();
+    if (station && station !== "ALL") params.append("station", station);
+    if (project && project !== "ALL") params.append("project", project);
+    if (errorCode && errorCode !== "ALL") params.append("errorCode", errorCode);
+    if (model && model !== "ALL") params.append("model", model);
+    if (fromDate) params.append("fromDate", fromDate);
+    if (toDate) params.append("toDate", toDate);
+    return params;
+}
+
+
+function buildSummaryMatrix(entries = []) {
+    const machineMap = new Map();
+    const errorCodes = new Set();
+
+    entries.forEach((entry) => {
+        if (!entry) return;
+        const machine = entry.machineNo || "-";
+        const code = entry.errorCode || "-";
+        const total = typeof entry.totalNtf === "number" ? entry.totalNtf : Number(entry.totalNtf ?? 0) || 0;
+
+        if (!machineMap.has(machine)) machineMap.set(machine, {});
+        machineMap.get(machine)[code] = total;
+        errorCodes.add(code);
+    });
+
+    const headers = Array.from(errorCodes).sort((a, b) => a.localeCompare(b));
+    const rows = Array.from(machineMap.entries())
+        .map(([machineNo, values]) => {
+            // Total/machine
+            const rowTotal = Object.values(values).reduce((sum, val) => sum + (Number(val) || 0), 0);
+            return { machineNo, values, rowTotal };
+        })
+        .sort((a, b) => a.machineNo.localeCompare(b.machineNo));
+
+    // Total/error code
+    const columnTotals = {};
+    headers.forEach((code) => {
+        columnTotals[code] = rows.reduce((sum, row) => sum + (Number(row.values[code]) || 0), 0);
+    });
+
+    // Tính grand total
+    const grandTotal = Object.values(columnTotals).reduce((sum, val) => sum + val, 0);
+
+    return { headers, rows, columnTotals, grandTotal };
+}
+
+function renderSummaryTable(entries = []) {
+    const table = document.getElementById("summary-table");
+    const thead = table?.querySelector("thead");
+    const tbody = table?.querySelector("tbody");
+    if (!table || !thead || !tbody) return;
+
+    const matrix = buildSummaryMatrix(entries);
+    GLOBAL.summaryMatrix = matrix;
+
+    if (!matrix.headers.length || !matrix.rows.length) {
+        resetSummaryTable("No summary data");
+        return;
+    }
+
+    const msgEl = getSummaryMessageElement();
+    if (msgEl) msgEl.classList.add("d-none");
+    table.classList.remove("d-none");
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    // Header row
+    const headerRow = document.createElement("tr");
+    const machineTh = document.createElement("th");
+    machineTh.textContent = "Machine No";
+    headerRow.appendChild(machineTh);
+
+    matrix.headers.forEach((code) => {
+        const th = document.createElement("th");
+        th.textContent = code;
+        th.dataset.errorCode = code;
+        headerRow.appendChild(th);
+    });
+
+    const totalTh = document.createElement("th");
+    totalTh.textContent = "Total";
+    headerRow.appendChild(totalTh);
+
+    thead.appendChild(headerRow);
+
+    matrix.rows.forEach(({ machineNo, values, rowTotal }) => {
+        const tr = document.createElement("tr");
+        const machineTd = document.createElement("td");
+        machineTd.textContent = machineNo;
+        machineTd.className = "text-start align-middle";
+        machineTd.dataset.machine = machineNo;
+        tr.appendChild(machineTd);
+
+        matrix.headers.forEach((code) => {
+            const td = document.createElement("td");
+            const rawValue = values[code] ?? 0;
+            const numericValue = Number(rawValue ?? 0);
+            td.textContent = Number.isNaN(numericValue) ? "-" : numericValue.toLocaleString();
+            td.dataset.machine = machineNo;
+            td.dataset.errorCode = code;
+            td.dataset.value = Number.isNaN(numericValue) ? 0 : numericValue;
+            td.className = "summary-value-cell text-center align-middle";
+            tr.appendChild(td);
+        });
+
+        // Cột Total
+        const totalTd = document.createElement("td");
+        totalTd.textContent = rowTotal.toLocaleString();
+        totalTd.dataset.machine = machineNo;
+        totalTd.dataset.isTotal = "row";
+        totalTd.dataset.value = rowTotal;
+        totalTd.className = "summary-value-cell text-center align-middle";
+        tr.appendChild(totalTd);
+
+        tbody.appendChild(tr);
+    });
+
+    // Hàng Total
+    const totalRow = document.createElement("tr");
+
+    const totalLabelTd = document.createElement("td");
+    totalLabelTd.textContent = "Total";
+    totalLabelTd.className = "text-start align-middle";
+    totalRow.appendChild(totalLabelTd);
+
+    matrix.headers.forEach((code) => {
+        const td = document.createElement("td");
+        const total = matrix.columnTotals[code] || 0;
+        td.textContent = total.toLocaleString();
+        td.dataset.errorCode = code;
+        td.dataset.isTotal = "column";
+        td.dataset.value = total;
+        td.className = "summary-value-cell text-center align-middle";
+        totalRow.appendChild(td);
+    });
+
+    // Grand total cell
+    const grandTotalTd = document.createElement("td");
+    grandTotalTd.textContent = matrix.grandTotal.toLocaleString();
+    grandTotalTd.dataset.isTotal = "grand";
+    grandTotalTd.className = "summary-value-cell text-center align-middle";
+    totalRow.appendChild(grandTotalTd);
+
+    tbody.appendChild(totalRow);
+}
+
+async function loadSummaryView() {
+    if (GLOBAL.modalView !== "summary") return;
+
+    const selection = GLOBAL.currentSelection || {};
+    const project = selection.project;
+    const station = selection.station;
+    const fromDate = selection.fromDate;
+    const toDate = selection.toDate;
+
+    if (!project || !station || !fromDate || !toDate) {
+        resetSummaryTable("Please select a cell to view summary.");
+        return;
+    }
+
+    const modelSelect = document.getElementById("model");
+    const model = selection.model || modelSelect?.value || "ALL";
+    const errorCode = GLOBAL.summaryFilter?.errorCode || "ALL";
+
+    const hasLoader = typeof loader !== "undefined";
+    if (hasLoader && typeof loader.load === "function") loader.load();
+
+    try {
+        const params = buildSummaryParams({ station, project, errorCode, model, fromDate, toDate });
+        const endpoint = "/production-system/api/cnt-machine-error/ntf/station-project";
+        const url = params.toString() ? `${endpoint}?${params}` : endpoint;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const json = await res.json();
+        const data = Array.isArray(json?.data) ? json.data : [];
+        GLOBAL.summaryData = data;
+        renderSummaryTable(data);
+    } catch (error) {
+        console.error("Failed to load summary data:", error);
+        resetSummaryTable("Failed to load summary data.");
+    } finally {
+        if (hasLoader && typeof loader.unload === "function") loader.unload();
+    }
+}
+
+function setupSummaryTableEvents() {
+    const table = document.getElementById("summary-table");
+    if (!table || table.dataset.bound === "true") return;
+    table.dataset.bound = "true";
+    table.addEventListener("click", (event) => {
+        const cell = event.target.closest(".summary-value-cell");
+        if (!cell) return;
+        handleSummaryCellClick(cell);
+    });
+}
+
+async function handleSummaryCellClick(cell) {
+    const machineNo = cell.dataset.machine || "";
+    const errorCode = cell.dataset.errorCode || "";
+    const isTotal = cell.dataset.isTotal || "";
+
+    if (!isTotal && (!machineNo || !errorCode)) return;
+    
+    if (isTotal && !machineNo && !errorCode) return;
+
+    const selection = GLOBAL.currentSelection || {};
+    const project = selection.project || "";
+    const station = selection.station || "";
+    const fromDate = selection.fromDate || "";
+    const toDate = selection.toDate || "";
+
+    if (!project || !station || !fromDate || !toDate) return;
+
+    const modelSelect = document.getElementById("model");
+    const selectedModel = modelSelect?.value || selection.model || "ALL";
+    const modelParam = selectedModel === "ALL" ? "" : selectedModel;
+
+    const displayMachine = isTotal === "row" ? machineNo : (machineNo || "All");
+    const displayError = isTotal === "column" ? errorCode : (errorCode || "All");
+    
+    renderSummaryDetailModal({ 
+        machineNo: displayMachine, 
+        errorCode: displayError, 
+        message: "Loading detail..." 
+    });
+
+    const hasLoader = typeof loader !== "undefined";
+    if (hasLoader && typeof loader.load === "function") loader.load();
+
+    try {
+        const params = new URLSearchParams();
+        
+        if (isTotal !== "column" && machineNo) {
+            params.append("machineNo", machineNo);
+        }
+        
+        params.append("project", project);
+        params.append("station", station);
+        
+        if (isTotal !== "row" && errorCode) {
+            params.append("errorCode", errorCode);
+        }
+        
+        params.append("fromDate", fromDate);
+        params.append("toDate", toDate);
+        if (modelParam) params.append("model", modelParam);
+
+        const endpoint = "/production-system/api/cnt-machine-error/ntf/detail";
+        const url = `${endpoint}?${params}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const json = await res.json();
+        let rows = Array.isArray(json?.data) ? json.data : [];
+
+        rows = rows.filter((item) => {
+            const matchesMachine = isTotal === "column" || !machineNo || item?.machineNo === machineNo;
+            const matchesProject = !project || item?.projectName === project;
+            const matchesStation = !station || item?.station === station;
+            const matchesError = isTotal === "row" || !errorCode || item?.errorCode === errorCode;
+            const matchesModel = !modelParam || item?.model === modelParam;
+            return matchesMachine && matchesProject && matchesStation && matchesError && matchesModel;
+        });
+
+        if (!rows.length) {
+            renderSummaryDetailModal({ 
+                machineNo: displayMachine, 
+                errorCode: displayError, 
+                message: "No detail data." 
+            });
+            return;
+        }
+
+        renderSummaryDetailModal({ 
+            machineNo: displayMachine, 
+            errorCode: displayError, 
+            rows 
+        });
+    } catch (error) {
+        console.error("Failed to load summary detail:", error);
+        renderSummaryDetailModal({ 
+            machineNo: displayMachine, 
+            errorCode: displayError, 
+            message: "Failed to load detail data." 
+        });
+    } finally {
+        if (hasLoader && typeof loader.unload === "function") loader.unload();
+    }
+}
+
+function renderSummaryDetailModal({ machineNo, errorCode, rows = [], message = "" }) {
+    const modalEl = document.getElementById("summary-detail-modal");
+    const titleEl = document.getElementById("summary-detail-title");
+    const table = document.getElementById("summary-detail-table");
+    const tbody = table?.querySelector("tbody");
+    const messageEl = document.getElementById("summary-detail-message");
+    if (!modalEl || !titleEl || !table || !tbody || !messageEl) return;
+
+    const selection = GLOBAL.currentSelection || {};
+    const station = selection.station || "-";
+
+    titleEl.textContent = `Summary Detail - ${station} - ${machineNo || "-"} - ${errorCode || "-"}`;
+    tbody.innerHTML = "";
+
+    if (Array.isArray(rows) && rows.length > 0) {
+        table.classList.remove("d-none");
+        messageEl.classList.add("d-none");
+
+        rows.forEach((item) => {
+            const tr = document.createElement("tr");
+            [
+                item?.id,
+                item?.projectName,
+                item?.model,
+                item?.serialId,
+                item?.customer,
+            ].forEach((value) => {
+                const td = document.createElement("td");
+                td.textContent = value != null && value !== "" ? value : "-";
+                td.className = "text-center align-middle";
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+    } else {
+        table.classList.add("d-none");
+        messageEl.textContent = message || "No detail data.";
+        messageEl.classList.remove("d-none");
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
 }
 
 function openUpdateModal(row) {
@@ -564,7 +944,7 @@ async function fetchMachineErrorSummary() {
         renderTableHeader(data);
         renderTable(data);
     } catch (err) {
-        console.error("Lỗi:", err);
+        console.error("Lá»—i:", err);
     }
 }
 
@@ -813,6 +1193,9 @@ function getProjectAndStation() {
             }
 
             await renderModalTable(top5Data);
+            if (GLOBAL.modalView === "summary") {
+                await loadSummaryView();
+            }
 
             chartData.forEach((data, idx) => {
                 const chartId = `chart-${idx + 1}`;
@@ -908,7 +1291,7 @@ async function fetchChartDataShift({ project, station, fromDate, toDate, model =
 
         return { chartDatas, top5: summarized.slice(0, 5) };
     } catch (err) {
-        console.error("Lỗi:", err);
+        console.error("Lá»—i:", err);
         return { chartDatas: [], top5: [] };
     }
 }
@@ -984,7 +1367,7 @@ async function fetchChartDataDate({ project, station, fromDate, toDate, model = 
 
         return { chartDatas, top5: summarized.slice(0, 5) };
     } catch (err) {
-        console.error("Lỗi:", err);
+        console.error("Lá»—i:", err);
         return { chartDatas: [], top5: [] };
     }
 }
@@ -1035,7 +1418,7 @@ async function fetchChartDataHour({ project, station, workDate, model = "ALL" })
             })),
         };
     } catch (err) {
-        console.error("Lỗi:", err);
+        console.error("Lá»—i:", err);
         return { chartDatas: [], top5: [] };
     }
 }
@@ -1131,22 +1514,23 @@ async function renderModalTable(top5Data) {
     });
 }
 
-function renderTitleInfo(sel) {
+function renderTitleInfo(sel = {}) {
     const titleEl = document.getElementById("title-info");
     if (!titleEl) return;
 
-    const { project, station, cellType, fromDate, toDate, workDate } = sel;
+    const { project, station, cellType, fromDate, toDate, workDate } = sel || {};
 
-    let timeRange = "";
+    let timeRange = "-";
     if ((cellType === "week" || cellType === "date") && fromDate && toDate) {
         const from = fromDate.split(" ")[0].replace(/\//g, "-");
         const to = toDate.split(" ")[0].replace(/\//g, "-");
-        timeRange = `${from} → ${to}`;
+        timeRange = `${from} - ${to}`;
     } else if (cellType === "day" && workDate) {
         timeRange = workDate.split(" ")[0].replace(/\//g, "-");
     }
 
-    titleEl.textContent = `Top 5 Error Code - ${project || "-"} - ${station || "-"} - ${timeRange || "-"}`;
+    const viewTitle = GLOBAL.modalView === "summary" ? "Summary" : "Top 5 Error Code";
+    titleEl.textContent = `${viewTitle} - ${project || "-"} - ${station || "-"} - ${timeRange}`;
 }
 
 function modalControl() {
@@ -1185,6 +1569,9 @@ function modalControl() {
                         : await fetchHourData(project, station, picker.startDate.format("YYYY/MM/DD"), model);
             renderTitleInfo(GLOBAL.currentSelection);
             await renderModalTable(top5Data);
+            if (GLOBAL.modalView === "summary") {
+                // await loadSummaryView();
+            }
 
             setTimeout(() => {
                 renderCharts(chartData);
@@ -1346,3 +1733,10 @@ ready(function () {
     fetchMachineErrorSummary();
     getProjectAndStation();
 });
+
+
+
+
+
+
+
