@@ -225,13 +225,17 @@ function setModalView(view) {
     const summaryWrapper = document.getElementById("summary-table-wrapper");
     if (!top5Wrapper || !summaryWrapper) return;
 
-    let targetView = view === "summary" ? "summary" : "top5";
+    const targetView = view === "summary" ? "summary" : "top5";
+    const previousView = GLOBAL.modalView || "top5";
+    const isSameView = previousView === targetView;
     GLOBAL.modalView = targetView;
 
     if (targetView === "summary") {
         top5Wrapper.classList.add("d-none");
         summaryWrapper.classList.remove("d-none");
-        loadSummaryView();
+        if (!isSameView) {
+            loadSummaryView();
+        }
     } else {
         top5Wrapper.classList.remove("d-none");
         summaryWrapper.classList.add("d-none");
@@ -446,6 +450,7 @@ async function loadSummaryView() {
         resetSummaryTable("Please select a cell to view summary.");
         return;
     }
+    resetSummaryTable("Loading summary data...");
 
     const modelSelect = document.getElementById("model");
     const model = selection.model || modelSelect?.value || "ALL";
@@ -1536,8 +1541,22 @@ function renderTitleInfo(sel = {}) {
 function modalControl() {
     const sel = GLOBAL.currentSelection || {};
     const groupByEl = document.getElementById("groupBy");
+    const modelSelect = document.getElementById("model");
     renderTitleInfo(sel);
     const $dateInput = window.jQuery?.("#dateRange");
+
+    if (modelSelect && modelSelect.dataset.bound !== "true") {
+        modelSelect.dataset.bound = "true";
+        modelSelect.addEventListener("change", async () => {
+            const selectedModel = modelSelect.value || "ALL";
+            GLOBAL.currentSelection = GLOBAL.currentSelection || {};
+            GLOBAL.currentSelection.model = selectedModel;
+
+            if (GLOBAL.modalView === "summary") {
+                await loadSummaryView();
+            }
+        });
+    }
 
     if (!groupByEl || !$dateInput) return;
 
@@ -1570,7 +1589,7 @@ function modalControl() {
             renderTitleInfo(GLOBAL.currentSelection);
             await renderModalTable(top5Data);
             if (GLOBAL.modalView === "summary") {
-                // await loadSummaryView();
+                await loadSummaryView();
             }
 
             setTimeout(() => {
@@ -1733,10 +1752,6 @@ ready(function () {
     fetchMachineErrorSummary();
     getProjectAndStation();
 });
-
-
-
-
 
 
 
