@@ -1035,7 +1035,7 @@ function goOutFullScreen() {
         formTimeout: null,
     }
 
-    const selection = {
+    const selectionSnapshot = {
         bu: null,
         factory: null
     };
@@ -1043,12 +1043,12 @@ function goOutFullScreen() {
     function captureSelections() {
         var currentBu = $('#btnBu').val();
         if (currentBu !== undefined && currentBu !== null && currentBu !== '') {
-            selection.bu = currentBu;
+            selectionSnapshot.bu = currentBu;
         }
 
         var currentFactory = $('#select-factory').val();
         if (currentFactory !== undefined && currentFactory !== null && currentFactory !== '') {
-            selection.factory = currentFactory;
+            selectionSnapshot.factory = currentFactory;
         }
     }
 
@@ -1056,18 +1056,18 @@ function goOutFullScreen() {
         var $buSelect = $('#btnBu');
         var $factorySelect = $('#select-factory');
 
-        if (selection.bu && $buSelect.find('option').filter(function () {
-            return $(this).val() == selection.bu;
+        if (selectionSnapshot.bu && $buSelect.find('option').filter(function () {
+            return $(this).val() == selectionSnapshot.bu;
         }).length) {
-            $buSelect.val(selection.bu);
-            _state.nameFactory = selection.bu;
+            $buSelect.val(selectionSnapshot.bu);
+            _state.nameFactory = selectionSnapshot.bu;
         }
 
-        if (selection.factory && $factorySelect.find('option').filter(function () {
-            return $(this).val() == selection.factory;
+        if (selectionSnapshot.factory && $factorySelect.find('option').filter(function () {
+            return $(this).val() == selectionSnapshot.factory;
         }).length) {
-            $factorySelect.val(selection.factory);
-            _state.idFac = selection.factory;
+            $factorySelect.val(selectionSnapshot.factory);
+            _state.idFac = selectionSnapshot.factory;
         }
     }
 
@@ -1148,8 +1148,8 @@ function goOutFullScreen() {
         // idBu = '';
         // var nameFactory = $("#btnBu").val();
         _state.nameFactory = $("#btnBu").val();
-        selection.bu = _state.nameFactory;
-        selection.factory = null;
+        selectionSnapshot.bu = _state.nameFactory;
+        selectionSnapshot.factory = null;
         _state.nameFactory = $(this).val();
         getFactory(_state.nameFactory); 
     });
@@ -1181,7 +1181,7 @@ function goOutFullScreen() {
                     // idBu = (idBu != '' ? idBu : data[0]['id']);
                     $('#select-factory').html(htmlFactory);
 
-                    var preferredFactory = selection.factory || idFactory;
+                    var preferredFactory = selectionSnapshot.factory || idFactory;
                     var fallbackFactory = data[0]['id'];
                     var matchedFactory = fallbackFactory;
 
@@ -1509,7 +1509,9 @@ function goOutFullScreen() {
                     // getDataPaperless(data[0].id_flag);
                     // _state.id_flag = data[0].id_flag;
                     // getDataPaperless(data[0].id_flag)
-                    getDataPaperless(_state.id_flag)
+                    if (!isReloading) {
+                        getDataPaperless(_state.id_flag);
+                    }
                 }
 
                 $("#factory_name").html($("#select-factory").find("option:selected").html() + ' Statistic');
@@ -1669,9 +1671,11 @@ function goOutFullScreen() {
                     _state.nameTeam = data["teams"][0].team_name;
                     _state.sDate = sDate;
                     // getMEchecklist(data["teams"][0].team_id, id_flag, 1, data["teams"][0].team_name);
-                    getMEchecklist(_state.teamId,_state.id_flag,_state.id_type,_state.nameTeam)
-                    count = 1
-                    loadDataFormChecked(_state.id_flag,_state.teamId,_state.sDate)
+                    if (!isReloading) {
+                        getMEchecklist(_state.teamId,_state.id_flag,_state.id_type,_state.nameTeam);
+                        count = 1;
+                        loadDataFormChecked(_state.id_flag,_state.teamId,_state.sDate);
+                    }
                     // loadDataFormChecked(id_flag, data["teams"][0].team_id, sDate);
                 }
             },
@@ -2608,7 +2612,7 @@ function goOutFullScreen() {
                 clearInterval(window.autoReloadTimeout)
             },complete: function () {
             isLoading = false;
-            if (!isLoading){
+            if (!isLoading && !isReloading){
                 window.autoReloadTimeout && clearInterval(window.autoReloadTimeout);
                 window.autoReloadTimeout = setInterval(reloadData, 10000);
             }
@@ -2824,11 +2828,14 @@ function goOutFullScreen() {
         });
     }
 
+    var isReloading = false;
     function reloadData() {
-        if (isLoading) {
-            console.log("loading");
+        if (isLoading || isReloading) {
+            console.log("loading or already reloading");
             return; 
         }
+
+        isReloading = true;
         restoreSelections();
         
         var currentTime = moment().format("YYYY/MM/DD HH:mm");
@@ -2839,6 +2846,9 @@ function goOutFullScreen() {
         _state.sDate = currentTime;
         
         loadItem(_state.idFac);
+        setTimeout(function() {
+            isReloading = false;
+        }, 2000); // Reset the flag after a delay to prevent rapid consecutive reloads
     }
 
     function bultTable(data) {
@@ -2967,4 +2977,15 @@ function goOutFullScreen() {
         });
         init();
     });
+    // function reloadData(){
+    //     if (!window.autoReloadInterval) {
+    //     window.autoReloadInterval = setInterval(() => {
+    //         loadItem(_state.idFac);
+    //         getDataPaperless(_state.id_flag);
+    //         getMEchecklist(_state.teamId,_state.id_flag,_state.id_type,_state.nameTeam);
+    //         loadDataFormChecked(_state.id_flag, _state.teamId,_state.sDate, _state.nameTeam, _state.nameCheck);
+    //     }, 7000);
+    //     }
+    // }
+
 </script>
