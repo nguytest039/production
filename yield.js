@@ -90,15 +90,14 @@ const handleApplyBtn = () => {
         const station = GLOBAL.currentSelection?.station;
         const model = dataset.selectedModel;
 
-        if (!station) {
-            alert("Thiếu thông tin station");
+        if (!station || !model) {
+            alert("Thiếu thông tin station hoặc model");
             return;
         }
 
         loader.load();
         try {
-            const modelParam = (model === "all") ? "" : model;
-            const raw = await apiGetOutputDetail(dataset.fromDate, dataset.toDate, station, modelParam, isHour);
+            const raw = await apiGetOutputDetail(dataset.fromDate, dataset.toDate, station, model, isHour);
 
             // Kiểm tra dữ liệu rỗng
             if (!Array.isArray(raw) || raw.length === 0) {
@@ -608,11 +607,6 @@ async function getListModel(station, project) {
 
         select.innerHTML = "";
 
-        const optAll = document.createElement("option");
-        optAll.value = "all";
-        optAll.textContent = "All";
-        select.append(optAll);
-
         data.forEach((m) => {
             const opt = document.createElement("option");
             opt.value = m.modelName;
@@ -622,8 +616,8 @@ async function getListModel(station, project) {
 
         if (data.length === 0) return;
 
-        select.value = "all";
-        dataset.selectedModel = "all";
+        select.value = data[0].modelName;
+        dataset.selectedModel = data[0].modelName;
 
         const sel = GLOBAL.currentSelection || {};
         const $input = $("#dateRange");
@@ -703,8 +697,7 @@ async function getDataByHour(fromDate, toDate, station, model) {
         loader.load();
         const fd = fromDate;
         const td = toDate;
-        const modelParam = (model === "all") ? "" : model;
-        const raw = await apiGetOutputDetail(fd, td, station, modelParam, true);
+        const raw = await apiGetOutputDetail(fd, td, station, model, true);
         if (!Array.isArray(raw) || raw.length === 0) {
             setModalNoData(true);
             clearDetailTable();
@@ -726,8 +719,7 @@ async function getDataByDay(fromDate, toDate, station, model) {
         loader.load();
         const fd = fromDate;
         const td = toDate;
-        const modelParam = (model === "all") ? "" : model;
-        const raw = await apiGetOutputDetail(fd, td, station, modelParam, false);
+        const raw = await apiGetOutputDetail(fd, td, station, model, false);
         if (!Array.isArray(raw) || raw.length === 0) {
             setModalNoData(true);
             clearDetailTable();
