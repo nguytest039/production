@@ -768,6 +768,8 @@ async function drawDailyChart(data, chartId) {
                     addDragPanEvent(container, this);
                 },
             },
+            animation: false,
+            clipPath: true
         },
         title: null,
         xAxis: {
@@ -1674,11 +1676,17 @@ const adjustCharts = () => {
                             minWidth: chart.container.parentElement.offsetWidth,
                             scrollPositionX: 0,
                         },
+                        clipPath: true
                     },
                 },
                 false
             );
             chart.reflow();
+        }
+        
+        // Ensure chart stays within its container
+        if (chart.container && chart.container.parentElement) {
+            chart.container.style.overflow = 'hidden';
         }
     });
 };
@@ -1741,9 +1749,7 @@ function singlePicker($input, workDate) {
 function formatPercent(value) {
     if (value == null || isNaN(value)) return "-";
     const val = value * 100;
-    const cut = Math.trunc(val * 1000) / 1000;
-    const str = cut.toString();
-    return str.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "");
+    return val.toFixed(2);
 }
 
 ready(function () {
