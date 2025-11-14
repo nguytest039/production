@@ -733,6 +733,13 @@
                         <span style="font-family: sans-serif;">Administrator</span>
                         <i class="fas fa-user-circle ml-1"> </i>
                     </div>
+
+                    <div class="input-group float-right css-time-span mb-2" style="right: 4rem;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                        </div>
+                        <input type="text" class="form-control float-right"id="reservation">
+                    </div>
                     <!-- /.form group -->
                 </div>
                 <img style="position: relative; top: 2.5vh" src="/paperless/assets/images/checklist/header2mini.png"
@@ -762,15 +769,6 @@
                                 <div style="float: left">
                                     <span style="color: #8ce5ff; font-size: 2.7vh;"><b id="factory_name">N/A
                                             Statistic</b></span>
-                                </div>
-                                <div style="float:right">
-                                    <div class="input-group input-group-sm css-time-span">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                                        </div>
-                                        <input type="text" class="form-control form-control-sm float-right"
-                                            id="reservation">
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1037,7 +1035,7 @@ function goOutFullScreen() {
         formTimeout: null,
     }
 
-    const selectionSnapshot = {
+    const selection = {
         bu: null,
         factory: null
     };
@@ -1045,12 +1043,12 @@ function goOutFullScreen() {
     function captureSelections() {
         var currentBu = $('#btnBu').val();
         if (currentBu !== undefined && currentBu !== null && currentBu !== '') {
-            selectionSnapshot.bu = currentBu;
+            selection.bu = currentBu;
         }
 
         var currentFactory = $('#select-factory').val();
         if (currentFactory !== undefined && currentFactory !== null && currentFactory !== '') {
-            selectionSnapshot.factory = currentFactory;
+            selection.factory = currentFactory;
         }
     }
 
@@ -1058,18 +1056,18 @@ function goOutFullScreen() {
         var $buSelect = $('#btnBu');
         var $factorySelect = $('#select-factory');
 
-        if (selectionSnapshot.bu && $buSelect.find('option').filter(function () {
-            return $(this).val() == selectionSnapshot.bu;
+        if (selection.bu && $buSelect.find('option').filter(function () {
+            return $(this).val() == selection.bu;
         }).length) {
-            $buSelect.val(selectionSnapshot.bu);
-            _state.nameFactory = selectionSnapshot.bu;
+            $buSelect.val(selection.bu);
+            _state.nameFactory = selection.bu;
         }
 
-        if (selectionSnapshot.factory && $factorySelect.find('option').filter(function () {
-            return $(this).val() == selectionSnapshot.factory;
+        if (selection.factory && $factorySelect.find('option').filter(function () {
+            return $(this).val() == selection.factory;
         }).length) {
-            $factorySelect.val(selectionSnapshot.factory);
-            _state.idFac = selectionSnapshot.factory;
+            $factorySelect.val(selection.factory);
+            _state.idFac = selection.factory;
         }
     }
 
@@ -1124,17 +1122,10 @@ function goOutFullScreen() {
                     $('#btnBu').html(htmlBu);
                     // $('#btnBu').val(sbuName);
 
-                    if (sBu != null) {
-                        $('#btnBu').val(sBu);
-                        _state.nameFactory = sBu;
-                        selectionSnapshot.bu = sBu;
-                        getFactory(sBu);
-                    } else {
-                        $('#btnBu').val(data[0]);
-                        _state.nameFactory = data[0];
-                        selectionSnapshot.bu = data[0];
-                        getFactory(data[0]);
-                    }
+                    let buToUse = _state.nameFactory || sBu || data[0];
+                    $('#btnBu').val(buToUse);
+                    _state.nameFactory = buToUse;
+                    getFactory(buToUse);
 
                 } else {
                     console.log("No data factory line.");
@@ -1157,8 +1148,9 @@ function goOutFullScreen() {
         // idBu = '';
         // var nameFactory = $("#btnBu").val();
         _state.nameFactory = $("#btnBu").val();
-        selectionSnapshot.bu = _state.nameFactory;
-        selectionSnapshot.factory = null;
+        selection.bu = _state.nameFactory;
+        selection.factory = null;
+        _state.nameFactory = $(this).val();
         getFactory(_state.nameFactory); 
     });
 
@@ -1189,7 +1181,7 @@ function goOutFullScreen() {
                     // idBu = (idBu != '' ? idBu : data[0]['id']);
                     $('#select-factory').html(htmlFactory);
 
-                    var preferredFactory = selectionSnapshot.factory || idFactory;
+                    var preferredFactory = selection.factory || idFactory;
                     var fallbackFactory = data[0]['id'];
                     var matchedFactory = fallbackFactory;
 
@@ -1218,6 +1210,7 @@ function goOutFullScreen() {
                     alert("No data factory line!");
                 }
                 window.sessionStorage.setItem('dataset', JSON.stringify(dataset));
+                _state.nameFactory = $("#btnBu").val(); 
             },
             error: function (e) {
                 $(".loader").addClass("d-none");
@@ -1236,7 +1229,7 @@ function goOutFullScreen() {
         // dataset.idBu = $(this).val();
         var idFac = $("#select-factory").val();
         _state.idFac=idFac;
-        console.log(_state.idFac);
+        _state.idFac = $(this).val();
         loadItem(idFac);
         captureSelections();
         window.sessionStorage.setItem('dataset', JSON.stringify(dataset));
@@ -1539,7 +1532,8 @@ function goOutFullScreen() {
             var idFlag = id_flag;
         }
         var sDate = $('#reservation').val();
-        var title = ' <spring:message code="department.statistic" /> - ' + sDate + tempFLag;
+        // var title = ' <spring:message code="department.statistic" /> - ' + sDate + tempFLag;
+        var title = '<spring:message code="department.statistic" />';
         $.ajax({
             type: 'GET',
             url: '/paperless/api/v2/statistic/get_data_statistic_bu_team_v2',
@@ -2591,7 +2585,8 @@ function goOutFullScreen() {
                     $("#n_chart").addClass('d-none');
                     $("#n_box-2").addClass('d-none');
                     $("#n_box-2_1").addClass('d-none');
-                    $("#tbl_title").html(nameTeam + " (" + timeSpan + ") - " + textType)
+                    // $("#tbl_title").html(nameTeam + " (" + timeSpan + ") - " + textType)
+                    $("#tbl_title").html(nameTeam + " - " + textType)
 
                 } else {
                     alert("No data");
@@ -2615,7 +2610,7 @@ function goOutFullScreen() {
             isLoading = false;
             if (!isLoading){
                 window.autoReloadTimeout && clearInterval(window.autoReloadTimeout);
-                window.autoReloadTimeout = setInterval(reloadData, 300000);
+                window.autoReloadTimeout = setInterval(reloadData, 10000);
             }
         }
         });
@@ -2630,7 +2625,8 @@ function goOutFullScreen() {
                 backgroundColor: '#fff0',
             },
             title: {
-                text: nameTeam + " (" + timeSpan + ") - " + nameCheck,
+                // text: nameTeam + " (" + timeSpan + ") - " + nameCheck,
+                text: nameTeam + " - " + nameCheck,
                 style: {
                     fontWeight: 'bold',
                     fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"',
@@ -2778,7 +2774,8 @@ function goOutFullScreen() {
             contentType: "application/json; charset=utf-8",
             success: function (res) {
                 $(".icon-loading").addClass("d-none");
-                $("#tbl_title").html(nameTeam + " (" + sDate + ") - " + nameCheck)
+                // $("#tbl_title").html(nameTeam + " (" + sDate + ") - " + nameCheck)
+                $("#tbl_title").html(nameTeam + " - " + nameCheck)
                 var data = res['data'];
                 if (res.status == 1 && res.total > 0) {
                     bultTable(data);
@@ -2806,7 +2803,8 @@ function goOutFullScreen() {
             contentType: "application/json; charset=utf-8",
             success: function (res) {
                 $(".icon-loading").addClass("d-none");
-                $("#tbl_title").html(nameTeam + " (" + sDate + ") - " + nameCheck)
+                // $("#tbl_title").html(nameTeam + " (" + sDate + ") - " + nameCheck)
+                $("#tbl_title").html(nameTeam + " - " + nameCheck)
                 var data = res['data'];
                 if (data != null) {
                     if (res.status == 1 && res.total > 0) {
@@ -2831,7 +2829,6 @@ function goOutFullScreen() {
             console.log("loading");
             return; 
         }
-
         restoreSelections();
         
         var currentTime = moment().format("YYYY/MM/DD HH:mm");
@@ -2970,15 +2967,4 @@ function goOutFullScreen() {
         });
         init();
     });
-    // function reloadData(){
-    //     if (!window.autoReloadInterval) {
-    //     window.autoReloadInterval = setInterval(() => {
-    //         loadItem(_state.idFac);
-    //         getDataPaperless(_state.id_flag);
-    //         getMEchecklist(_state.teamId,_state.id_flag,_state.id_type,_state.nameTeam);
-    //         loadDataFormChecked(_state.id_flag, _state.teamId,_state.sDate, _state.nameTeam, _state.nameCheck);
-    //     }, 7000);
-    //     }
-    // }
-
 </script>
