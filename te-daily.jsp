@@ -28,7 +28,7 @@
                 <label for="customerSelect" class="fw-bold mb-0 label-custom">Customer</label>
                 <select name="" id="customerSelect" class="form-control form-control-sm text-warning fw-bold">
                     <option value="RING" selected>Rhea</option>
-                    <option value="APOLLO">Amazon</option>
+                    <option value="APOLLO">Apollo</option>
                     <option value="KRONOS">Kronos</option>
                 </select>
             </div>
@@ -39,7 +39,7 @@
         <div class="row h-100">
             <div class="col-md-12 h-100 component-wrapper">
                 <div class="component-item">
-                    <h5 class="component-title">Detail</h5>
+                    <h5 class="component-title">Details</h5>
                     <div class="component-body">
                         <div class="table-responsive h-100 mh-100 overflow-auto overflow-y-auto">
                             <table class="table table-sm h-100" id="table-1">
@@ -58,7 +58,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="title-info">Top 5 Error Code</h1>
+                    <h1 class="modal-title fs-5" id="title-info">Top 5 Errors</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -67,7 +67,7 @@
                             <div class="d-flex align-items-center gap-2">
                                 <div class="btn-group btn-group-sm toggle-view" role="group" id="modal-view-toggle">
                                     <button type="button" class="btn btn-outline-warning active" data-view="top5">
-                                        Top 5 Error
+                                        Top 5 Errors
                                     </button>
                                     <button type="button" class="btn btn-outline-warning" data-view="summary">
                                         Summary
@@ -203,6 +203,46 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save-update">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="update_status_owner" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Owner/Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="update-form" class="d-flex flex-column gap-3">
+                        <div>
+                            <label for="root-cause" class="form-label">Owner</label>
+                            <textarea
+                                name="root-cause"
+                                id="root-cause"
+                                class="form-control"
+                                placeholder="Enter Owner"
+                                rows="5"
+                            ></textarea>
+                        </div>
+
+                        <div>
+                            <label for="corrective-action" class="form-label">Status</label>
+                            <textarea
+                                name="corrective-action"
+                                id="corrective-action"
+                                class="form-control"
+                                placeholder="Enter Status"
+                                rows="5"
+                            ></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-update2">Save changes</button>
                 </div>
             </div>
         </div>
