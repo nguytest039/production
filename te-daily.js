@@ -19,9 +19,18 @@ const loadEvent = () => {
     if (table2Body) {
         table2Body.addEventListener("click", function (e) {
             const cell = e.target.closest("td");
-            if (!cell || !cell.classList.contains("editable-cell")) return;
-            const row = cell.closest("tr");
-            openUpdateModal(row);
+            if (!cell) return;
+
+            if (cell.classList.contains("editable-cell")) {
+                const row = cell.closest("tr");
+                openUpdateModal(row);
+                return;
+            }
+
+            if (cell.dataset.field === "totalNtf") {
+                const row = cell.closest("tr");
+                handleTop5ErrorClick(row);
+            }
         });
     }
 
@@ -316,22 +325,28 @@ function buildSummaryMatrix(entries = []) {
         errorCodes.add(code);
     });
 
-    const headers = Array.from(errorCodes).sort((a, b) => a.localeCompare(b));
+    const errorCodesArray = Array.from(errorCodes);
+
+    // Calculate column totals
+    const columnTotals = {};
+    errorCodesArray.forEach((code) => {
+        columnTotals[code] = 0;
+        machineMap.forEach((values) => {
+            columnTotals[code] += Number(values[code]) || 0;
+        });
+    });
+
+    // Sort error codes by column total DESC
+    const headers = errorCodesArray.sort((a, b) => (columnTotals[b] || 0) - (columnTotals[a] || 0));
+
+    // Calculate row totals and sort DESC
     const rows = Array.from(machineMap.entries())
         .map(([machineNo, values]) => {
-            // Total/machine
             const rowTotal = Object.values(values).reduce((sum, val) => sum + (Number(val) || 0), 0);
             return { machineNo, values, rowTotal };
         })
-        .sort((a, b) => a.machineNo.localeCompare(b.machineNo));
+        .sort((a, b) => b.rowTotal - a.rowTotal);
 
-    // Total/error code
-    const columnTotals = {};
-    headers.forEach((code) => {
-        columnTotals[code] = rows.reduce((sum, row) => sum + (Number(row.values[code]) || 0), 0);
-    });
-
-    // Tính grand total
     const grandTotal = Object.values(columnTotals).reduce((sum, val) => sum + val, 0);
 
     return { headers, rows, columnTotals, grandTotal };
@@ -363,10 +378,11 @@ function renderSummaryTable(entries = []) {
     machineTh.textContent = "Machine No";
     headerRow.appendChild(machineTh);
 
-    matrix.headers.forEach((code) => {
+    matrix.headers.forEach((code, index) => {
         const th = document.createElement("th");
         th.textContent = code;
         th.dataset.errorCode = code;
+        if (index < 3) th.classList.add("text-warning");
         headerRow.appendChild(th);
     });
 
@@ -376,11 +392,12 @@ function renderSummaryTable(entries = []) {
 
     thead.appendChild(headerRow);
 
-    matrix.rows.forEach(({ machineNo, values, rowTotal }) => {
+    matrix.rows.forEach(({ machineNo, values, rowTotal }, rowIndex) => {
         const tr = document.createElement("tr");
         const machineTd = document.createElement("td");
         machineTd.textContent = machineNo;
         machineTd.className = "text-start align-middle";
+        if (rowIndex < 3) machineTd.classList.add("text-warning");
         machineTd.dataset.machine = machineNo;
         tr.appendChild(machineTd);
 
@@ -494,7 +511,7 @@ async function handleSummaryCellClick(cell) {
     const isTotal = cell.dataset.isTotal || "";
 
     if (!isTotal && (!machineNo || !errorCode)) return;
-    
+
     if (isTotal && !machineNo && !errorCode) return;
 
     const selection = GLOBAL.currentSelection || {};
@@ -511,11 +528,11 @@ async function handleSummaryCellClick(cell) {
 
     const displayMachine = isTotal === "row" ? machineNo : (machineNo || "All");
     const displayError = isTotal === "column" ? errorCode : (errorCode || "All");
-    
-    renderSummaryDetailModal({ 
-        machineNo: displayMachine, 
-        errorCode: displayError, 
-        message: "Loading detail..." 
+
+    renderSummaryDetailModal({
+        machineNo: displayMachine,
+        errorCode: displayError,
+        message: "Loading detail..."
     });
 
     const hasLoader = typeof loader !== "undefined";
@@ -523,18 +540,18 @@ async function handleSummaryCellClick(cell) {
 
     try {
         const params = new URLSearchParams();
-        
+
         if (isTotal !== "column" && machineNo) {
             params.append("machineNo", machineNo);
         }
-        
+
         params.append("project", project);
         params.append("station", station);
-        
+
         if (isTotal !== "row" && errorCode) {
             params.append("errorCode", errorCode);
         }
-        
+
         params.append("fromDate", fromDate);
         params.append("toDate", toDate);
         if (modelParam) params.append("model", modelParam);
@@ -556,25 +573,102 @@ async function handleSummaryCellClick(cell) {
         });
 
         if (!rows.length) {
-            renderSummaryDetailModal({ 
-                machineNo: displayMachine, 
-                errorCode: displayError, 
-                message: "No detail data." 
+            renderSummaryDetailModal({
+                machineNo: displayMachine,
+                errorCode: displayError,
+                message: "No detail data."
             });
             return;
         }
 
-        renderSummaryDetailModal({ 
-            machineNo: displayMachine, 
-            errorCode: displayError, 
-            rows 
+        renderSummaryDetailModal({
+            machineNo: displayMachine,
+            errorCode: displayError,
+            rows
         });
     } catch (error) {
         console.error("Failed to load summary detail:", error);
-        renderSummaryDetailModal({ 
-            machineNo: displayMachine, 
-            errorCode: displayError, 
-            message: "Failed to load detail data." 
+        renderSummaryDetailModal({
+            machineNo: displayMachine,
+            errorCode: displayError,
+            message: "Failed to load detail data."
+        });
+    } finally {
+        if (hasLoader && typeof loader.unload === "function") loader.unload();
+    }
+}
+
+async function handleTop5ErrorClick(row) {
+    if (!row) return;
+
+    const errorCode = row.dataset.errorCode || "";
+    if (!errorCode) return;
+
+    const selection = GLOBAL.currentSelection || {};
+    const project = selection.project || "";
+    const station = selection.station || "";
+    const fromDate = selection.fromDate || "";
+    const toDate = selection.toDate || "";
+
+    if (!project || !station || !fromDate || !toDate) return;
+
+    const modelSelect = document.getElementById("model");
+    const selectedModel = modelSelect?.value || selection.model || "ALL";
+    const modelParam = selectedModel === "ALL" ? "" : selectedModel;
+
+    renderSummaryDetailModal({
+        machineNo: "All",
+        errorCode: errorCode,
+        message: "Loading detail..."
+    });
+
+    const hasLoader = typeof loader !== "undefined";
+    if (hasLoader && typeof loader.load === "function") loader.load();
+
+    try {
+        const params = new URLSearchParams();
+        params.append("project", project);
+        params.append("station", station);
+        params.append("errorCode", errorCode);
+        params.append("fromDate", fromDate);
+        params.append("toDate", toDate);
+        if (modelParam) params.append("model", modelParam);
+
+        const endpoint = "/production-system/api/cnt-machine-error/ntf/detail";
+        const url = `${endpoint}?${params}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const json = await res.json();
+        let rows = Array.isArray(json?.data) ? json.data : [];
+
+        rows = rows.filter((item) => {
+            const matchesProject = !project || item?.projectName === project;
+            const matchesStation = !station || item?.station === station;
+            const matchesError = item?.errorCode === errorCode;
+            const matchesModel = !modelParam || item?.model === modelParam;
+            return matchesProject && matchesStation && matchesError && matchesModel;
+        });
+
+        if (!rows.length) {
+            renderSummaryDetailModal({
+                machineNo: "All",
+                errorCode: errorCode,
+                message: "No detail data."
+            });
+            return;
+        }
+
+        renderSummaryDetailModal({
+            machineNo: "All",
+            errorCode: errorCode,
+            rows
+        });
+    } catch (error) {
+        console.error("Failed to load error detail:", error);
+        renderSummaryDetailModal({
+            machineNo: "All",
+            errorCode: errorCode,
+            message: "Failed to load detail data."
         });
     } finally {
         if (hasLoader && typeof loader.unload === "function") loader.unload();
@@ -629,14 +723,18 @@ function openUpdateModal(row) {
     if (!row) return;
     const rootInput = document.getElementById("root-cause");
     const actionInput = document.getElementById("corrective-action");
+    const ownerInput = document.getElementById("owner-input");
+    const statusInput = document.getElementById("status-input");
     const modalEl = document.getElementById("modal-update");
-    if (!rootInput || !actionInput || !modalEl) return;
+    if (!rootInput || !actionInput || !ownerInput || !statusInput || !modalEl) return;
 
     const errorCode = row.dataset.errorCode || "";
     if (!errorCode) return;
 
     rootInput.value = row.dataset.rootCause || "";
     actionInput.value = row.dataset.action || "";
+    ownerInput.value = row.dataset.owner || "";
+    statusInput.value = row.dataset.status || "Open";
 
     GLOBAL.editingError = {
         errorCode,
@@ -651,7 +749,9 @@ function openUpdateModal(row) {
 async function handleSaveErrorInfo() {
     const rootInput = document.getElementById("root-cause");
     const actionInput = document.getElementById("corrective-action");
-    if (!rootInput || !actionInput) return;
+    const ownerInput = document.getElementById("owner-input");
+    const statusInput = document.getElementById("status-input");
+    if (!rootInput || !actionInput || !ownerInput || !statusInput) return;
 
     const editing = GLOBAL.editingError;
     if (!editing || !editing.errorCode) return;
@@ -660,6 +760,8 @@ async function handleSaveErrorInfo() {
         machineNo: editing.machineNo || "",
         rootCause: rootInput.value.trim(),
         action: actionInput.value.trim(),
+        owner: ownerInput.value.trim(),
+        status: statusInput.value.trim(),
     };
 
     const hasLoader = typeof loader !== "undefined";
@@ -685,31 +787,37 @@ async function handleSaveErrorInfo() {
     }
 }
 
-function updateRowErrorInfo(row, { rootCause, action }) {
+// Tìm hàm updateRowErrorInfo, thêm owner, status vào params:
+function updateRowErrorInfo(row, { rootCause, action, owner, status }) {
     if (!row) return;
 
     const rootCell = row.querySelector('td[data-field="rootCause"]');
     const actionCell = row.querySelector('td[data-field="action"]');
-    const rootText = rootCause || "";
-    const actionText = action || "";
+    const ownerCell = row.querySelector('td[data-field="owner"]');
+    const statusCell = row.querySelector('td[data-field="status"]');
 
-    if (rootCell) rootCell.textContent = rootText || "-";
-    if (actionCell) actionCell.textContent = actionText || "-";
+    if (rootCell) rootCell.textContent = rootCause || "-";
+    if (actionCell) actionCell.textContent = action || "-";
+    if (ownerCell) ownerCell.textContent = owner || "N/A";
+    if (statusCell) {
+        const select = statusCell.querySelector("select");
+        if (select) select.value = status || "Open";
+    }
 
-    row.dataset.rootCause = rootText;
-    row.dataset.action = actionText;
+    row.dataset.rootCause = rootCause || "";
+    row.dataset.action = action || "";
+    row.dataset.owner = owner || "";
+    row.dataset.status = status || "Open";
 
     const key = getErrorInfoKey(row.dataset.errorCode || "");
-    if (!key) return;
-
-    GLOBAL.errorInfoCache = GLOBAL.errorInfoCache || {};
-    GLOBAL.errorInfoCache[key] = {
-        ...(GLOBAL.errorInfoCache[key] || {}),
-        rootCause: rootText,
-        action: actionText,
-        owner: GLOBAL.errorInfoCache[key]?.owner || "",
-        status: GLOBAL.errorInfoCache[key]?.status || "",
-    };
+    if (key) {
+        GLOBAL.errorInfoCache[key] = {
+            rootCause: rootCause || "",
+            action: action || "",
+            owner: owner || "",
+            status: status || "Open",
+        };
+    }
 }
 
 async function apiGetModels(station, project) {
@@ -768,8 +876,6 @@ async function drawDailyChart(data, chartId) {
                     addDragPanEvent(container, this);
                 },
             },
-            animation: false,
-            clipPath: true
         },
         title: null,
         xAxis: {
@@ -777,11 +883,13 @@ async function drawDailyChart(data, chartId) {
             labels: {
                 style: { fontSize: "0.75rem", fontWeight: "600", color: "#7a95c3" },
                 useHTML: true,
+                y: 15,
             },
             tickLength: 5,
             tickPositioner() {
                 return this.categories.map((_, i) => i);
             },
+            margin: 20,
         },
         yAxis: {
             title: null,
@@ -1275,12 +1383,13 @@ async function fetchChartDataShift({ project, station, fromDate, toDate, model =
                 ["DAY", "NIGHT"].forEach((shift) => {
                     const key = `${dateStr}_${shift}`;
                     const item = shiftMap[key];
-                    const shiftLabel = shift === "DAY" ? "Day" : "Night";
+                    const shiftLabel = shift === "DAY" ? "D" : "N";
 
                     points.push({
                         y: item?.ntfRate ?? 0,
                         cft: err.errorCode,
-                        updatedAt: `${displayDate}<br/>${shiftLabel}`,
+                        // updatedAt: `${displayDate}<br/>${shiftLabel}`,
+                        updatedAt: `${displayDate} ${shiftLabel}`,
                         fullDate: `${dateStr} ${shiftLabel}`,
                         note: `${err.errorCode}`,
                         editor: "",
@@ -1490,9 +1599,12 @@ async function renderModalTable(top5Data) {
         const rate = formatPercent(item?.totalRate);
         appendCell(rate === "-" ? "-" : `${rate}%`, "text-center align-middle");
 
-        const totalErrors =
-            typeof item?.totalNtf === "number" ? item.totalNtf.toLocaleString() : item?.totalNtf || "-";
-        appendCell(totalErrors, "text-center align-middle");
+        const totalErrors = typeof item?.totalNtf === "number" ? item.totalNtf.toLocaleString() : item?.totalNtf || "-";
+        const totalNtfTd = document.createElement("td");
+        totalNtfTd.textContent = totalErrors;
+        totalNtfTd.className = "text-center align-middle cursor-pointer";
+        totalNtfTd.dataset.field = "totalNtf";
+        row.appendChild(totalNtfTd);
 
         const chartTd = document.createElement("td");
         chartTd.className = "chart-container";
@@ -1503,19 +1615,38 @@ async function renderModalTable(top5Data) {
         row.appendChild(chartTd);
 
         const rootTd = document.createElement("td");
-        rootTd.className = "text-start align-middle editable-cell";
+        rootTd.className = "text-start align-middle editable-cell text-warning";
         rootTd.dataset.field = "rootCause";
         rootTd.textContent = rootCause || "-";
         row.appendChild(rootTd);
 
         const actionTd = document.createElement("td");
-        actionTd.className = "text-start align-middle editable-cell";
+        actionTd.className = "text-start align-middle editable-cell text-warning";
         actionTd.dataset.field = "action";
         actionTd.textContent = action || "-";
         row.appendChild(actionTd);
 
-        appendCell(owner, "text-center align-middle");
-        appendCell(status, "text-center align-middle");
+        const ownerTd = document.createElement("td");
+        ownerTd.className = "text-center align-middle editable-cell text-warning";
+        ownerTd.dataset.field = "owner";
+        ownerTd.textContent = owner;
+        row.appendChild(ownerTd);
+
+        const statusTd = document.createElement("td");
+        statusTd.className = "text-center align-middle editable-cell text-warning";
+        statusTd.dataset.field = "status";
+        const statusSelect = document.createElement("select");
+        statusSelect.className = "form-select form-select-sm text-warning bg-transparent border-0";
+        statusSelect.style.cssText = "cursor: pointer; pointer-events: none;";
+        ["Open", "Ongoing", "Monitor", "Closed"].forEach(opt => {
+            const option = document.createElement("option");
+            option.value = opt;
+            option.textContent = opt;
+            if (opt === status) option.selected = true;
+            statusSelect.appendChild(option);
+        });
+        statusTd.appendChild(statusSelect);
+        row.appendChild(statusTd);
 
         tbody.append(row);
     });
@@ -1536,7 +1667,7 @@ function renderTitleInfo(sel = {}) {
         timeRange = workDate.split(" ")[0].replace(/\//g, "-");
     }
 
-    const viewTitle = GLOBAL.modalView === "summary" ? "Summary" : "Top 5 Error Code";
+    const viewTitle = GLOBAL.modalView === "summary" ? "Summary" : "Top 5 Errors";
     titleEl.textContent = `${viewTitle} - ${project || "-"} - ${station || "-"} - ${timeRange}`;
 }
 
@@ -1676,17 +1807,11 @@ const adjustCharts = () => {
                             minWidth: chart.container.parentElement.offsetWidth,
                             scrollPositionX: 0,
                         },
-                        clipPath: true
                     },
                 },
                 false
             );
             chart.reflow();
-        }
-        
-        // Ensure chart stays within its container
-        if (chart.container && chart.container.parentElement) {
-            chart.container.style.overflow = 'hidden';
         }
     });
 };
@@ -1748,8 +1873,7 @@ function singlePicker($input, workDate) {
 
 function formatPercent(value) {
     if (value == null || isNaN(value)) return "-";
-    const val = value * 100;
-    return val.toFixed(2);
+    return (value * 100).toFixed(2);
 }
 
 ready(function () {
@@ -1758,6 +1882,5 @@ ready(function () {
     fetchMachineErrorSummary();
     getProjectAndStation();
 });
-
 
 
