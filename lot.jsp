@@ -147,19 +147,19 @@
         value="<%=pageContext.getAttribute(\"profile\") %>" /> <jsp:param name="logout" value="<%=
         pageContext.getAttribute(\"logout\") %>" />
     </jsp:include>
-
-    <div class="container-fluid px-0 content-wrapper">
+    <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
+        <option value="today" selected>Time: Today</option>
+        <option value="7">Time: Last 7 Days</option>
+        <option value="30">Time: Last 30 Days</option>
+        <option value="custom">Time: Custom</option>
+    </select>
+    <div class="container-fluid p-0 content-wrapper">
         <div class="row">
             <div class="col-md-3 component-wrapper">
                 <div class="component-item">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <h5 class="component-title mb-0">Inspected Distribution by Material Type</h5>
-                        <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
-                            <option value="today" selected>Time: Today</option>
-                            <option value="7">Time: 7 Days Ago</option>
-                            <option value="30">Time: 30 Days Ago</option>
-                            <option value="custom">Time: Custom</option>
-                        </select>
+
                         <div id="daterangepicker-container" style="display: none; position: absolute">
                             <input type="text" id="daterangepicker" />
                         </div>
@@ -172,8 +172,8 @@
                 <div class="row component-wrapper">
                     <div class="component-item">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="component-title mb-0">Lot Rejected Rate</h5>
-                            <select name="" id="sl-time" class="form-select form-select-sm w-auto">
+                            <h5 class="component-title mb-0">Lot Rejected Rate (Today)</h5>
+                            <select name="" id="sl-time" class="form-select form-select-sm w-auto d-none">
                                 <option value="today" selected>Time: Today</option>
                                 <option value="7">Time: 7 Days Ago</option>
                                 <option value="30">Time: 30 Days Ago</option>
@@ -187,7 +187,8 @@
                         <div class="row">
                             <div class="col-md-4 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">Inspected</div>
                                     <span id="inspected" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -195,7 +196,8 @@
 
                             <div class="col-md-4 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">Lot Rejected</div>
                                     <span id="lot-rejected" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -203,7 +205,8 @@
 
                             <div class="col-md-4 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">LRR</div>
                                     <span id="lrr" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -239,7 +242,8 @@
                         <div class="row">
                             <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">To Be Inspected</div>
                                     <span id="be-inspected" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -247,7 +251,8 @@
 
                             <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">Timeout Inspected</div>
                                     <span id="timeout_inspect" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -255,7 +260,8 @@
 
                             <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">To Be Scanned</div>
                                     <span id="scanned" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -263,7 +269,8 @@
 
                             <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
                                     <div class="component-title">Timeout Scanned</div>
                                     <span id="timeout_scan" class="fw-bold text-warning text-span"></span>
                                 </div>
@@ -344,7 +351,7 @@
             <div class="col-md-6 component-wrapper">
                 <div class="component-item">
                     <h5 class="component-title">NCMR List</h5>
-                    <div class="component-body table-box" id="table-4">
+                    <div class="component-body table-box">
                         <table class="table table-sm table-striped" id="table-4">
                             <thead></thead>
                             <tbody></tbody>
@@ -356,7 +363,7 @@
             <div class="col-md-6 component-wrapper">
                 <div class="component-item">
                     <h5 class="component-title">Inspection List</h5>
-                    <div class="component-body table-box" id="table-5">
+                    <div class="component-body table-box">
                         <table class="table table-sm table-striped" id="table-5">
                             <thead></thead>
                             <tbody></tbody>
@@ -371,6 +378,18 @@
 <script>
     const dataset = {};
     const chartsList = [];
+    const donutFilters = {
+        materialTypeIQC: null,
+        materialTypeNCMR: null,
+    };
+    const lotTableFilters = {
+        "table-1": null,
+        "table-2": null,
+        "table-3": null,
+    };
+    
+    const API_TOP_REJECT = "/production-system/api/iqc/top-reject";
+
     function applyScaleToChart(chart) {
         if (!chart) return;
         chart.reflow();
@@ -548,7 +567,7 @@
                         const x = series.center[0] + chart.plotLeft - bbox.width / 2;
                         const y = series.center[1] + chart.plotTop - bbox.height / 2;
 
-                        customLabel.attr({x, y});
+                        customLabel.attr({ x, y });
                         customLabel.css({
                             fontSize: series.center && series.center[2] ? series.center[2] / 12 + "px" : "1.2rem",
                         });
@@ -557,18 +576,25 @@
                     },
                 },
             },
-            title: {text: ""},
-            tooltip: {pointFormat: "{series.name}: <b>{point.percentage:.0f}%</b>"},
-            legend: {enabled: true, itemStyle: {color: "#fff"}},
+            title: { text: "" },
+            tooltip: { pointFormat: "{series.name}: <b>{point.percentage:.0f}%</b>" },
+            legend: { enabled: true, itemStyle: { color: "#fff" } },
             plotOptions: {
                 pie: {
                     allowPointSelect: true,
                     cursor: "pointer",
+                    point: {
+                        events: {
+                            click: function () {
+                                handleDonutClick(containerId, this.name);
+                            },
+                        },
+                    },
                     dataLabels: {
                         enabled: true,
                         distance: 20,
                         format: "{point.name}<br/>{point.y} ({point.percentage:.2f}%)",
-                        style: {fontSize: "0.7rem", color: "#fff", textOutline: "none"},
+                        style: { fontSize: "0.7rem", color: "#fff", textOutline: "none" },
                     },
                     showInLegend: true,
                 },
@@ -601,7 +627,6 @@
         drawDonutChart("donut-chart-2", chartData);
     }
 
-    const API_TOP_REJECT = "/production-system/api/iqc/top-reject";
 
     async function fetchTopReject(fieldName) {
         try {
@@ -637,8 +662,8 @@
                     },
                 },
             },
-            title: {text: ""},
-            legend: {enabled: false},
+            title: { text: "" },
+            legend: { enabled: false },
             xAxis: {
                 categories,
                 crosshair: true,
@@ -659,9 +684,9 @@
                 min: 0,
                 max: yMax,
                 tickInterval: Math.ceil(yMax / 5),
-                title: {text: ""},
+                title: { text: "" },
             },
-            tooltip: {enabled: true, pointFormat: "<b>{point.y}</b>"},
+            tooltip: { enabled: true, pointFormat: "<b>{point.y}</b>" },
             plotOptions: {
                 column: {
                     cursor: "pointer",
@@ -687,7 +712,7 @@
         return chart;
     }
 
-    function renderTopRejectTable(tableId, data, cols) {
+    function renderTable(tableId, data, cols) {
         const table = document.querySelector("#" + tableId);
         if (!table) return;
 
@@ -720,35 +745,122 @@
             .join("");
     }
 
+    async function fetchIQCLot(page = 0, size = 20, materialType = null) {
+        try {
+            const params = new URLSearchParams({ page, size });
+
+            if (fromDate) params.append("fromDate", fromDate);
+            if (toDate) params.append("toDate", toDate);
+
+            if (materialType) params.append("materialType", materialType);
+
+            const res = await fetch(`/production-system/api/iqc/iqc-lot?\${params}`);
+            if (!res.ok) throw new Error(`HTTP \${res.status}`);
+
+            const json = await res.json();
+            return json.data || [];
+        } catch (err) {
+            console.error("error:", err);
+            return [];
+        }
+    }
+
+    async function fetchNCMR(page = 0, size = 20, materialType = null) {
+        try {
+            const params = new URLSearchParams({ page, size });
+
+            if (fromDate) params.append("fromDate", fromDate);
+            if (toDate) params.append("toDate", toDate);
+
+            if (materialType) params.append("materialType", materialType);
+
+            const res = await fetch(`/production-system/api/iqc/ncmr?\${params}`);
+            if (!res.ok) throw new Error(`HTTP \${res.status}`);
+
+            const json = await res.json();
+            return json.data || [];
+        } catch (err) {
+            console.error("error:", err);
+            return [];
+        }
+    }
+
     const TABLE1_COLUMNS = [
-        {key: "materialType", label: "Material Type"},
-        {key: "mfrcode", label: "MFR Code"},
-        {key: "mfrname", label: "MFR Name"},
-        {key: "numberRecord", label: "Reject Qty"},
-        {key: "model", label: "Model"},
+        { key: "materialType", label: "Material Type" },
+        { key: "mfrcode", label: "MFR Code" },
+        { key: "mfrname", label: "MFR Name" },
+        { key: "numberRecord", label: "Reject Qty" },
+        { key: "model", label: "Model" },
     ];
 
     const TABLE2_COLUMNS = [
-        {key: "mfrcode", label: "MFR Code"},
-        {key: "mfrname", label: "MFR Name"},
-        {key: "numberRecord", label: "Reject Qty"},
-        {key: "model", label: "Model"},
-        {key: "materialType", label: "Material Type"},
+        { key: "mfrcode", label: "MFR Code" },
+        { key: "mfrname", label: "MFR Name" },
+        { key: "numberRecord", label: "Reject Qty" },
+        { key: "model", label: "Model" },
+        { key: "materialType", label: "Material Type" },
     ];
 
     const TABLE3_COLUMNS = [
-        {key: "model", label: "Model"},
-        {key: "mfrcode", label: "MFR Code"},
-        {key: "mfrname", label: "MFR Name"},
-        {key: "numberRecord", label: "Reject Qty"},
-        {key: "materialType", label: "Material Type"},
+        { key: "model", label: "Model" },
+        { key: "mfrcode", label: "MFR Code" },
+        { key: "mfrname", label: "MFR Name" },
+        { key: "numberRecord", label: "Reject Qty" },
+        { key: "materialType", label: "Material Type" },
     ];
 
-    const currentTableFilters = {
-        "table-1": null,
-        "table-2": null,
-        "table-3": null,
-    };
+    const TABLE4_COLUMNS = [
+        { key: "ncmrNo", label: "NCMR No" },
+        { key: "docNo", label: "Doc No" },
+        { key: "caseOwner", label: "Case Owner" },
+        { key: "department", label: "Department" },
+        { key: "custKpNo", label: "KpNo" },
+        { key: "priorityFlag", label: "Priority" },
+        { key: "mfrName", label: "MFR Name" },
+        { key: "editEmp", label: "Edit Emp" },
+        { key: "inspectionDate", label: "Inspection Date" },
+        { key: "rejectReason", label: "Reject Reason" },
+        { key: "improvementAction", label: "Improvement Action" },
+        { key: "judgement", label: "Judgement" },
+        { key: "nextStep", label: "Next-Step" },
+        { key: "status", label: "Status" },
+        { key: "agingDay", label: "Aging Day" },
+    ];
+
+    const TABLE5_COLUMNS = [
+        { key: "docNo", label: "Doc No" },
+        { key: "custKpNo", label: "KpNo" },
+        { key: "poNo", label: "Po No" },
+        { key: "poItem", label: "Item" },
+        { key: "mfrCode", label: "MFR Code" },
+        { key: "mfrName", label: "MFR Name" },
+        { key: "materialType", label: "Type" },
+        { key: "floor", label: "Floor" },
+        { key: "receiveTime", label: "Receive Time" },
+        { key: "iqcEmp", label: "IQC Emp" },
+        { key: "iqcStatus", label: "IQC Status" },
+        { key: "iqcRemark", label: "IQC Remark" },
+        { key: "iqcQty", label: "IQC Quantity" },
+        { key: "iqcTime", label: "IQC Time" },
+    ];
+
+    function handleDonutClick(containerId, materialType) {
+        if (containerId === "donut-chart-1") {
+            if (donutFilters.materialTypeNCMR === materialType) {
+                donutFilters.materialTypeNCMR = null;
+            } else {
+                donutFilters.materialTypeNCMR = materialType;
+            }
+            loadTable5();
+        } else if (containerId === "donut-chart-2") {
+            if (donutFilters.materialTypeIQC === materialType) {
+                donutFilters.materialTypeIQC = null;
+            } else {
+                donutFilters.materialTypeIQC = materialType;
+            }
+            loadTable4();
+        }
+    }
 
     function handleColumnClick(containerId, category) {
         if (containerId === "col-chart-3") {
@@ -758,13 +870,13 @@
             const fullData = dataset.table1Data;
             const tableId = "table-1";
 
-            if (currentTableFilters[tableId] === normalizedCategory) {
-                currentTableFilters[tableId] = null;
-                renderTopRejectTable(tableId, fullData, TABLE1_COLUMNS);
+            if (lotTableFilters[tableId] === normalizedCategory) {
+                lotTableFilters[tableId] = null;
+                renderTable(tableId, fullData, TABLE1_COLUMNS);
             } else {
-                currentTableFilters[tableId] = normalizedCategory;
+                lotTableFilters[tableId] = normalizedCategory;
                 const filtered = fullData.filter((row) => (row[key] != null ? row[key] : "N/A") === normalizedCategory);
-                renderTopRejectTable(tableId, filtered, TABLE1_COLUMNS);
+                renderTable(tableId, filtered, TABLE1_COLUMNS);
             }
         } else if (containerId === "col-chart-4") {
             if (!dataset.table2Data) return;
@@ -773,13 +885,13 @@
             const fullData = dataset.table2Data;
             const tableId = "table-2";
 
-            if (currentTableFilters[tableId] === normalizedCategory) {
-                currentTableFilters[tableId] = null;
-                renderTopRejectTable(tableId, fullData, TABLE2_COLUMNS);
+            if (lotTableFilters[tableId] === normalizedCategory) {
+                lotTableFilters[tableId] = null;
+                renderTable(tableId, fullData, TABLE2_COLUMNS);
             } else {
-                currentTableFilters[tableId] = normalizedCategory;
+                lotTableFilters[tableId] = normalizedCategory;
                 const filtered = fullData.filter((row) => (row[key] != null ? row[key] : "N/A") === normalizedCategory);
-                renderTopRejectTable(tableId, filtered, TABLE2_COLUMNS);
+                renderTable(tableId, filtered, TABLE2_COLUMNS);
             }
         } else if (containerId === "col-chart-5") {
             if (!dataset.table3Data) return;
@@ -788,13 +900,13 @@
             const fullData = dataset.table3Data;
             const tableId = "table-3";
 
-            if (currentTableFilters[tableId] === normalizedCategory) {
-                currentTableFilters[tableId] = null;
-                renderTopRejectTable(tableId, fullData, TABLE3_COLUMNS);
+            if (lotTableFilters[tableId] === normalizedCategory) {
+                lotTableFilters[tableId] = null;
+                renderTable(tableId, fullData, TABLE3_COLUMNS);
             } else {
-                currentTableFilters[tableId] = normalizedCategory;
+                lotTableFilters[tableId] = normalizedCategory;
                 const filtered = fullData.filter((row) => (row[key] != null ? row[key] : "N/A") === normalizedCategory);
-                renderTopRejectTable(tableId, filtered, TABLE3_COLUMNS);
+                renderTable(tableId, filtered, TABLE3_COLUMNS);
             }
         }
     }
@@ -835,19 +947,31 @@
     async function loadTable1() {
         const data = await fetchTopReject("MaterialTypeAndMFR");
         dataset.table1Data = data || [];
-        renderTopRejectTable("table-1", dataset.table1Data, TABLE1_COLUMNS);
+        renderTable("table-1", dataset.table1Data, TABLE1_COLUMNS);
     }
 
     async function loadTable2() {
         const data = await fetchTopReject("MFR");
         dataset.table2Data = data || [];
-        renderTopRejectTable("table-2", dataset.table2Data, TABLE2_COLUMNS);
+        renderTable("table-2", dataset.table2Data, TABLE2_COLUMNS);
     }
 
     async function loadTable3() {
         const data = await fetchTopReject("ModelAndMFR");
         dataset.table3Data = data || [];
-        renderTopRejectTable("table-3", dataset.table3Data, TABLE3_COLUMNS);
+        renderTable("table-3", dataset.table3Data, TABLE3_COLUMNS);
+    }
+
+    async function loadTable4() {
+        const data = await fetchIQCLot(0, 20, donutFilters.materialTypeIQC);
+        dataset.table4Data = data;
+        renderTable("table-4", data, TABLE4_COLUMNS);
+    }
+
+    async function loadTable5() {
+        const data = await fetchNCMR(0, 20, donutFilters.materialTypeNCMR);
+        dataset.table5Data = data;
+        renderTable("table-5", data, TABLE5_COLUMNS);
     }
 
     async function loadAllTopReject() {
@@ -879,8 +1003,8 @@
 
     async function getDataLotInject() {
         try {
-            const slTimeElement = document.getElementById("sl-time");
-            const selected = slTimeElement && slTimeElement.value ? slTimeElement.value : "today";
+            const slTime = document.getElementById("sl-time");
+            const selected = slTime && slTime.value ? slTime.value : "today";
 
             let fromMoment = moment();
             let toMoment = moment();
@@ -963,14 +1087,6 @@
         renderMirrorChart("col-chart-2", dailyData.xLabels, dailyData.inspected, dailyData.rejected);
     }
 
-    function drawLotRejectCharts(result) {
-        const weeklyData = processWeekData(result);
-        renderMirrorChart("col-chart-1", weeklyData.xLabels, weeklyData.inspected, weeklyData.rejected);
-
-        const dailyData = processDayData(result);
-        renderMirrorChart("col-chart-2", dailyData.xLabels, dailyData.inspected, dailyData.rejected);
-    }
-
     const processWeekData = (result) => {
         const xLabels = [];
         const inspected = [];
@@ -982,7 +1098,7 @@
             rejected.push(week.lotRejectedTotal || 0);
         });
 
-        return {xLabels, inspected, rejected};
+        return { xLabels, inspected, rejected };
     };
 
     const processDayData = (result) => {
@@ -998,7 +1114,7 @@
             });
         });
 
-        return {xLabels, inspected, rejected};
+        return { xLabels, inspected, rejected };
     };
 
     const renderMirrorChart = (chartId, xLabels, checkIn, checkOut) => {
@@ -1049,27 +1165,27 @@
                 lineWidth: 0,
                 tickLength: 5,
                 offset: -105,
-                labels: {align: "center", y: 0},
+                labels: { align: "center", y: 0 },
             },
             yAxis: [
-                {title: null, height: "43%", offset: 0, softMax: 600},
-                {title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: 600},
+                { title: null, height: "43%", offset: 0, softMax: 600 },
+                { title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: 600 },
             ],
-            tooltip: {enabled: false},
-            legend: {enabled: false},
+            tooltip: { enabled: false },
+            legend: { enabled: false },
             plotOptions: {
                 column: {
                     grouping: false,
                     maxPointWidth: 30,
                     dataLabels: {
                         allowOverlap: true,
-                        style: {textOutline: "1px contrast"},
+                        style: { textOutline: "1px contrast" },
                         rotation: -90,
                     },
                 },
             },
             series: [
-                {name: "Inspected", color: "#fddd60", data: checkIn, yAxis: 0},
+                { name: "Inspected", color: "#fddd60", data: checkIn, yAxis: 0 },
                 {
                     name: "Rejected",
                     color: "#7cffb2",
@@ -1090,31 +1206,7 @@
         return chart;
     };
 
-    async function loadLotRejectWeeklyChart() {
-        const range = getDateRangeLastWeeks(8);
-        const result = await getLotRejectDataWithRange(range.from, range.to);
-        if (!result) return;
-
-        const weeklyData = processWeekData(result);
-        renderMirrorChart("col-chart-1", weeklyData.xLabels, weeklyData.inspected, weeklyData.rejected);
-    }
-
-    async function loadLotRejectDailyChart() {
-        const range = getDateRangeLastDays(7);
-        const result = await getLotRejectDataWithRange(range.from, range.to);
-        if (!result) return;
-
-        const dailyData = processDayData(result);
-        renderMirrorChart("col-chart-2", dailyData.xLabels, dailyData.inspected, dailyData.rejected);
-    }
-
-    function drawLotRejectCharts(result) {
-        const weeklyData = processWeekData(result);
-        renderMirrorChart("col-chart-1", weeklyData.xLabels, weeklyData.inspected, weeklyData.rejected);
-
-        const dailyData = processDayData(result);
-        renderMirrorChart("col-chart-2", dailyData.xLabels, dailyData.inspected, dailyData.rejected);
-    }
+    async function fetchDataIQC(page, size) {}
 
     const loadData = async () => {
         getDataCPN();
@@ -1134,6 +1226,8 @@
         loadDonutNCMR();
         loadAllTopReject();
         getDataCPN();
+        loadTable4();
+        loadTable5();
 
         selectElement.addEventListener("change", function () {
             const selectedOption = this.value;
@@ -1143,14 +1237,16 @@
             loadDonutNCMR();
             loadAllTopReject();
             getDataCPN();
+            loadTable4();
+            loadTable5();
         });
 
-        const slTimeElement = document.getElementById("sl-time");
-        if (slTimeElement) {
-            if (!slTimeElement.value) {
-                slTimeElement.selectedIndex = 0;
+        const slTime = document.getElementById("sl-time");
+        if (slTime) {
+            if (!slTime.value) {
+                slTime.selectedIndex = 0;
             }
-            slTimeElement.addEventListener("change", function () {
+            slTime.addEventListener("change", function () {
                 getDataLotInject();
             });
         }
