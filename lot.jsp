@@ -1,9 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <link rel="stylesheet" href="/production-system/assets/plugins/daterangepicker/daterangepicker.css" />
+<link rel="stylesheet" href="/production-system/assets/plugins/bootstrap-icons/bootstrap-icons.css" />
 <script src="/production-system/assets/plugins/jquery/jquery.min.js"></script>
 <script src="/production-system/assets/plugins/daterangepicker/moment.min.js"></script>
 <script src="/production-system/assets/plugins/daterangepicker/daterangepicker.js"></script>
-<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="/production-system/assets/plugins/highcharts/highcharts.js"></script>
 
 <style>
     .component-wrapper {
@@ -28,11 +29,11 @@
     }
 
     .component-item .chart-box {
-        height: 25vh;
+        height: 30vh;
     }
 
     .component-item .table-box {
-        height: 25vh;
+        height: 30vh;
         overflow: auto;
     }
 
@@ -42,9 +43,23 @@
     }
 
     .component-title {
-        font-size: 1.12rem;
+        font-size: 1rem;
         margin: 0;
         padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-badge {
+        display: inline-block;
+        background-color: #e74c3c;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: bold;
+        white-space: nowrap;
     }
 
     .text-span {
@@ -78,7 +93,7 @@
         --border-color: #6290b5;
         margin-bottom: 0;
         border-right: 1px solid #37567f;
-        border-top: 1px solid #37567f;
+        /* border-top: 1px solid #37567f; */
     }
 
     .table th,
@@ -98,10 +113,12 @@
         top: 0;
         z-index: 20;
         background-color: #264b8b;
+        font-size: 0.7rem;
+        /* border-top: 1px solid var(--border-color); */
     }
 
     .table tbody td {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         background-color: transparent;
     }
 
@@ -129,6 +146,123 @@
         background: #0c1b40;
         color: #fff;
     }
+
+    [id^="pagination-table"] {
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        gap: 5px;
+    }
+
+    [id^="pagination-table"] button {
+        border: 1px solid #0a58ca;
+        background-color: transparent;
+        color: #0a58ca;
+        border-radius: 5px;
+        min-width: 2rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        height: 2rem;
+        font-size: 1rem;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    [id^="pagination-table"] button:hover {
+        background-color: #0a58ca;
+        color: #fff;
+    }
+
+    [id^="pagination-table"] button.active {
+        background-color: #4982d8;
+        color: #fff;
+    }
+
+    [id^="pagination-table"] button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        color: #888;
+        border-color: #444;
+    }
+
+    ::-webkit-scrollbar {
+        width: 0.3rem;
+        height: 0.3rem;
+    }
+
+    /* Nền của scrollbar */
+    ::-webkit-scrollbar-track {
+        background: #acacac;
+        border-radius: 0px;
+    }
+
+    /* Thanh cuộn */
+    ::-webkit-scrollbar-thumb {
+        background: #264b8b;
+        border-radius: 0px;
+        /* background-color: rgba(255, 235, 59, 0.637); */
+    }
+
+    .filter-badge {
+        background-color: rgb(8, 58, 143);
+        font-size: 0.7rem;
+        padding: 0rem 0.3rem;
+    }
+
+    .filter-badge .bi-x:hover {
+        color: #ffc107;
+    }
+
+    .form-select,
+    .form-control {
+        background: transparent;
+        border: 1px solid #5264b6;
+        color: #000 !important;
+        border-radius: 6px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+
+    .form-select:focus,
+    .form-control:focus {
+        background: #2a2d3a;
+        border-color: #5a5d6a;
+        color: #fff;
+        box-shadow: none;
+    }
+
+    .no-data {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        background: transparent;
+    }
+
+    .cpnCustom {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .cpnCustom > .row {
+        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .cpnCustom .component-wrapper {
+        display: flex;
+    }
+
+    .cpnCustom .component-wrapper > .component-item {
+        flex: 1;
+    }
 </style>
 
 <div class="container-fluid">
@@ -139,94 +273,83 @@
     <spring:message code="logout" var="logout" />
 
     <jsp:include page="/WEB-INF/jsp/common/header-dashboard.jsp">
-        <jsp:param name="titlePage" value="Apollo & Rhea IQC Inspection Report" />
+        <jsp:param name="titlePage" value="IQC Inspection Report" />
         <jsp:param name="subTitlePage" value="" />
         <jsp:param name="vietnamese" value="<%=pageContext.getAttribute(\"vietnamese\") %>" /> <jsp:param name="chinese"
-        value="<%= pageContext.getAttribute(\"chinese\") %>" /> <jsp:param name="english" value="<%=
-        pageContext.getAttribute(\"english\") %>" /> <jsp:param name="profile"
-        value="<%=pageContext.getAttribute(\"profile\") %>" /> <jsp:param name="logout" value="<%=
-        pageContext.getAttribute(\"logout\") %>" />
+        value="<%=pageContext.getAttribute(\"chinese\") %>" /> <jsp:param name="english"
+        value="<%=pageContext.getAttribute(\"english\") %>" /> <jsp:param name="profile"
+        value="<%=pageContext.getAttribute(\"profile\") %>" /> <jsp:param name="logout"
+        value="<%=pageContext.getAttribute(\"logout\") %>" />
     </jsp:include>
     <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
-        <option value="today" selected>Time: Today</option>
+        <option value="today">Time: Today</option>
         <option value="7">Time: Last 7 Days</option>
-        <option value="30">Time: Last 30 Days</option>
+        <option value="30" selected>Time: Last 30 Days</option>
         <option value="custom">Time: Custom</option>
     </select>
     <div class="container-fluid p-0 content-wrapper">
         <div class="row">
             <div class="col-md-3 component-wrapper">
                 <div class="component-item">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h5 class="component-title mb-0">Inspected Distribution by Material Type</h5>
-
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="component-title mb-0">
+                            Lot Rejected Rate <span style="font-size: 0.9rem">(Today)</span>
+                        </h5>
+                        <select name="" id="sl-time" class="form-select form-select-sm w-auto d-none">
+                            <option value="today" selected>Time: Today</option>
+                            <option value="7">Time: 7 Days Ago</option>
+                            <option value="30">Time: 30 Days Ago</option>
+                            <option value="custom">Time: Custom</option>
+                        </select>
                         <div id="daterangepicker-container" style="display: none; position: absolute">
                             <input type="text" id="daterangepicker" />
                         </div>
                     </div>
-                    <div class="component-body chart-box flex-grow-1" id="donut-chart-1"></div>
+
+                    <div class="row d-flex flex-column">
+                        <div class="col-md-12 component-wrapper">
+                            <div
+                                class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                            >
+                                <div class="component-title">Inspected</div>
+                                <span id="inspected" class="fw-bold text-warning text-span"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 component-wrapper">
+                            <div
+                                class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                            >
+                                <div class="component-title">Lot Rejected</div>
+                                <span id="lot-rejected" class="fw-bold text-warning text-span"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 component-wrapper">
+                            <div
+                                class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                            >
+                                <div class="component-title">LRR</div>
+                                <span id="lrr" class="fw-bold text-warning text-span"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="col-md-9">
-                <div class="row component-wrapper">
-                    <div class="component-item">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="component-title mb-0">Lot Rejected Rate (Today)</h5>
-                            <select name="" id="sl-time" class="form-select form-select-sm w-auto d-none">
-                                <option value="today" selected>Time: Today</option>
-                                <option value="7">Time: 7 Days Ago</option>
-                                <option value="30">Time: 30 Days Ago</option>
-                                <option value="custom">Time: Custom</option>
-                            </select>
-                            <div id="daterangepicker-container" style="display: none; position: absolute">
-                                <input type="text" id="daterangepicker" />
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 component-wrapper">
-                                <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
-                                >
-                                    <div class="component-title">Inspected</div>
-                                    <span id="inspected" class="fw-bold text-warning text-span"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4 component-wrapper">
-                                <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
-                                >
-                                    <div class="component-title">Lot Rejected</div>
-                                    <span id="lot-rejected" class="fw-bold text-warning text-span"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4 component-wrapper">
-                                <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
-                                >
-                                    <div class="component-title">LRR</div>
-                                    <span id="lrr" class="fw-bold text-warning text-span"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
+                <div class="row" style="height: 100%;">
                     <div class="col-md-6 component-wrapper">
-                        <div class="component-item">
-                            <h5 class="component-title">LLR By Weeks</h5>
-                            <div class="component-body chart-box" id="col-chart-1"></div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 component-wrapper">
-                        <div class="component-item">
+                        <div class="component-item" style="height: 100%;">
                             <h5 class="component-title">LLR Last 7 Days</h5>
-                            <div class="component-body chart-box" id="col-chart-2"></div>
+                            <div class="component-body chart-box flex-grow-1 " id="col-chart-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 component-wrapper">
+                        <div class="component-item" style="height: 100%;">
+                            <h5 class="component-title">LLR By Weeks</h5>
+                            <div class="component-body chart-box flex-grow-1 " id="col-chart-1"></div>
                         </div>
                     </div>
                 </div>
@@ -237,8 +360,7 @@
             <div class="col-md-3 component-wrapper">
                 <div class="component-item">
                     <h5 class="component-title">CPN Status</h5>
-
-                    <div class="component-body">
+                    <div class="component-body cpnCustom" id="">
                         <div class="row">
                             <div class="col-md-6 component-wrapper">
                                 <div
@@ -277,9 +399,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <h5 class="component-title mt-1">NCMR Status</h5>
-                    <div class="component-body chart-box flex-grow-1" id="donut-chart-2"></div>
                 </div>
             </div>
 
@@ -308,7 +427,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4 component-wrapper">
+                    <div class="col-md-4 component-wrapper d-none">
                         <div class="component-item">
                             <h5 class="component-title">Lot Rejected By Material Type Details</h5>
                             <div class="component-body table-box">
@@ -320,7 +439,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4 component-wrapper">
+                    <div class="col-md-4 component-wrapper d-none">
                         <div class="component-item">
                             <h5 class="component-title">Top Lot Rejected By MFR Details</h5>
                             <div class="component-body table-box">
@@ -332,7 +451,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4 component-wrapper">
+                    <div class="col-md-4 component-wrapper d-none">
                         <div class="component-item">
                             <h5 class="component-title">Top Lot Rejected By Models Details</h5>
                             <div class="component-body table-box">
@@ -348,7 +467,41 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6 component-wrapper">
+            <div class="col-md-3 component-wrapper">
+                <div class="component-item">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="component-title mb-0">To be Inspected Distribution by Material Type</h5>
+
+                        <div id="daterangepicker-container" style="display: none; position: absolute">
+                            <input type="text" id="daterangepicker" />
+                        </div>
+                    </div>
+                    <div class="component-body chart-box flex-grow-1" id="donut-chart-1"></div>
+                </div>
+            </div>
+
+            <div class="col-md-9 component-wrapper">
+                <div class="component-item">
+                    <h5 class="component-title">Inspection List</h5>
+                    <div class="component-body table-box">
+                        <table class="table table-sm table-striped" id="table-5">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-table-5" style="margin-top: 0.4rem"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 component-wrapper">
+                <div class="component-item">
+                    <h5 class="component-title mt-1">NCMR Status</h5>
+                    <div class="component-body chart-box flex-grow-1" id="donut-chart-2"></div>
+                </div>
+            </div>
+            <div class="col-md-9 component-wrapper">
                 <div class="component-item">
                     <h5 class="component-title">NCMR List</h5>
                     <div class="component-body table-box">
@@ -359,23 +512,13 @@
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 component-wrapper">
-                <div class="component-item">
-                    <h5 class="component-title">Inspection List</h5>
-                    <div class="component-body table-box">
-                        <table class="table table-sm table-striped" id="table-5">
-                            <thead></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
-<script>
+<script type="module" src="/production-system/js/modules/applib.js"></script>
+<script type="module">
+    import { DataTableLib } from "/production-system/js/modules/applib.js";
     const dataset = {};
     const chartsList = [];
     const donutFilters = {
@@ -387,8 +530,12 @@
         "table-2": null,
         "table-3": null,
     };
-    
     const API_TOP_REJECT = "/production-system/api/iqc/top-reject";
+    let table1Instance = null;
+    let table2Instance = null;
+    let table3Instance = null;
+    let table4Instance = null;
+    let table5Instance = null;
 
     function applyScaleToChart(chart) {
         if (!chart) return;
@@ -413,10 +560,10 @@
             fromDate = getFormattedDate(moment(), "00:00:00");
             toDate = getFormattedDate(moment(), "23:59:59");
         } else if (selectedOption === "7") {
-            fromDate = getFormattedDate(moment().subtract(7, "days"), "00:00:00");
+            fromDate = getFormattedDate(moment().subtract(6, "days"), "00:00:00");
             toDate = getFormattedDate(moment(), "23:59:59");
         } else if (selectedOption === "30") {
-            fromDate = getFormattedDate(moment().subtract(30, "days"), "00:00:00");
+            fromDate = getFormattedDate(moment().subtract(29, "days"), "00:00:00");
             toDate = getFormattedDate(moment(), "23:59:59");
         }
     }
@@ -434,7 +581,7 @@
             if (!data || !data.length) return [];
 
             return data.map((i) => ({
-                name: i.materialType,
+                name: i.materialType == null ? "Others" : i.materialType,
                 y: i.totalRecord,
             }));
         } catch (error) {
@@ -456,7 +603,7 @@
             if (!data || !data.length) return [];
 
             return data.map((i) => ({
-                name: i.materialType,
+                name: i.materialType == null ? "Others" : i.materialType,
                 y: i.totalRecord,
             }));
         } catch (error) {
@@ -530,6 +677,11 @@
     };
 
     function drawDonutChart(containerId, chartData) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            return null;
+        }
+
         const chart = Highcharts.chart(containerId, {
             chart: {
                 type: "pie",
@@ -578,7 +730,7 @@
             },
             title: { text: "" },
             tooltip: { pointFormat: "{series.name}: <b>{point.percentage:.0f}%</b>" },
-            legend: { enabled: true, itemStyle: { color: "#fff" } },
+            legend: { enabled: true, itemStyle: { color: "#fff", fontSize: "0.55rem" } },
             plotOptions: {
                 pie: {
                     allowPointSelect: true,
@@ -594,7 +746,7 @@
                         enabled: true,
                         distance: 20,
                         format: "{point.name}<br/>{point.y} ({point.percentage:.2f}%)",
-                        style: { fontSize: "0.7rem", color: "#fff", textOutline: "none" },
+                        style: { fontSize: "0.65rem", color: "#fff", textOutline: "none" },
                     },
                     showInLegend: true,
                 },
@@ -603,7 +755,7 @@
                 {
                     name: "Count",
                     colorByPoint: true,
-                    innerSize: "75%",
+                    innerSize: "70%",
                     data: chartData,
                 },
             ],
@@ -627,7 +779,6 @@
         drawDonutChart("donut-chart-2", chartData);
     }
 
-
     async function fetchTopReject(fieldName) {
         try {
             const params = new URLSearchParams({
@@ -649,6 +800,13 @@
     }
 
     function drawColumnChart(containerId, categories, values) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            return null;
+        }
+
+        container.innerHTML = "";
+
         const maxVal = Math.max(...values, 1);
         const yMax = Math.ceil((maxVal * 1.2) / 5) * 5;
 
@@ -656,6 +814,7 @@
             chart: {
                 type: "column",
                 spacing: [10, 10, 10, 10],
+                marginBottom: 80,
                 events: {
                     render() {
                         applyScaleToChart(this);
@@ -672,10 +831,14 @@
                     style: {
                         fontSize: "9px",
                         fontWeight: "700",
-                        whiteSpace: "normal",
-                        width: "20px",
-                        lineHeight: "0.7rem",
+                        whiteSpace: "nowrap",
+                        width: "50px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        // lineHeight: "1rem",
                     },
+                    rotation: 75,
+                    align: "left",
                 },
                 lineWidth: 1,
                 tickLength: 0,
@@ -712,77 +875,14 @@
         return chart;
     }
 
-    function renderTable(tableId, data, cols) {
-        const table = document.querySelector("#" + tableId);
-        if (!table) return;
-
-        const thead = table.querySelector("thead");
-        const tbody = table.querySelector("tbody");
-
-        thead.innerHTML =
-            "<tr>" +
-            cols
-                .map(function (c) {
-                    return "<th>" + c.label + "</th>";
-                })
-                .join("") +
-            "</tr>";
-
-        if (!data || !data.length) {
-            tbody.innerHTML = '<tr><td colspan="' + cols.length + '">No data</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = data
-            .map(function (row, idx) {
-                const cells = cols
-                    .map(function (c) {
-                        return "<td>" + (row[c.key] != null ? row[c.key] : "-") + "</td>";
-                    })
-                    .join("");
-                return '<tr class="' + (idx % 2 === 1 ? "odd" : "") + '">' + cells + "</tr>";
-            })
-            .join("");
-    }
-
-    async function fetchIQCLot(page = 0, size = 20, materialType = null) {
-        try {
-            const params = new URLSearchParams({ page, size });
-
-            if (fromDate) params.append("fromDate", fromDate);
-            if (toDate) params.append("toDate", toDate);
-
-            if (materialType) params.append("materialType", materialType);
-
-            const res = await fetch(`/production-system/api/iqc/iqc-lot?\${params}`);
-            if (!res.ok) throw new Error(`HTTP \${res.status}`);
-
-            const json = await res.json();
-            return json.data || [];
-        } catch (err) {
-            console.error("error:", err);
-            return [];
-        }
-    }
-
-    async function fetchNCMR(page = 0, size = 20, materialType = null) {
-        try {
-            const params = new URLSearchParams({ page, size });
-
-            if (fromDate) params.append("fromDate", fromDate);
-            if (toDate) params.append("toDate", toDate);
-
-            if (materialType) params.append("materialType", materialType);
-
-            const res = await fetch(`/production-system/api/iqc/ncmr?\${params}`);
-            if (!res.ok) throw new Error(`HTTP \${res.status}`);
-
-            const json = await res.json();
-            return json.data || [];
-        } catch (err) {
-            console.error("error:", err);
-            return [];
-        }
+    function showNoData(containerId, message = "NO DATA") {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = "";
+        const el = document.createElement("div");
+        el.className = "no-data";
+        el.textContent = message;
+        container.appendChild(el);
     }
 
     const TABLE1_COLUMNS = [
@@ -790,15 +890,15 @@
         { key: "mfrcode", label: "MFR Code" },
         { key: "mfrname", label: "MFR Name" },
         { key: "numberRecord", label: "Reject Qty" },
-        { key: "model", label: "Model" },
+        // { key: "model", label: "Model" },
     ];
 
     const TABLE2_COLUMNS = [
         { key: "mfrcode", label: "MFR Code" },
         { key: "mfrname", label: "MFR Name" },
         { key: "numberRecord", label: "Reject Qty" },
-        { key: "model", label: "Model" },
-        { key: "materialType", label: "Material Type" },
+        // { key: "model", label: "Model" },
+        // { key: "materialType", label: "Material Type" },
     ];
 
     const TABLE3_COLUMNS = [
@@ -806,10 +906,11 @@
         { key: "mfrcode", label: "MFR Code" },
         { key: "mfrname", label: "MFR Name" },
         { key: "numberRecord", label: "Reject Qty" },
-        { key: "materialType", label: "Material Type" },
+        // { key: "materialType", label: "Material Type" },
     ];
 
     const TABLE4_COLUMNS = [
+        { key: "stt", label: "#" },
         { key: "ncmrNo", label: "NCMR No" },
         { key: "docNo", label: "Doc No" },
         { key: "caseOwner", label: "Case Owner" },
@@ -828,6 +929,7 @@
     ];
 
     const TABLE5_COLUMNS = [
+        { key: "stt", label: "#" },
         { key: "docNo", label: "Doc No" },
         { key: "custKpNo", label: "KpNo" },
         { key: "poNo", label: "Po No" },
@@ -846,74 +948,128 @@
 
     function handleDonutClick(containerId, materialType) {
         if (containerId === "donut-chart-1") {
-            if (donutFilters.materialTypeNCMR === materialType) {
-                donutFilters.materialTypeNCMR = null;
-            } else {
-                donutFilters.materialTypeNCMR = materialType;
+            donutFilters.materialTypeIQC = donutFilters.materialTypeIQC === materialType ? null : materialType;
+            updateTableTitleBadge("table-5", donutFilters.materialTypeIQC);
+            renderTable5();
+
+            const table5 = document.getElementById("table-5");
+            if (table5) {
+                setTimeout(() => {
+                    table5.closest(".component-item").scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                    });
+                }, 100);
             }
-            loadTable5();
         } else if (containerId === "donut-chart-2") {
-            if (donutFilters.materialTypeIQC === materialType) {
-                donutFilters.materialTypeIQC = null;
-            } else {
-                donutFilters.materialTypeIQC = materialType;
-            }
-            loadTable4();
+            donutFilters.materialTypeNCMR = donutFilters.materialTypeNCMR === materialType ? null : materialType;
+            updateTableTitleBadge("table-4", donutFilters.materialTypeNCMR);
+            renderTable4();
         }
     }
 
     function handleColumnClick(containerId, category) {
+        const cleanCategory =
+            typeof category === "string" ? category.replace(/<[^>]*>/g, "").trim() : String(category || "N/A");
+
         if (containerId === "col-chart-3") {
-            if (!dataset.table1Data) return;
-            const key = "materialType";
-            const normalizedCategory = category || "N/A";
-            const fullData = dataset.table1Data;
             const tableId = "table-1";
+            const filterKey = TABLE1_COLUMNS[0].key; // "materialType"
 
-            if (lotTableFilters[tableId] === normalizedCategory) {
+            if (lotTableFilters[tableId] === cleanCategory) {
                 lotTableFilters[tableId] = null;
-                renderTable(tableId, fullData, TABLE1_COLUMNS);
             } else {
-                lotTableFilters[tableId] = normalizedCategory;
-                const filtered = fullData.filter((row) => (row[key] != null ? row[key] : "N/A") === normalizedCategory);
-                renderTable(tableId, filtered, TABLE1_COLUMNS);
+                lotTableFilters[tableId] = cleanCategory;
             }
+            updateTableTitleBadge(tableId);
+            renderTable1();
         } else if (containerId === "col-chart-4") {
-            if (!dataset.table2Data) return;
-            const key = "mfrcode";
-            const normalizedCategory = category || "N/A";
-            const fullData = dataset.table2Data;
             const tableId = "table-2";
+            const filterKey = TABLE2_COLUMNS[0].key; // "mfrcode"
 
-            if (lotTableFilters[tableId] === normalizedCategory) {
+            if (lotTableFilters[tableId] === cleanCategory) {
                 lotTableFilters[tableId] = null;
-                renderTable(tableId, fullData, TABLE2_COLUMNS);
             } else {
-                lotTableFilters[tableId] = normalizedCategory;
-                const filtered = fullData.filter((row) => (row[key] != null ? row[key] : "N/A") === normalizedCategory);
-                renderTable(tableId, filtered, TABLE2_COLUMNS);
+                lotTableFilters[tableId] = cleanCategory;
             }
+            updateTableTitleBadge(tableId);
+            renderTable2();
         } else if (containerId === "col-chart-5") {
-            if (!dataset.table3Data) return;
-            const key = "model";
-            const normalizedCategory = category || "N/A";
-            const fullData = dataset.table3Data;
             const tableId = "table-3";
+            const filterKey = TABLE3_COLUMNS[0].key; // "model"
 
-            if (lotTableFilters[tableId] === normalizedCategory) {
+            if (lotTableFilters[tableId] === cleanCategory) {
                 lotTableFilters[tableId] = null;
-                renderTable(tableId, fullData, TABLE3_COLUMNS);
             } else {
-                lotTableFilters[tableId] = normalizedCategory;
-                const filtered = fullData.filter((row) => (row[key] != null ? row[key] : "N/A") === normalizedCategory);
-                renderTable(tableId, filtered, TABLE3_COLUMNS);
+                lotTableFilters[tableId] = cleanCategory;
             }
+            updateTableTitleBadge(tableId);
+            renderTable3();
+        }
+    }
+
+    function updateTableTitleBadge(tableId, filterValue) {
+        const tableElement = document.getElementById(tableId);
+        if (!tableElement) return;
+
+        const titleElement = tableElement.closest(".component-item").querySelector(".component-title");
+        if (!titleElement) return;
+
+        const existingBadge = titleElement.querySelector(".filter-badge");
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+
+        const filter = filterValue !== undefined ? filterValue : lotTableFilters[tableId];
+
+        if (filter) {
+            const badge = document.createElement("span");
+            badge.className = "filter-badge";
+            badge.style.display = "inline-flex";
+            badge.style.alignItems = "center";
+            badge.style.gap = "0.3rem";
+            badge.style.cursor = "pointer";
+
+            const text = document.createElement("span");
+            text.textContent = filter;
+
+            const closeBtn = document.createElement("span");
+            closeBtn.innerHTML = "<i class='bi bi-x'></i>";
+            closeBtn.style.fontSize = "1rem";
+            closeBtn.style.fontWeight = "normal";
+            closeBtn.style.lineHeight = "1.1";
+
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+
+                if (tableId === "table-4") {
+                    donutFilters.materialTypeNCMR = null;
+                    renderTable4();
+                } else if (tableId === "table-5") {
+                    donutFilters.materialTypeIQC = null;
+                    renderTable5();
+                } else {
+                    lotTableFilters[tableId] = null;
+                    if (tableId === "table-1") renderTable1();
+                    else if (tableId === "table-2") renderTable2();
+                    else if (tableId === "table-3") renderTable3();
+                }
+
+                updateTableTitleBadge(tableId);
+            };
+
+            badge.appendChild(text);
+            badge.appendChild(closeBtn);
+            titleElement.appendChild(badge);
         }
     }
 
     async function loadMaterialTypeChart() {
         const data = await fetchTopReject("MaterialType");
-        if (!data.length) return;
+        if (!data.length) {
+            showNoData("col-chart-3", "NO DATA");
+            return;
+        }
 
         const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
         const categories = top10.map((i) => i.materialType || "N/A");
@@ -924,7 +1080,10 @@
 
     async function loadMFRChart() {
         const data = await fetchTopReject("MFR");
-        if (!data.length) return;
+        if (!data.length) {
+            showNoData("col-chart-4", "NO DATA");
+            return;
+        }
 
         const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
         const categories = top10.map((i) => i.mfrcode || "N/A");
@@ -935,7 +1094,10 @@
 
     async function loadModelChart() {
         const data = await fetchTopReject("Model");
-        if (!data.length) return;
+        if (!data.length) {
+            showNoData("col-chart-5", "NO DATA");
+            return;
+        }
 
         const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
         const categories = top10.map((i) => i.model || "N/A");
@@ -944,44 +1106,374 @@
         drawColumnChart("col-chart-5", categories, values);
     }
 
-    async function loadTable1() {
-        const data = await fetchTopReject("MaterialTypeAndMFR");
-        dataset.table1Data = data || [];
-        renderTable("table-1", dataset.table1Data, TABLE1_COLUMNS);
+    async function renderTable1() {
+        const table = document.getElementById("table-1");
+        if (!table) return;
+
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        if (table1Instance) {
+            table1Instance.destroy();
+        }
+
+        table1Instance = new DataTableLib({
+            tableId: "table-1",
+            serverSide: true,
+            rows: 9999,
+            pagination: false,
+            paginationId: null,
+            emptyMessage: "NO DATA",
+            sort: false,
+
+            buildUrl: (page) => {
+                const params = new URLSearchParams({
+                    fieldName: "MaterialTypeAndMFR",
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    page: 0,
+                    size: 9999,
+                });
+                return `/production-system/api/iqc/top-reject?\${params}`;
+            },
+
+            formatData: (result) => {
+                let data = result?.data || [];
+                dataset.table1Data = data;
+
+                const filter = lotTableFilters["table-1"];
+                const firstColKey = TABLE1_COLUMNS[0].key; // "materialType"
+
+                if (filter) {
+                    data = data.filter((row) => {
+                        const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
+                        return cellValue === filter;
+                    });
+                }
+
+                result.total = data.length;
+                return data;
+            },
+
+            columnsConfig: TABLE1_COLUMNS.map((col) => ({ label: col.label })),
+
+            rowRenderer: (item, index, meta) => {
+                const page = meta?.currentPage ?? 1;
+                const size = meta?.rows ?? 10;
+                const stt = (page - 1) * size + index + 1;
+
+                if (!item || Object.keys(item).length === 0) {
+                    return `<td colspan="\${TABLE1_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                }
+
+                return TABLE1_COLUMNS.map((col) => `<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
+            },
+        });
+
+        await table1Instance.init();
     }
 
-    async function loadTable2() {
-        const data = await fetchTopReject("MFR");
-        dataset.table2Data = data || [];
-        renderTable("table-2", dataset.table2Data, TABLE2_COLUMNS);
+    async function renderTable2() {
+        const table = document.getElementById("table-2");
+        if (!table) return;
+
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        if (table2Instance) {
+            table2Instance.destroy();
+        }
+
+        table2Instance = new DataTableLib({
+            tableId: "table-2",
+            serverSide: true,
+            rows: 9999,
+            pagination: false,
+            paginationId: null,
+            emptyMessage: "NO DATA",
+            sort: false,
+
+            buildUrl: (page) => {
+                const params = new URLSearchParams({
+                    fieldName: "MFR",
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    page: 0,
+                    size: 9999,
+                });
+                return `/production-system/api/iqc/top-reject?\${params}`;
+            },
+
+            formatData: (result) => {
+                let data = result?.data || [];
+                dataset.table2Data = data;
+
+                const filter = lotTableFilters["table-2"];
+                const firstColKey = TABLE2_COLUMNS[0].key; // "mfrcode"
+
+                if (filter) {
+                    data = data.filter((row) => {
+                        const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
+                        return cellValue === filter;
+                    });
+                }
+
+                result.total = data.length;
+                return data;
+            },
+
+            columnsConfig: TABLE2_COLUMNS.map((col) => ({ label: col.label })),
+
+            rowRenderer: (item, index, meta) => {
+                const page = meta?.currentPage ?? 1;
+                const size = meta?.rows ?? 10;
+                const stt = (page - 1) * size + index + 1;
+
+                if (!item || Object.keys(item).length === 0) {
+                    return `<td colspan="\${TABLE2_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                }
+
+                return TABLE2_COLUMNS.map((col) => `<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
+            },
+        });
+
+        await table2Instance.init();
     }
 
-    async function loadTable3() {
-        const data = await fetchTopReject("ModelAndMFR");
-        dataset.table3Data = data || [];
-        renderTable("table-3", dataset.table3Data, TABLE3_COLUMNS);
+    async function renderTable3() {
+        const table = document.getElementById("table-3");
+        if (!table) return;
+
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        if (table3Instance) {
+            table3Instance.destroy();
+        }
+
+        table3Instance = new DataTableLib({
+            tableId: "table-3",
+            serverSide: true,
+            rows: 9999,
+            pagination: false,
+            paginationId: null,
+            emptyMessage: "NO DATA",
+            sort: false,
+
+            buildUrl: (page) => {
+                const params = new URLSearchParams({
+                    fieldName: "ModelAndMFR",
+                    fromDate: fromDate,
+                    toDate: toDate,
+                    page: 0,
+                    size: 9999,
+                });
+                return `/production-system/api/iqc/top-reject?\${params}`;
+            },
+
+            formatData: (result) => {
+                let data = result?.data || [];
+                dataset.table3Data = data;
+
+                const filter = lotTableFilters["table-3"];
+                const firstColKey = TABLE3_COLUMNS[0].key; // "model"
+
+                if (filter) {
+                    data = data.filter((row) => {
+                        const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
+                        return cellValue === filter;
+                    });
+                }
+
+                result.total = data.length;
+                return data;
+            },
+
+            columnsConfig: TABLE3_COLUMNS.map((col) => ({ label: col.label })),
+
+            rowRenderer: (item, index, meta) => {
+                const page = meta?.currentPage ?? 1;
+                const size = meta?.rows ?? 10;
+                const stt = (page - 1) * size + index + 1;
+
+                if (!item || Object.keys(item).length === 0) {
+                    return `<td colspan="\${TABLE3_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                }
+
+                return TABLE3_COLUMNS.map((col) => `<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
+            },
+        });
+
+        await table3Instance.init();
     }
 
-    async function loadTable4() {
-        const data = await fetchIQCLot(0, 20, donutFilters.materialTypeIQC);
-        dataset.table4Data = data;
-        renderTable("table-4", data, TABLE4_COLUMNS);
+    async function renderTable4() {
+        const table = document.getElementById("table-4");
+        if (!table) return;
+
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
+
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        if (table4Instance) {
+            table4Instance.destroy();
+        }
+
+        let paginationContainer = document.getElementById("pagination-table-4");
+        if (!paginationContainer) {
+            paginationContainer = document.createElement("div");
+            paginationContainer.id = "pagination-table-4";
+            paginationContainer.style.marginTop = "0.4rem";
+
+            const componentItem = table.closest(".component-item");
+            if (componentItem) {
+                componentItem.appendChild(paginationContainer);
+            }
+        }
+
+        table4Instance = new DataTableLib({
+            tableId: "table-4",
+            serverSide: true,
+            rows: 10,
+            paginationId: "pagination-table-4",
+            emptyMessage: "NO DATA",
+            sort: false,
+
+            buildUrl: (page) => {
+                const params = new URLSearchParams({
+                    page: page - 1,
+                    size: 10,
+                    fromDate: fromDate,
+                    toDate: toDate,
+                });
+
+                if (donutFilters.materialTypeNCMR) {
+                    params.append("materialType", donutFilters.materialTypeNCMR);
+                }
+
+                return `/production-system/api/iqc/ncmr?\${params}`;
+            },
+
+            formatData: (result) => {
+                result.total = result?.size || 0;
+                return result?.data || [];
+            },
+
+            columnsConfig: TABLE4_COLUMNS.map((col) => ({ label: col.label })),
+
+            rowRenderer: (item, index, meta) => {
+                const page = meta?.currentPage ?? 1;
+                const size = meta?.rows ?? 10;
+                const stt = (page - 1) * size + index + 1;
+
+                if (!item || Object.keys(item).length === 0) {
+                    return `<td colspan="\${TABLE4_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                }
+
+                const cells = [`<td>\${stt}</td>`];
+                TABLE4_COLUMNS.forEach((col) => {
+                    if (col.key === "stt") return;
+                    const value = item?.[col.key] != null ? item[col.key] : "-";
+                    if (col.key === "rejectReason" || col.key === "improvementAction") {
+                        cells.push(
+                            `<td style="max-width: 200px; word-wrap: break-word; white-space: normal;">\${value}</td>`
+                        );
+                    } else {
+                        cells.push(`<td>\${value}</td>`);
+                    }
+                });
+                return cells.join("");
+            },
+        });
+
+        await table4Instance.init();
     }
 
-    async function loadTable5() {
-        const data = await fetchNCMR(0, 20, donutFilters.materialTypeNCMR);
-        dataset.table5Data = data;
-        renderTable("table-5", data, TABLE5_COLUMNS);
+    async function renderTable5() {
+        const table = document.getElementById("table-5");
+        if (!table) return;
+
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        if (table5Instance) {
+            table5Instance.destroy();
+        }
+
+        table5Instance = new DataTableLib({
+            tableId: "table-5",
+            serverSide: true,
+            rows: 50,
+            paginationId: "pagination-table-5",
+            emptyMessage: "NO DATA",
+            sort: false,
+
+            buildUrl: (page) => {
+                const params = new URLSearchParams({
+                    page: page - 1,
+                    size: 50,
+                    fromDate: fromDate,
+                    toDate: toDate,
+                });
+
+                if (donutFilters.materialTypeIQC) {
+                    params.append("materialType", donutFilters.materialTypeIQC);
+                }
+
+                return `/production-system/api/iqc/iqc-lot?\${params}`;
+            },
+
+            formatData: (result) => {
+                result.total = result?.size || 0;
+                dataset.table5Data = result?.data || [];
+                return result?.data || [];
+            },
+
+            columnsConfig: TABLE5_COLUMNS.map((col) => ({ label: col.label })),
+
+            rowRenderer: (item, index, meta) => {
+                const page = meta?.currentPage ?? 1;
+                const size = meta?.rows ?? 10;
+                const stt = (page - 1) * size + index + 1;
+
+                if (!item || Object.keys(item).length === 0) {
+                    return `<td colspan="\${TABLE5_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                }
+
+                const cells = [`<td>\${stt}</td>`];
+                TABLE5_COLUMNS.forEach((col) => {
+                    if (col.key === "stt") return;
+                    cells.push(`<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`);
+                });
+                return cells.join("");
+            },
+        });
+
+        await table5Instance.init();
     }
+
+    // async function loadTable5() {
+    //     await renderTable5();
+    // }
 
     async function loadAllTopReject() {
         await Promise.all([
             loadMaterialTypeChart(),
             loadMFRChart(),
             loadModelChart(),
-            loadTable1(),
-            loadTable2(),
-            loadTable3(),
+            renderTable1(),
+            renderTable2(),
+            renderTable3(),
         ]);
     }
 
@@ -1013,10 +1505,10 @@
                 fromMoment = moment();
                 toMoment = moment();
             } else if (selected === "7") {
-                fromMoment = moment().subtract(7, "days");
+                fromMoment = moment().subtract(6, "days");
                 toMoment = moment();
             } else if (selected === "30") {
-                fromMoment = moment().subtract(30, "days");
+                fromMoment = moment().subtract(29, "days");
                 toMoment = moment();
             }
 
@@ -1040,8 +1532,10 @@
     }
 
     function getDateRangeLastWeeks(weeks) {
-        const start = moment().subtract(weeks, "weeks").startOf("week");
-        const end = moment().endOf("week");
+        const start = moment()
+            .subtract(weeks - 1, "weeks")
+            .startOf("isoWeek");
+        const end = moment().endOf("isoWeek");
         return {
             from: getFormattedDate(start, "00:00:00"),
             to: getFormattedDate(end, "23:59:59"),
@@ -1049,7 +1543,7 @@
     }
 
     function getDateRangeLastDays(days) {
-        const start = moment().subtract(days, "days");
+        const start = moment().subtract(days - 1, "days");
         const end = moment();
         return {
             from: getFormattedDate(start, "00:00:00"),
@@ -1093,7 +1587,7 @@
         const rejected = [];
 
         result.data.forEach((week) => {
-            xLabels.push(week.weekNumber);
+            xLabels.push(`W\${week.weekNumber}`);
             inspected.push(week.inspectedTotal || 0);
             rejected.push(week.lotRejectedTotal || 0);
         });
@@ -1108,7 +1602,8 @@
 
         result.data.forEach((week) => {
             week.data.forEach((day) => {
-                xLabels.push(day.workDate);
+                const formattedDate = day.workDate.split("-").slice(1).join("-");
+                xLabels.push(formattedDate);
                 inspected.push(day.inspectedTotal || 0);
                 rejected.push(day.lotRejectedTotal || 0);
             });
@@ -1118,6 +1613,17 @@
     };
 
     const renderMirrorChart = (chartId, xLabels, checkIn, checkOut) => {
+        const container = document.getElementById(chartId);
+        if (!container) {
+            return null;
+        }
+        const maxCheckOut = checkOut.reduce((a, b) => Math.max(a, b), 0);
+        const yMaxBottom = Math.ceil(maxCheckOut * 1.5);
+        const lineData = checkIn.map((inspected, i) => {
+            const rejected = checkOut[i] || 0;
+            return inspected > 0 ? parseFloat(((rejected / inspected) * 100).toFixed(2)) : 0;
+        });
+        const yMaxLine = Math.ceil(Math.max(...lineData) * 4);
         const chart = Highcharts.chart(chartId, {
             chart: {
                 type: "column",
@@ -1136,11 +1642,13 @@
                             btn.style.columnGap = "5px";
                             btn.style.margin = "5px";
                             btn.style.fontSize = "1rem";
-                            btn.style.color = series.visible ? series.color : "#ccc";
+                            // btn.style.color = series.visible ? series.color : "#fff";
+                            btn.style.color = "#fff";
                             btn.style.textDecoration = series.visible ? "unset" : "line-through";
                             btn.onclick = () => {
                                 series.setVisible(!series.visible);
-                                btn.style.color = series.visible ? series.color : "#ccc";
+                                btn.style.color = "#fff";
+                                // btn.style.color = series.visible ? series.color : "#fff";
                                 btn.style.textDecoration = series.visible ? "unset" : "line-through";
                             };
 
@@ -1148,7 +1656,7 @@
                             circle.style.display = "inline-block";
                             circle.style.width = "10px";
                             circle.style.height = "10px";
-                            circle.style.backgroundColor = series.visible ? series.color : "#ccc";
+                            circle.style.backgroundColor = series.visible ? series.color : "#fff";
                             btn.prepend(circle);
 
                             legendContainer.appendChild(btn);
@@ -1164,15 +1672,29 @@
                 categories: xLabels,
                 lineWidth: 0,
                 tickLength: 5,
-                offset: -105,
-                labels: { align: "center", y: 0 },
+                offset: -110,
+                labels: { align: "center", y: 0, style: { fontSize: "0.75rem" } },
             },
+
             yAxis: [
                 { title: null, height: "43%", offset: 0, softMax: 600 },
-                { title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: 600 },
+                { title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: yMaxBottom },
+                {
+                    title: null,
+                    top: 0,
+                    height: "43%",
+                    offset: 0,
+                    opposite: true,
+                    max: yMaxLine,
+                    labels: { enabled: false },
+                    gridLineWidth: 0,
+                },
             ],
             tooltip: { enabled: false },
-            legend: { enabled: false },
+            legend: {
+                enabled: true,
+                itemStyle: { color: "#fff" },
+            },
             plotOptions: {
                 column: {
                     grouping: false,
@@ -1180,7 +1702,8 @@
                     dataLabels: {
                         allowOverlap: true,
                         style: { textOutline: "1px contrast" },
-                        rotation: -90,
+                        // rotation: -90,
+                        rotation: 0,
                     },
                 },
             },
@@ -1199,9 +1722,25 @@
                         align: "center",
                     },
                 },
+                {
+                    name: "Ratio (Rejected/Inspected)",
+                    type: "line",
+                    color: "#38C3FE",
+                    data: checkIn.map((inspected, i) =>
+                        inspected > 0 ? parseFloat(((checkOut[i] / inspected) * 100).toFixed(2)) : 0
+                    ),
+                    yAxis: 2,
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function () {
+                            return this.y + "%";
+                        },
+                        align: "center",
+                    },
+                    marker: { enabled: true, radius: 3 },
+                },
             ],
         });
-
         chartsList.push(chart);
         return chart;
     };
@@ -1218,16 +1757,16 @@
     const loadEvent = () => {
         highchartsInit();
         if (!selectElement.value) {
-            selectElement.selectedIndex = 0;
+            selectElement.selectedIndex = 2;
         }
-        const initialValue = selectElement.value || "today";
-        updateDates(initialValue);
+        const initVal = selectElement.value || "30";
+        updateDates(initVal);
         loadDonutIQC();
         loadDonutNCMR();
         loadAllTopReject();
         getDataCPN();
-        loadTable4();
-        loadTable5();
+        renderTable4();
+        renderTable5();
 
         selectElement.addEventListener("change", function () {
             const selectedOption = this.value;
@@ -1237,8 +1776,8 @@
             loadDonutNCMR();
             loadAllTopReject();
             getDataCPN();
-            loadTable4();
-            loadTable5();
+            renderTable4();
+            renderTable5();
         });
 
         const slTime = document.getElementById("sl-time");
