@@ -1,3023 +1,1867 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java"%>
-
-<!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/> -->
-<!-- <script src="/paperless/assets/plugins/highchart/modules/exporting.js"></script>
-<script src="/paperless/assets/plugins/highchart/modules/offline-exporting.js"></script> -->
-<style>
-    /* @media only screen and (max-width: 990px) {
-        #chart_detail {
-            display: none;
-        }
-    } */
-
-    body {
-        background-image: url("/paperless/assets/images/checklist/background.png");
-        background-size: cover;
-    }
-
-    /* Let's get this party started */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-
-    /* Track */
-    ::-webkit-scrollbar-track {
-        -webkit-box-shadow: inset 0 0 6px rgba(0, 100, 167, 0.377);
-        -webkit-border-radius: 4px;
-        border-radius: 4px;
-    }
-
-    /* Handle */
-    ::-webkit-scrollbar-thumb {
-        -webkit-border-radius: 4px;
-        border-radius: 4px;
-        background: #0ee4ff;
-        -webkit-box-shadow: inset 0 0 6px #002930;
-    }
-
-    ::-webkit-scrollbar-thumb:window-inactive {
-        background: #0ee4ff;
-    }
-
-    .tableFixHead {
-        overflow-y: auto;
-        height: 86%;
-    }
-
-    #tbl {
-        width: 100%;
-        text-align: center;
-        border-collapse: separate;
-        border-spacing: 0;
-        line-height: 2;
-    }
-
-    #tbl th {
-        /* Apply both top and bottom borders to the <th> */
-        border-top: 1px solid #00515f93;
-        border-bottom: 1px solid #00515f93;
-        border-right: 1px solid #00515f93;
-        ;
-    }
-
-    #tbl td {
-        /* For cells, apply the border to one of each side only (right but not left, bottom but not top) */
-        border-bottom: 1px solid #00515f93;
-        border-right: 1px solid #00515f93;
-    }
-
-    #tbl th:first-child,
-    #tbl td:first-child {
-        /* Apply a left border on the first <td> or <th> in a row */
-        border-left: 1px solid #00515f93;
-    }
-
-    #tbl thead th {
-        position: sticky;
-        top: 0;
-        background-color: #092436;
-        color: #068b8d;
-    }
-
-    /* img {
-        position: absolute;
-    } */
-
-    #box-1 {
-        margin: 0;
-        padding: 0;
-        background-image: url("/paperless/assets/images/checklist/box1.png");
-        background-size: 100% 100%;
-    }
-
-    .box2 {
-        /* background-image: url("/paperless/assets/dist/img/Group7452.png"); */
-        background-size: 100% 100%;
-        position: relative;
-    }
-
-    #box-3 {
-        /* background-image: url("/paperless/assets/dist/img/Group7452.png"); */
-        background-size: 100% 100%;
-        padding: 0.8%;
-    }
-
-    .header1 {
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        margin: 0px !important;
-        position: relative;
-    }
-
-    .header2 {
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
-
-    .text {
-        color: #daf9f7;
-        position: absolute;
-        /* font-family: 'Gentium Basic', serif !important; */
-        text-align: center;
-        width: 100%;
-        font-size: 2.8vh;
-        margin: auto;
-    }
-
-    .text2 {
-        color: #daf9f7;
-        position: absolute;
-        padding: 3px;
-        /* font-family: sans-serif; */
-        text-align: center;
-        width: 100%;
-        font-size: 2.3vh;
-        margin: auto;
-        margin-top: 5vh;
-        background-image: url("/paperless/assets/images/checklist/FAI2.png");
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-
-    .text3 {
-        position: absolute;
-        color: #00c2dc;
-        /* font-family: sans-serif; */
-        text-align: left;
-        width: 100%;
-        font-size: 0.9rem;
-        margin: -0.6rem 0rem 0rem 3rem;
-    }
-
-    .header_in {
-        width: 100%;
-        position: absolute;
-        top: 0.5vh;
-    }
-
-    .ad .right {
-        margin-bottom: 0px;
-        margin-right: 6em;
-        width: auto;
-        background: transparent;
-        color: #00bdd6;
-        font-size: 14px;
-        border: solid #2f8abc 1px;
-        box-shadow: 0 2px 4px 0 #2f8abc;
-        border-radius: 4px;
-    }
-
-    .btn-circle {
-        border: none;
-        width: 50px;
-        height: 32px;
-        padding: 6px 0px;
-        /* border-radius: 15px; */
-        text-align: center;
-        font-size: 12px;
-        line-height: 1.42857;
-    }
-
-    .btn-circle option {
-        background: #034e78;
-    }
-
-    .btn-h1 .btn-primary,
-    .btn-show-total {
-        color: #00c2dc;
-        background-color: #ffffff00;
-        background-size: 100% 100%;
-        border: solid #2f8abc 1px;
-        box-shadow: 0 2px 4px 0 #2f8abc;
-    }
-
-    .hidden {
-        display: none;
-    }
-
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
-
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        background-color: #f9f9f9;
-        min-width: 250px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        z-index: 1;
-        font-size: 0.8em;
-    }
-
-    .dropdown-content a {
-        color: #7bbef9;
-        padding: 13px 10px;
-        text-decoration: none;
-        display: block;
-        background-color: #09223a;
-    }
-
-    .dropdown-content a:hover {
-        background-color: #087177
-    }
-
-    .dropdown-content a:active {
-        background-color: #00c2dc
-    }
-
-    /*end header*/
-    .chart {
-        height: 24.5vh;
-        overflow: hidden;
-        margin: auto;
-        margin: 0.4rem 0.5rem 0.8rem 0.5rem;
-    }
-
-    .timspan_group {
-        position: absolute;
-        text-align: left;
-        width: 12%;
-        margin: -1rem 0rem 0rem 8rem;
-        height: 1.6rem;
-        font-size: 0.9em;
-    }
-
-    .timespan_input {
-        height: 1.6rem;
-    }
-
-    .timespan_prepend {
-        height: 1.6rem;
-    }
-
-    .timespan_text {
-        height: 1.6rem;
-        padding-left: 0rem;
-        padding-right: 0rem;
-    }
-
-    .btn_group {
-        position: absolute;
-        margin: -1.5rem 0rem 0rem 18.5rem;
-        padding: 0.15rem;
-        margin-top: -0.9rem;
-        color: #068b8d;
-        background: #011428;
-        outline: none;
-        border-radius: 4px;
-        border: 1px solid #068b8d;
-    }
-
-    .input-group-prepend .input-group-text {
-        color: #00c2dc;
-        background: transparent;
-        border: 1px solid #068b8d;
-    }
-
-    #reservation {
-        background: transparent;
-        border: 1px solid #068b8d;
-        color: #00c2dc;
-
-    }
-
-    .check_bar progress[value] {
-        /* Reset the default appearance */
-        -webkit-appearance: none;
-        appearance: none;
-        width: 60%;
-        height: 1.2vh;
-    }
-
-    .check_bar progress[value]::-webkit-progress-bar {
-        background-color: rgba(238, 238, 238, 0);
-        /* border: #056e9f solid 1px; */
-        border-width: 1px;
-        border-style: solid;
-        border-color: #3bdbc0;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
-    }
-
-    .check_bar progress[value]::-webkit-progress-value {
-        background-image:
-            -webkit-linear-gradient(left, #25926b, #3bdbc0);
-        border-radius: 2px;
-    }
-
-    .uncheck_bar progress[value] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 60%;
-        height: 1.2vh;
-    }
-
-    .uncheck_bar progress[value]::-webkit-progress-bar {
-        background-color: rgba(238, 238, 238, 0);
-        border-width: 1px;
-        border-style: solid;
-        border-color: #f4eb96;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
-    }
-
-    .uncheck_bar progress[value]::-webkit-progress-value {
-        background-image:
-            -webkit-linear-gradient(left, #e0cd00, #f4eb96);
-        border-radius: 2px;
-    }
-
-    .abnormal_bar progress[value] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 60%;
-        height: 1.2vh;
-    }
-
-    .abnormal_bar progress[value]::-webkit-progress-bar {
-        background-color: rgba(238, 238, 238, 0);
-        border-width: 1px;
-        border-style: solid;
-        border-color: #ff9b78;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
-    }
-
-    .abnormal_bar progress[value]::-webkit-progress-value {
-        background-image:
-            -webkit-linear-gradient(left, #f87a30, #ff9b78);
-        border-radius: 2px;
-    }
-
-
-    /* #tbl  {
-        border: rgb(42, 77, 77) solid 1px;
-    } */
-
-    #myInput {
-        color: #00c2dc;
-        /* background: transparent; */
-        border: 1px solid #068b8d;
-        border-radius: 2px;
-        background-color: #068b8d2c;
-        font-family: sans-serif, FontAwesome;
-    }
-
-    ::placeholder {
-        color: #0e7279;
-        opacity: 1;
-        /* Firefox */
-    }
-
-    :-ms-input-placeholder {
-        /* Internet Explorer 10-11 */
-        color: #0e7279;
-    }
-
-    ::-ms-input-placeholder {
-        /* Microsoft Edge */
-        color: #0e7279;
-    }
-
-    .d_btn {
-        text-align: center;
-        padding: 3px;
-        height: 100%;
-        min-width: 50px;
-        border: 1px solid #068b8d;
-        background-color: #068b8d2c;
-        color: #00c2dc;
-        font-size: 11px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .d_btn_dis {
-        border: 1px solid #838383;
-        background-color: #8383832c;
-        color: #838383;
-        cursor: not-allowed;
-    }
-
-    .detail_s {
-        padding: 0px;
-        width: 100%;
-        margin: auto;
-    }
-
-    .detail_s .number {
-        font-size: 6vh;
-        line-height: 0.9;
-        font-weight: bold;
-        color: #00c2dc;
-        width: 100%;
-        text-align: center;
-    }
-
-    .detail_s .name {
-        font-size: 12px;
-        color: #00c2dc;
-        width: 100%;
-        text-align: center;
-    }
-
-    .detail_s .uncheck {
-        color: #f4eb96;
-    }
-
-    .detail_s .check {
-        color: #3bdbc0;
-    }
-
-    .detail_s .abnormal {
-        color: #ff9b78;
-    }
-
-    .detail_s .progressBar {
-        width: 100%;
-        text-align: center;
-    }
-
-    #tbl_title,
-    #totalForm {
-        color: #8ce5ff;
-        font-weight: 500;
-        font-size: 16px;
-    }
-
-    .btn_detail {
-        background: repeating-linear-gradient(90deg, #016f71, #4CAF50 60px);
-        border: tomato;
-        border-radius: 6px;
-        margin: 5px;
-    }
-
-    /* .icon_detail{
-        cursor: pointer;
-    } */
-
-    .icon_detail:hover {
-        cursor: pointer;
-        color: #85e1ae;
-        /* font-size: 16px; */
-    }
-
-    .no_data {
-        text-align: center;
-        position: absolute;
-        top: 45%;
-    }
-
-
-    .fade {
-        opacity: 1;
-    }
-
-    #statistic-data-check-qr th {
-        position: sticky;
-        top: 0;
-    }
-
-    #statistic-data-check-qr th:first-of-type,
-    #statistic-data-check-qr td:first-of-type {
-        left: 0;
-        position: sticky;
-        background: #0e273e;
-        z-index: 3;
-        border: 1px solid #686868;
-
-    }
-
-    #statistic-data-check-qr {
-        /* z-index: 1;
-        background: #04111e; */
-        border: 1px solid #f9f9f9 !important;
-    }
-
-
-    #statistic-data-check-qr {
-        border-color: cornflowerblue;
-        margin: auto;
-        margin-bottom: 3px;
-    }
-
-    #statistic-data-check-qr tbody td {
-        padding: 3px;
-        text-align: center;
-        border: 1px solid #686868;
-    }
-
-    #statistic-data-check-qr tbody {
-        color: white;
-    }
-
-    #statistic-data-check-qr thead th {
-        min-width: 100px;
-        padding: 3px;
-        text-align: center;
-        border: 1px solid #686868 !important;
-        /* border-color: cornflowerblue; */
-    }
-
-    #statistic-data-check-qr thead tr {
-        color: white;
-    }
-
-    .value-step {
-        text-align: center;
-    }
-
-    .txt-color-success {
-        color: #00ec36;
-    }
-
-    .modal-content {
-        background: #04111e;
-        /* box-shadow: 0 0px 6px 0 #ffffff; */
-        border: 1px solid #f9f9f9;
-    }
-
-    .card-body {
-        background: #04111e;
-        /* background: #ffffff00; */
-        padding: 0.5rem 1rem 0.5rem 1rem;
-    }
-
-    .card {
-        background: #4a53521a;
-        margin-bottom: 0;
-    }
-
-    .modal-header {
-        background: #f1f1f11f;
-        border: 0;
-    }
-
-    .modal-footer {
-        background: #f1f1f11f;
-        border: 0;
-    }
-
-    #name_form {
-        color: #9cfeff;
-    }
-
-    .head-table .clear-view {
-        color: #f1f1f1;
-    }
-
-    .modalQr-code .clear-view {
-        color: aquamarine;
-    }
-
-    .bar_charts {
-        float: left;
-    }
-
-    .item_bar {
-        border: #068b8d solid 1px;
-        border-radius: 6px;
-        cursor: pointer;
-        margin: 0 4px;
-        width: fit-content;
-        padding: 2px 4px;
-    }
-
-    .item_bar:hover {
-        /* border: #068b8d solid 1px; */
-        background-color: rgba(0, 74, 97, 0.356);
-    }
-
-    .item_bar_active {
-        border: #ffffff solid 1px;
-        background-color: rgba(0, 74, 97, 0.356);
-        color: #00c2dc;
-    }
-
-    .highcharts-figure,
-    .highcharts-data-table table {
-        min-width: 100%;
-        max-width: 100%;
-        margin: 1em auto;
-    }
-
-    .highcharts-data-table table {
-        font-family: Verdana, sans-serif;
-        border-collapse: collapse;
-        border: 1px solid #ebebeb;
-        margin: 10px auto;
-        text-align: center;
-        width: 100%;
-        max-width: 500px;
-    }
-
-    .highcharts-data-table caption {
-        padding: 1em 0;
-        font-size: 1.2em;
-        color: #555;
-    }
-
-    .highcharts-data-table th {
-        font-weight: 600;
-        padding: 0.5em;
-    }
-
-    .highcharts-data-table td,
-    .highcharts-data-table th,
-    .highcharts-data-table caption {
-        padding: 0.5em;
-    }
-
-    .highcharts-data-table thead tr,
-    .highcharts-data-table tr:nth-child(even) {
-        background: #f8f8f8;
-    }
-
-    .highcharts-data-table tr:hover {
-        background: #f1f7ff;
-    }
-
-    /* .highcharts-figure,
-    .highcharts-data-table table {
-        min-width: 310px;
-        max-width: 800px;
-        margin: 1em auto;
-    } */
-
-    #chart-by-team {
-        height: 400px;
-    }
-
-    .loader {
-        display: block;
-        position: fixed;
-        z-index: 1000;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        background: rgba(10 10 10 / 22%) url('/paperless/assets/images/loadingg.gif') 50% 50% no-repeat;
-    }
-
-    .css-time-span {
-        width: 220px;
-        margin-top: 5px;
-    }
-
-    .content {
-        width: 99vw;
-        height: 99vh;
-        padding: 0 0 0 10px;
-    }
-
-    @media only screen and (min-width: 960px) and (max-width: 1024px) {
-        body {
-            font-size: 11px !important;
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+    <link rel="stylesheet" href="/production-system/assets/plugins/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="/production-system/assets/plugins/bootstrap-icons/bootstrap-icons.css" />
+    <script src="/production-system/assets/plugins/jquery/jquery.min.js"></script>
+    <script src="/production-system/assets/plugins/daterangepicker/moment.min.js"></script>
+    <script src="/production-system/assets/plugins/daterangepicker/daterangepicker.js"></script>
+    <script src="/production-system/assets/plugins/highcharts/highcharts.js"></script>
+
+    <style>
+        .component-wrapper {
+            /* border: 1px solid green; */
+            padding: 0.35rem 0.35rem;
         }
 
-        .css-time-span {
-            width: 147px;
-            margin-top: 0px;
+        .component-item {
+            height: 100%;
+            padding: 0.5rem 0.75rem;
+            background-color: rgba(73, 146, 255, 0.15);
+            box-shadow: 0 3px 17px #030616;
+            border-radius: 0.3rem;
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-start;
+            flex-direction: column;
+            -webkit-border-radius: 0.3rem;
+            -moz-border-radius: 0.3rem;
+            -ms-border-radius: 0.3rem;
+            -o-border-radius: 0.3rem;
         }
 
-        .detail_s .name {
-            font-size: 11px;
+        .component-item .chart-box {
+            height: 30vh;
         }
 
-        .detail_s .number {
-            font-size: 3vh;
+        .component-item .table-box {
+            height: 30vh;
+            overflow: auto;
         }
 
-        .tableFixHead {
-            height: 81%;
+        .component-item .info-box {
+            height: 6vh;
+            background-color: rgba(73, 146, 255, 0.15);
         }
-    }
-</style>
-<div class="loader"></div>
 
-<!-- <body> -->
-    <div class="header col-md-12 p-0" style=" height: 10vh">
-        <div class="header1">
-            <img src="/paperless/assets/images/checklist/header1.png" alt="" width="100%" height="40px"
-                style="height: 5.8vh;">
-            <div class="row header_in">
-                <div class="col-md-4" style="top: 1vh">
-                    <div class="row btn-h1">
-                        <div class="col-md-2"></div>
-                        <!--<div class="col-md-1" style="margin-left: 1.3rem;"> -->
-                        <select id="btnBu" class="btn btn-primary btn-circle"></select>
-                        <!-- </div> -->
-                        <!-- <div class="col-md-1" style="margin-left: 1.3rem;"> -->
-                        <select id="select-factory" class="btn btn-primary"
-                            style="margin-left: 20px;"></select>
-                        <!-- </div> -->
-                        <div class="col-md-1 dropdown d-none" style="margin-left: 1.3rem;">
-                            <select id="select-team" class="dropbtn btn btn-primary btn-circle">TEAM</select>
+        .component-title {
+            font-size: 1rem;
+            margin: 0;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-badge {
+            display: inline-block;
+            background-color: #e74c3c;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .text-span {
+            font-size: 1.12rem;
+        }
+
+        .table-responsive::-webkit-scrollbar,
+        .component-item .table-box::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb,
+        .component-item .table-box::-webkit-scrollbar-thumb {
+            background-color: #264b8b;
+            border-radius: 3px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track,
+        .component-item .table-box::-webkit-scrollbar-track {
+            background-color: rgba(73, 146, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .table-responsive::-webkit-scrollbar-corner,
+        .component-item .table-box::-webkit-scrollbar-corner {
+            background-color: rgba(73, 146, 255, 0.1);
+        }
+
+        .table {
+            --border-color: #6290b5;
+            margin-bottom: 0;
+            border-right: 1px solid #37567f;
+            /* border-top: 1px solid #37567f; */
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+            color: #fff;
+            border: none;
+            box-shadow: inset 0.5px -0.5px 0px var(--border-color);
+            font-weight: normal;
+            line-height: 1.2;
+        }
+
+        .table thead,
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background-color: #264b8b;
+            font-size: 0.7rem;
+            /* border-top: 1px solid var(--border-color); */
+        }
+
+        .table tbody td {
+            font-size: 0.7rem;
+            background-color: transparent;
+        }
+
+        .table-striped>tbody>tr.odd {
+            background-color: #264e9256;
+        }
+
+        .table tbody td.grand-value {
+            /* color: #5e9fff; */
+            color: #03a9f4;
+        }
+
+        select {
+            background-color: #cfe2ff !important;
+            cursor: pointer;
+        }
+
+        select:focus,
+        select:focus-visible {
+            outline: 0;
+            box-shadow: none;
+        }
+
+        select option {
+            background: #0c1b40;
+            color: #fff;
+        }
+
+        [id^="pagination-table"] {
+            display: flex;
+            justify-content: end;
+            align-items: center;
+            gap: 5px;
+        }
+
+        [id^="pagination-table"] button {
+            border: 1px solid #0a58ca;
+            background-color: transparent;
+            color: #0a58ca;
+            border-radius: 5px;
+            min-width: 2rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            height: 2rem;
+            font-size: 1rem;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        [id^="pagination-table"] button:hover {
+            background-color: #0a58ca;
+            color: #fff;
+        }
+
+        [id^="pagination-table"] button.active {
+            background-color: #4982d8;
+            color: #fff;
+        }
+
+        [id^="pagination-table"] button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            color: #888;
+            border-color: #444;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0.3rem;
+            height: 0.3rem;
+        }
+
+        /* Nền của scrollbar */
+        ::-webkit-scrollbar-track {
+            background: #acacac;
+            border-radius: 0px;
+        }
+
+        /* Thanh cuộn */
+        ::-webkit-scrollbar-thumb {
+            background: #264b8b;
+            border-radius: 0px;
+            /* background-color: rgba(255, 235, 59, 0.637); */
+        }
+
+        .filter-badge {
+            background-color: rgb(8, 58, 143);
+            font-size: 0.7rem;
+            padding: 0rem 0.3rem;
+        }
+
+        .filter-badge .bi-x:hover {
+            color: #ffc107;
+        }
+
+        .form-select,
+        .form-control {
+            background: transparent;
+            border: 1px solid #5264b6;
+            color: #000 !important;
+            border-radius: 6px;
+            font-size: 1rem;
+            border-radius: 10px;
+        }
+
+        .form-select:focus,
+        .form-control:focus {
+            background: #2a2d3a;
+            border-color: #5a5d6a;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .no-data {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            background: transparent;
+        }
+
+        .cpnCustom {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .cpnCustom>.row {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .cpnCustom .component-wrapper {
+            display: flex;
+        }
+
+        .cpnCustom .component-wrapper>.component-item {
+            flex: 1;
+        }
+    </style>
+
+    <div class="container-fluid">
+        <spring:message code="vietnamese" var="vietnamese" />
+        <spring:message code="chinese" var="chinese" />
+        <spring:message code="english" var="english" />
+        <spring:message code="profile" var="profile" />
+        <spring:message code="logout" var="logout" />
+
+        <jsp:include page="/WEB-INF/jsp/common/header-dashboard.jsp">
+            <jsp:param name="titlePage" value="IQC Inspection Report" />
+            <jsp:param name="subTitlePage" value="" />
+            <jsp:param name="vietnamese" value="<%=pageContext.getAttribute(\" vietnamese\") %>" /> <jsp:param
+                    name="chinese" value="<%=pageContext.getAttribute(\" chinese\") %>" /> <jsp:param name="english"
+                        value="<%=pageContext.getAttribute(\" english\") %>" /> <jsp:param name="profile"
+                            value="<%=pageContext.getAttribute(\" profile\") %>" /> <jsp:param name="logout"
+                                value="<%=pageContext.getAttribute(\" logout\") %>" />
+        </jsp:include>
+        <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
+            <option value="today">Time: Today</option>
+            <option value="7">Time: Last 7 Days</option>
+            <option value="30" selected>Time: Last 30 Days</option>
+            <option value="custom">Time: Custom</option>
+        </select>
+        <div class="container-fluid p-0 content-wrapper">
+            <div class="row">
+                <div class="col-md-3 component-wrapper">
+                    <div class="component-item">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="component-title mb-0">
+                                Lot Rejected Rate <span style="font-size: 0.9rem">(Today)</span>
+                            </h5>
+                            <select name="" id="sl-time" class="form-select form-select-sm w-auto d-none">
+                                <option value="today" selected>Time: Today</option>
+                                <option value="7">Time: 7 Days Ago</option>
+                                <option value="30">Time: 30 Days Ago</option>
+                                <option value="custom">Time: Custom</option>
+                            </select>
+                            <div id="daterangepicker-container" style="display: none; position: absolute">
+                                <input type="text" id="daterangepicker" />
+                            </div>
                         </div>
-                    <div style="margin-left: 1.3rem;">
-                            <button class="btn btn-primary btn__fullscreen--in" onclick="goFullScreen()"><i class="fas fa-expand"></i></button>
-                            <button class="btn btn-primary btn__fullscreen--out d-none" onclick="goOutFullScreen()"><i class="fas fa-compress"></i></button>
-                    </div>    
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <h5 class="text">
-                        <!-- Paperless Checklist Statistics -->
-                        <spring:message code='paperless.checklist.statistic' />
-                    </h5>
-                </div>
-                <div class="col-md-4 ad" style="top: 1vh; cursor: pointer;">
-                    <div class="form-group right float-right py-1 px-4 d-none">
-                        <span style="font-family: sans-serif;">Administrator</span>
-                        <i class="fas fa-user-circle ml-1"> </i>
-                    </div>
 
-                    <div class="input-group float-right css-time-span mb-2" style="right: 4rem;">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                        </div>
-                        <input type="text" class="form-control float-right"id="reservation">
-                    </div>
-                    <!-- /.form group -->
-                </div>
-                <img style="position: relative; top: 2.5vh" src="/paperless/assets/images/checklist/header2mini.png"
-                    alt="" width="100%">
-            </div>
-        </div>
-        <!--End header1-->
+                        <div class="row d-flex flex-column">
+                            <div class="col-md-12 component-wrapper">
+                                <div
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div class="component-title">Inspected</div>
+                                    <span id="inspected" class="fw-bold text-warning text-span"></span>
+                                </div>
+                            </div>
 
-        <!--Begins header2-->
-        <!-- <div class="header2">
-            <h6 class="text2"><b>FAI</b></h6>
-        </div> -->
-        <!--End header2-->
-    </div>
-    <div class="content">
-        <div class="row">
-            <div class="col-md-5" style="height: calc(60vh);float: left;">
-                <div id="box-1" class="row" style="height: calc(58.8vh);">
-                    <div class="col-md-12 no_data d-none" id="n_chart">
-                        <span style="color: #8ce5ff; font-size: 3vh;"><i class="far fa-dizzy"></i><b> No
-                                Data!</b></span>
-                    </div>
+                            <div class="col-md-12 component-wrapper">
+                                <div
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div class="component-title">Lot Rejected</div>
+                                    <span id="lot-rejected" class="fw-bold text-warning text-span"></span>
+                                </div>
+                            </div>
 
-                    <div class="col-md-12 m-3">
-                        <div class="row mb-1" style="width: 99%;">
-                            <div class="col-md-12">
-                                <div style="float: left">
-                                    <span style="color: #8ce5ff; font-size: 2.7vh;"><b id="factory_name">N/A
-                                            Statistic</b></span>
+                            <div class="col-md-12 component-wrapper">
+                                <div
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                    <div class="component-title">LRR</div>
+                                    <span id="lrr" class="fw-bold text-warning text-span"></span>
                                 </div>
                             </div>
                         </div>
-                        <div class="row"
-                            style="background-color: #00414d00; width: 98%; color: #fff; border-radius: 6px;">
-                            <div class="" style="overflow-x: auto; margin: auto; z-index: 999;">
-                                <table id="tbl_item">
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="row" style="height: 42vh;">
-                            <div class="col-md-7" style="float: left;">
-                                <div class="w-100 p-0" style="margin: auto; height: 90%;" id="statistic"></div>
-                                <!-- <button class="btn-show-total" onclick="showTotalChecked()">Total Checked</button> -->
-                            </div>
-                            <div class="col-md-5" id="chart_detail" style="float: left;margin: auto;">
-                                <div class="row detail_s">
-                                    <span id="number_check" class="number check">0</span>
-                                    <span class="name check">
-                                        <!-- Quantity Checked -->
-                                        <spring:message code='quantityChecked' />
-                                    </span>
-                                    <span class="progressBar check_bar">
-                                        <progress id="checked" value="0" max="100"></progress>
-                                    </span>
-                                </div>
-                                <div class="row detail_s" style="margin-top: 20px;">
-                                    <span id="number_uncheck" class="number uncheck">0</span>
-                                    <span class="name uncheck" id="status_name_un">
-                                        <!-- Quantity Unchecked -->
-                                        <spring:message code='quantityChecked' />
-                                    </span>
-                                    <span class="progressBar uncheck_bar">
-                                        <progress id="unchecked" value="0" max="100"></progress>
-                                    </span>
-                                </div>
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="row" style="height: 100%;">
+                        <div class="col-md-6 component-wrapper">
+                            <div class="component-item" style="height: 100%;">
+                                <h5 class="component-title">LLR Last 7 Days</h5>
+                                <div class="component-body chart-box flex-grow-1 " id="col-chart-2"></div>
                             </div>
                         </div>
 
+                        <div class="col-md-6 component-wrapper">
+                            <div class="component-item" style="height: 100%;">
+                                <h5 class="component-title">LLR By Weeks</h5>
+                                <div class="component-body chart-box flex-grow-1 " id="col-chart-1"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-7 pl-0" style=" height: 60vh;float: left;">
-                <div id="box-2" class="box2 mb-1" style="height: 29vh;">
-                    <div class="col-md-12 no_data" id="n_box-2">
-                        <span style="color: #8ce5ff; font-size: 3vh;"><i class="far fa-meh-rolling-eyes"></i><b> No
-                                Data!</b></span>
-                    </div>
-                    <div class="row" style="padding-top: 5px; padding-left: 15px; width: 100%; height: 100%;"
-                        id="department"></div>
-                </div>
-                <div id="box-2_1" class="box2" style="height: 29vh;">
-                    <div class="col-md-12 no_data" id="n_box-2_1">
-                        <span style="color: #8ce5ff; font-size: 3vh;"><i class="far fa-frown"></i><b> No
-                                Data!</b></span>
-                    </div>
-                    <!-- <div class="row" style="padding: 5px; padding-left: 15px; width: 100%; height: 100%;" id="MEchecklist"> -->
-                    <div class="row" style="padding: 5px; padding-left: 15px; width: 100%; height: 100%;"
-                        id="chart-by-team">
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-12" style="height: 29vh;">
-                <div id="box-3" style="height: 29vh">
-                    <div class="row" style="margin: auto;">
-                        <div class="col-md-12 m-0 mb-2">
-                            <div class="float-left">
-                                <span id='tbl_title'></span>
-                                <span class="ml-2" id="totalForm"></span>
-                            </div>
-                            <div class="float-left" style="margin-left: 20px;">
-                                <img src="/paperless/assets/images/icon_loading.gif" width="25px" height="25px"
-                                    id="icon_loading" style="margin-right: 16px;" class="icon-loading d-none">
-                            </div>
-                            <input class="float-right ml-2" type="text" id="myInput" onkeyup="myFunction()"
-                                placeholder="Search..." title="Type in a name">
-                            <div class="float-right d_btn d_btn_dis">
-                                <!-- By Paperless Type -->
-                                <spring:message code='by' />-<spring:message code='paperlessType' />
-                            </div>
-                            <div class="float-right d_btn d_btn_dis"><spring:message code='by' />-<spring:message code='me.chu_ki_check' /></div>
-                            <div class="float-right d_btn" onclick="window.location.href='/paperless/me-status-line'">
-                                <!-- By
-                                Line -->
-                                <spring:message code='by' />-<spring:message code='qrcode.line' />
-                            </div>
-                            <div class="float-right d_btn d_btn_dis">All</div>
-                        </div>
-                    </div>
-                    <div class="tableFixHead">
-                        <table class="" id='tbl'>
-                            <thead style="text-align: center;">
-                                <th style="min-width: 30px;">#</th>
-                                <th>
-                                    <!-- QR Code -->
-                                    <spring:message code='home.qr_code' />
-                                </th>
-                                <th>
-                                    <!-- Line -->
-                                    <spring:message code='qrcode.line' />
-                                </th>
-                                <th>
-                                    <!-- Checklist name -->
-                                    <spring:message code='checklistName' />
-                                </th>
-                                <th style="min-width: 165px;">
-                                    <!-- Frequency -->
-                                    <spring:message code='me.chu_ki_check' />
-                                </th>
-                                <!-- <th style="min-width: 80px;">Action</th> -->
-                            </thead>
-                            <tbody id="myTable" style="color: #daf9f7; text-align: center;">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modal-detail">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 93%;">
-            <div class="modal-content">
-                <div class="modal-header p-2">
-                    <h5 class="modal-title" id="name_form" style="line-height: 1.1;">
-                         <!-- Detail Checklist -->
-                         <spring:message code='paper.detail.checklist' />
-                    </h5>
-                </div>
-
-                <!-- <div class="card" style="max-height: 78vh;"> -->
-                <div class="card">
-                    <div class="card-header d-none">
-                        <h3 class="card-title" id="detail-name-form"></h3>
-                        <div class="card-tools">
-                            <button style="font-size: 15px; border: 0px; background: #fff; padding: 3px 12px;"
-                                id="btn-view-check" class="d-none"> <i class="fas fa-clipboard-check"></i></button>
-                            <button id="btn-change-icon"
-                                style="font-size: 15px; border: 0px; background: #fff; padding: 3px 12px;"
-                                onclick="openNav()"> <i class="fas fa-expand-arrows-alt" id="icon1"></i></button>
-                            <button
-                                style="font-size: 15px; margin-right: 15px; border: 0px; background: #fff; padding: 3px 12px;"
-                                id="btn-export"> <i class="fas fa-download"></i></button>
-                        </div>
-                    </div>
-                    <div class="card-body" style="overflow-y: auto;">
-                        <div class=" clear-view">
-                            <div class="dialog-chart-statistic d-none row"></div>
-                            <div class="dialog-chart-statistic d-none row"></div>
-                            <div class="modalQr-code">
-                                <div class="head-table">
-                                    <div class="row clear-view" style="text-align: center; margin-top: 8px;">
-                                        <div class="col-md-1"><b>
-                                            <!-- Xưởng -->
-                                            <spring:message code='me.factory' />
-                                            : </b><span id="detail-factory"></span></div>
-                                        <div class="col-md-2"><b>
-                                            <!-- Tầng -->
-                                            <spring:message code='me.floor' />
-                                            : </b><span id="detail-floor"></span></div>
-                                        <div class="col-md-2"><b>
-                                            <!-- Chuyền -->
-                                            <spring:message code='qrcode.line' />
-                                            : </b><span id="detail-line"></span></div>
-                                        <div class="col-md-2"><b>
-                                            <!-- Chu kì kiểm tra -->
-                                            <spring:message code='me.chu_ki_check' />
-                                            : </b><span id="detail-cycle"></span>
-                                        </div>
-                                        <div class="col-md-3"><b>
-                                            <!-- Mã thiết bị -->
-                                            <spring:message code='home.qr_code' />
-                                            : </b><span id="detail-qr"></span></div>
-                                        <div class="col-md-2"><b>
-                                            <!-- Thời gian -->
-                                            <spring:message code='me.time_date' />
-                                            : </b><span id="detail-time"></span>
-                                        </div>
+            <div class="row">
+                <div class="col-md-3 component-wrapper">
+                    <div class="component-item">
+                        <h5 class="component-title">CPN Status</h5>
+                        <div class="component-body cpnCustom" id="">
+                            <div class="row">
+                                <div class="col-md-6 component-wrapper">
+                                    <div
+                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                        <div class="component-title">To Be Inspected</div>
+                                        <span id="be-inspected" class="fw-bold text-warning text-span"></span>
                                     </div>
                                 </div>
-                                <div style="overflow-x: scroll; margin:8px 0px;">
-                                    <table id="statistic-data-check-qr" border="1">
+
+                                <div class="col-md-6 component-wrapper">
+                                    <div
+                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                        <div class="component-title">Timeout Inspected</div>
+                                        <span id="timeout_inspect" class="fw-bold text-warning text-span"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 component-wrapper">
+                                    <div
+                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                        <div class="component-title">To Be Scanned</div>
+                                        <span id="scanned" class="fw-bold text-warning text-span"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 component-wrapper">
+                                    <div
+                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
+                                        <div class="component-title">Timeout Scanned</div>
+                                        <span id="timeout_scan" class="fw-bold text-warning text-span"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-4 component-wrapper">
+                            <div class="component-item">
+                                <h5 class="component-title">Lot Rejected By Material Type</h5>
+                                <div class="component-body chart-box" id="col-chart-3"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 component-wrapper">
+                            <div class="component-item">
+                                <h5 class="component-title">Top Lot Rejected By MFR</h5>
+                                <div class="component-body chart-box" id="col-chart-4"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 component-wrapper">
+                            <div class="component-item">
+                                <h5 class="component-title">Top Lot Rejected By Models</h5>
+                                <div class="component-body chart-box" id="col-chart-5"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 component-wrapper d-none">
+                            <div class="component-item">
+                                <h5 class="component-title">Lot Rejected By Material Type Details</h5>
+                                <div class="component-body table-box">
+                                    <table class="table table-sm table-striped" id="table-1">
                                         <thead></thead>
                                         <tbody></tbody>
                                     </table>
                                 </div>
-                                <p class="clear-view" style="margin-bottom: 8px; text-align: right; margin-right: 8px;">
-                                    <b>
-                                        <!-- Mã biểu -->
-                                        <spring:message code='paper.code' />
-                                        : </b><span id="detail-form-code"></span></p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 component-wrapper d-none">
+                            <div class="component-item">
+                                <h5 class="component-title">Top Lot Rejected By MFR Details</h5>
+                                <div class="component-body table-box">
+                                    <table class="table table-sm table-striped" id="table-2">
+                                        <thead></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 component-wrapper d-none">
+                            <div class="component-item">
+                                <h5 class="component-title">Top Lot Rejected By Models Details</h5>
+                                <div class="component-body table-box">
+                                    <table class="table table-sm table-striped" id="table-3">
+                                        <thead></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer p-1">
-                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal"
-                        style="margin-right: 5px;"><i class="fa fa-times"></i> 
-                        <!-- Close -->
-                        <spring:message code='close' />
-                    </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 component-wrapper">
+                    <div class="component-item">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="component-title mb-0">To be Inspected Distribution by Material Type</h5>
+
+                            <div id="daterangepicker-container" style="display: none; position: absolute">
+                                <input type="text" id="daterangepicker" />
+                            </div>
+                        </div>
+                        <div class="component-body chart-box flex-grow-1" id="donut-chart-1"></div>
+                    </div>
                 </div>
 
+                <div class="col-md-9 component-wrapper">
+                    <div class="component-item">
+                        <h5 class="component-title">Inspection List</h5>
+                        <div class="component-body table-box">
+                            <table class="table table-sm table-striped" id="table-5">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="pagination-table-5" style="margin-top: 0.4rem"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 component-wrapper">
+                    <div class="component-item">
+                        <h5 class="component-title mt-1">NCMR Status</h5>
+                        <div class="component-body chart-box flex-grow-1" id="donut-chart-2"></div>
+                    </div>
+                </div>
+                <div class="col-md-9 component-wrapper">
+                    <div class="component-item">
+                        <h5 class="component-title">NCMR List</h5>
+                        <div class="component-body table-box">
+                            <table class="table table-sm table-striped" id="table-4">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="view-image" id="view-image"></div>
-<!-- </body> -->
+    </div>
 
-<!-- <script src="/paperless/assets/plugins/highchart/modules/highstock.js"></script> -->
-<script src="/paperless/assets/plugins/highchart/themes/dark-unica.js"></script>
-<script>
-    
-let isLoading = true;
+    <script type="module" src="/production-system/js/modules/applib.js"></script>
+    <script type="module">
+        import { DataTableLib } from "/production-system/js/modules/applib.js";
+        const dataset = {};
+        const chartsList = [];
+        const donutFilters = {
+            materialTypeIQC: null,
+            materialTypeNCMR: null,
+            iqcStatus: null, // 0-4: status filter for IQC table
+        };
+        const IQC_STATUS_MAP = {
+            0: 'TO BE INSPECTED',
+            1: 'ALL',
+            2: 'FAIL',
+            3: 'PASS',
+            4: 'PASS OR FAIL'
+        };
+        const lotTableFilters = {
+            "table-1": null,
+            "table-2": null,
+            "table-3": null,
+        };
+        const API_TOP_REJECT = "/production-system/api/iqc/top-reject";
+        let table1Instance = null;
+        let table2Instance = null;
+        let table3Instance = null;
+        let table4Instance = null;
+        let table5Instance = null;
 
-
-function goFullScreen() {
-    var elem = document.documentElement; 
-
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
-    }
-
-    $('.btn__fullscreen--out').removeClass('d-none');
-    $('.btn__fullscreen--in').addClass('d-none');
-    $('iframe').addClass('iframe--full');
-}
-
-function goOutFullScreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-    }
-
-    $('.btn__fullscreen--in').removeClass('d-none');
-    $('.btn__fullscreen--out').addClass('d-none');
-    $('iframe').removeClass('iframe--full');
-}
-
-    const _state={
-        idFac:null,
-        nameFactory:null,
-        id_flag:null,
-        teamId:null,
-        id_type:null,
-        nameTeam:null,
-        sDate:null,
-        nameCheck:null,
-        formTimeout: null,
-    }
-
-    const selectionSnapshot = {
-        bu: null,
-        factory: null
-    };
-
-    function captureSelections() {
-        var currentBu = $('#btnBu').val();
-        if (currentBu !== undefined && currentBu !== null && currentBu !== '') {
-            selectionSnapshot.bu = currentBu;
+        function applyScaleToChart(chart) {
+            if (!chart) return;
+            chart.reflow();
         }
 
-        var currentFactory = $('#select-factory').val();
-        if (currentFactory !== undefined && currentFactory !== null && currentFactory !== '') {
-            selectionSnapshot.factory = currentFactory;
-        }
-    }
-
-    function restoreSelections() {
-        var $buSelect = $('#btnBu');
-        var $factorySelect = $('#select-factory');
-
-        if (selectionSnapshot.bu && $buSelect.find('option').filter(function () {
-            return $(this).val() == selectionSnapshot.bu;
-        }).length) {
-            $buSelect.val(selectionSnapshot.bu);
-            _state.nameFactory = selectionSnapshot.bu;
-        }
-
-        if (selectionSnapshot.factory && $factorySelect.find('option').filter(function () {
-            return $(this).val() == selectionSnapshot.factory;
-        }).length) {
-            $factorySelect.val(selectionSnapshot.factory);
-            _state.idFac = selectionSnapshot.factory;
-        }
-    }
-
-    var sBu = searchParams('nameBU');
-    var idFactory = searchParams('id-bu');  
-    
-    var dataset = {};
-    var count = 1
-
-    var get_session = window.sessionStorage.getItem('dataset');
-    if (get_session != undefined) {
-        dataset = JSON.parse(get_session);
-    }
-
-    var timeTitle = '';
-    var temp_selection;
-    var tempFLag = "";
-    var idBu = (dataset.idBu != undefined ? dataset.idBu : "");
-    // var sbuName = (dataset.sbuName != undefined ? dataset.sbuName : "");
-    var status_name = '<spring:message code="needed.check" /> ';
-    var status_name_chart = "<spring:message code='needed.check' /> ";
-    var flag_id_value = "1";
-    _state.id_flag = flag_id_value;
-
-    $("#status_name_un").html(status_name);
-
-    function init() {
-        requestGetSbuName();
-    }
-
-    function requestGetSbuName() {
-        $(".loader").removeClass("d-none");
-
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v2/get_list_bu",
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                $(".loader").addClass("d-none");
-
-                var status = response['status'];
-                var data = response['data'];
-                var message = response['message'];
-                var total = response['total'];
-                if (total > 0) {
-                    var htmlBu = "";
-                    // $('#btnBu').html(htmlBu);
-                    for (var i = 0; i < data.length; i++) {
-                        htmlBu += '<option value="' + data[i] + '">' + data[i] + '</option>';
-                    }
-                    // sbuName = (sbuName != '' ? sbuName : data[0]);
-                    $('#btnBu').html(htmlBu);
-                    // $('#btnBu').val(sbuName);
-
-                    let buToUse = _state.nameFactory || sBu || data[0];
-                    $('#btnBu').val(buToUse);
-                    _state.nameFactory = buToUse;
-                    getFactory(buToUse);
-
-                } else {
-                    console.log("No data factory line.");
-                }
-            },
-            failure: function (error) {
-                $(".loader").addClass("d-none");
-
-                console.log(error);
-            }
+        window.addEventListener("resize", () => {
+            chartsList.forEach((chart) => applyScaleToChart(chart));
         });
-    }
 
+        let fromDate = null;
+        let toDate = null;
 
-    $("#btnBu").change(function () {
-        isLoading = true;
-        // sbuName = $("#btnBu").find("option:selected").val();
-        // sbuName = $(this).val();
-        // dataset.sbuName = $(this).val();
-        // idBu = '';
-        // var nameFactory = $("#btnBu").val();
-        _state.nameFactory = $("#btnBu").val();
-        selectionSnapshot.bu = _state.nameFactory;
-        selectionSnapshot.factory = null;
-        _state.nameFactory = $(this).val();
-        getFactory(_state.nameFactory); 
-    });
+        const selectElement = document.getElementById("sl-time-chart");
 
-
-    function getFactory(nameFactory) {
-        $(".loader").removeClass("d-none");
-
-        // $('#select-factory').html('');
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v2/get_list_factory_with_group_line",
-            data: {
-                sbu_name: nameFactory
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                $(".loader").addClass("d-none");
-
-                var status = response['status'];
-                var data = response['data'];
-                var message = response['message'];
-                var total = response['total'];
-                if (total > 0) {
-                    var htmlFactory = "";
-                    for (var i = 0; i < data.length; i++) {
-                        htmlFactory += '<option value="' + data[i]['id'] + '">' + data[i]['name'] + '</option>';
-                    }
-                    // idBu = (idBu != '' ? idBu : data[0]['id']);
-                    $('#select-factory').html(htmlFactory);
-
-                    var preferredFactory = selectionSnapshot.factory || idFactory;
-                    var fallbackFactory = data[0]['id'];
-                    var matchedFactory = fallbackFactory;
-
-                    if (preferredFactory != null) {
-                        for (var j = 0; j < data.length; j++) {
-                            if (data[j]['id'] == preferredFactory) {
-                                matchedFactory = preferredFactory;
-                                break;
-                            }
-                        }
-                    }
-
-                    $('#select-factory').val(matchedFactory);
-                    _state.idFac = matchedFactory;
-
-                    if (idFactory != null && preferredFactory == idFactory) {
-                        idFactory = null;
-                    }
-
-                    captureSelections();
-                    loadItem(_state.idFac);
-
-                    // if (idBu != null && idBu != '') {
-                    // }
-                } else {
-                    alert("No data factory line!");
-                }
-                window.sessionStorage.setItem('dataset', JSON.stringify(dataset));
-                _state.nameFactory = $("#btnBu").val(); 
-            },
-            error: function (e) {
-                $(".loader").addClass("d-none");
-                var res = JSON.parse(e.responseText);
-                alert(res.message);
-
-            }
-        });
-    }
-
-
-    $("#select-factory").change(function () {
-        isLoading = true;
-        // idBu = $("#select-factory").find("option:selected").val();
-        // idBu = $(this).val();
-        // dataset.idBu = $(this).val();
-        var idFac = $("#select-factory").val();
-        _state.idFac=idFac;
-        _state.idFac = $(this).val();
-        loadItem(idFac);
-        captureSelections();
-        window.sessionStorage.setItem('dataset', JSON.stringify(dataset));
-
-    });
-
-
-    Date.prototype.addDays = function (days) {
-        var date = new Date(this.valueOf());
-        date.setDate(date.getDate() + days);
-        return date;
-    }
-
-    Date.prototype.toString = function () {
-        var date = new Date(this.valueOf());
-        var year = date.getFullYear();
-        var month = (1 + date.getMonth()).toString();
-        month = month.length > 1 ? month : '0' + month;
-        var day = date.getDate().toString();
-        day = day.length > 1 ? day : '0' + day;
-        var hour = date.getHours().toString();
-        hour = hour.length > 1 ? hour : '0' + hour;
-        var minute = date.getMinutes().toString();
-        minute = minute.length > 1 ? minute : '0' + minute;
-        var second = date.getSeconds().toString();
-        second = second.length > 1 ? second : '0' + second;
-        var a = year + "-" + month + "-" + day;
-        return a;
-    }
-
-    Date.prototype.toString2 = function () {
-        var date = new Date(this.valueOf());
-        var year = date.getFullYear();
-        var month = (1 + date.getMonth()).toString();
-        month = month.length > 1 ? month : '0' + month;
-        var day = date.getDate().toString();
-        day = day.length > 1 ? day : '0' + day;
-        var hour = date.getHours().toString();
-        hour = hour.length > 1 ? hour : '0' + hour;
-        var minute = date.getMinutes().toString();
-        minute = minute.length > 1 ? minute : '0' + minute;
-        var second = date.getSeconds().toString();
-        second = second.length > 1 ? second : '0' + second;
-        var a = day + "." + month;
-        return a;
-    }
-
-    Date.prototype.calDayFromDateToDate = function (date) {
-        const oneDay = 24 * 60 * 60 * 1000;
-        var start = new Date(this.valueOf());
-        var diffDay = Math.round(Math.abs((start - date) / oneDay));
-        return diffDay;
-    }
-
-    function getTotalDayInMonth(timeSpan) {
-        var startDate = timeSpan;
-        var dateCheck = new Date(startDate);
-        var feb = 28;
-        if (dateCheck.getFullYear() * 1 % 4 == 0) {
-            feb = 29;
+        function getFormattedDate(date, time) {
+            return date.format(`YYYY/MM/DD ${time}`);
         }
-        var month = dateCheck.getMonth();
-        var day = 30;
-        switch (month) {
-            case 0:
-            case 2:
-            case 4:
-            case 6:
-            case 7:
-            case 9:
-            case 11:
-                day = 31;
-                break;
-            case 1:
-                day = feb;
-                break;
-            default:
-                day = 30;
-                break;
-        }
-        return day;
-    }
 
-    function defaultItemTime(idStep, frmFlag, timeSpan) {
-        var html = "";
-        if (frmFlag == 1) {
-            //DAY
-            var totalDay = getTotalDayInMonth(timeSpan);
-            for (var j = 1; j <= totalDay; j++) {
-                var tmp = '';
-                if (j < 10) {
-                    tmp = '0' + j;
-                } else tmp = j;
-                html += '<td class="step' + idStep + '_' + tmp + '"></td>';
-            }
-        } else if (frmFlag == 2) {
-            //week
-            for (var j = 1; j <= 53; j++) {
-
-                html += '<td class="step' + idStep + '_' + j + '"></td>';
-            }
-        } else if (frmFlag == 3) {
-            //month
-            for (var j = 1; j <= 12; j++) {
-                html += '<td class="step' + idStep + '_' + j + '"></td>';
-            }
-        } else if (frmFlag == 4) {
-            //quarter
-            for (var j = 1; j <= 4; j++) {
-
-                html += '<td class="step' + idStep + '_' + j + '"></td>';
-            }
-        } else if (frmFlag == 5) {
-            //year
-            var mDate = new Date();
-            var yearStart = 2019;
-            var yearEnd = mDate.getFullYear();
-            for (var j = yearStart; j <= yearEnd; j++) {
-                var tmp = '';
-
-                html += '<td class="step' + idStep + '_' + j + '"></td>';
-            }
-        } else if (frmFlag == 7) {
-            //shift
-
-            var totalDay = getTotalDayInMonth(timeSpan);
-            for (var j = 1; j <= totalDay; j++) {
-                var tmp = '';
-                if (j < 10) {
-                    tmp = '0' + j;
-                } else tmp = j;
-
-                html += '<td class="step' + idStep + '_' + tmp + '_DAY"></td>'
-                    + '<td class="step' + idStep + '_' + tmp + '_NIGHT"></td>';
-            }
-        } else if (frmFlag == 8) {
-            //lession 4
-            for (var j = 1; j <= 4; j++) {
-                html += '<td class="step' + idStep + '_' + j + '"></td>';
+        function updateDates(selectedOption) {
+            if (selectedOption === "today") {
+                fromDate = getFormattedDate(moment(), "00:00:00");
+                toDate = getFormattedDate(moment(), "23:59:59");
+            } else if (selectedOption === "7") {
+                fromDate = getFormattedDate(moment().subtract(6, "days"), "00:00:00");
+                toDate = getFormattedDate(moment(), "23:59:59");
+            } else if (selectedOption === "30") {
+                fromDate = getFormattedDate(moment().subtract(29, "days"), "00:00:00");
+                toDate = getFormattedDate(moment(), "23:59:59");
             }
         }
-        return html;
-    }
 
-    function getFormatDate(strDate) {
-        var date = new Date(strDate);
-        var year = date.getFullYear();
-        var month = (1 + date.getMonth()).toString();
-        month = month.length > 1 ? month : '0' + month;
-        var day = date.getDate().toString();
-        day = day.length > 1 ? day : '0' + day;
-        var hour = date.getHours().toString();
-        hour = hour.length > 1 ? hour : '0' + hour;
-        var minute = date.getMinutes().toString();
-        minute = minute.length > 1 ? minute : '0' + minute;
-        var second = date.getSeconds().toString();
-        second = second.length > 1 ? second : '0' + second;
+        async function getDataDonutIQC() {
+            try {
+                const res = await fetch(
+                    `/production-system/api/iqc/iqc-material-type?fromDate=${fromDate}&toDate=${toDate}`
+                );
+                if (!res.ok) throw new Error(`HTTP status ${res.status}`);
 
-        var a = year + "/" + month + "/" + day + " 08:30:00";
+                const json = await res.json();
 
-        timeM = a;
-        return a;
-        // return time;
-    }
+                const data = json.data;
+                if (!data || !data.length) return [];
 
-    $('#reservation').daterangepicker({
-        timePicker: true,
-        timePickerIncrement: 7,
-        singleDatePicker: true,
-        locale: {
-            format: 'YYYY/MM/DD HH:mm'
-        }
-    });
-
-    var start = moment().format("YYYY/MM/DD HH:mm");
-    $('#reservation').data('daterangepicker').setStartDate(start);
-
-    var timeSpan = $('#reservation').val();
-
-    $('#reservation').on('change', function () {
-        timeSpan = this.value;
-        init()
-    });
-
-    Date.prototype.getWeekNumber = function () {
-
-        var d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
-        var dayNum = d.getUTCDay() || 7;
-        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
-    };
-    $("#reservation").change(function () {
-        if (moment(new Date($('#reservation').val())).format("YYYY/MM/DD HH:mm") < moment(new Date()).format("YYYY/MM/DD HH:mm")) {
-            status_name = "Quantity Unchecked";
-            status_name_chart = "Unchecked";
-        }
-        else {
-            var status_name = 'Needed Check ';
-            status_name_chart = 'Needed Check';
-        }
-        $("#status_name_un").html(status_name);
-        loadDateDf();
-        // loadItem();
-    });
-
-    function getQuarter(d) {
-        var m = Math.floor(d.getMonth() / 3) + 1;
-        return m > 4 ? m - 4 : m;
-    }
-
-    function loadDateDf() {
-        var sDate = $('#reservation').val();
-        var date = new Date(sDate);
-        var d = date.toString();
-        //  var w = date.getWeekNumber();
-        var oneJan = new Date(date.getFullYear(), 0, 1);
-        var numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000));
-        var w = Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
-        //    console.log("result---", result)
-        var m = date.getMonth();
-        var y = date.getFullYear();
-
-        // var monthNames = ["January", "February", "March", "April", "May", "June",
-        //     "July", "August", "September", "October", "November", "December"
-        // ];
-        var monthNames = ["1", "2", "3", "4", "5", "6",
-            "7", "8", "9", "10", "11", "12"
-        ];
-        $("#time_1").html(" " + d.slice(8,) + "");
-        $("#time_2").html(" " + w + "");
-        $("#time_3").html(" " + monthNames[m] + "");
-        $("#time_4").html(" " + getQuarter(date) + "");
-        $("#time_5").html(" " + y + "");
-        $("#time_7").html(" " + "DAY" + "");
-    }
-
-    function loadItem(idFac) {
-        $(".loader").removeClass("d-none");
-
-        $('#tbl_item>tbody').html('');
-        $.ajax({
-            type: 'GET',
-            url: '/paperless/api/v2/get_flag_by_bu',
-            data: {
-                idBu: idFac,
-            },
-            success: function (res) {
-                $(".loader").addClass("d-none");
-
-                var data = res['data'];
-                var html = '<tr>';
-
-                for (i in data) {
-                    html += '<td class="td_item">' +
-                        '<div class="bar_charts item_bar" id="flag_' + data[i].id_flag + '">' +
-                        '<div class="bar_charts text-center pl-0 w-100">' +
-                        '<span class="f"><b>' + data[i].name + '</b> </span>' +
-                        '<span class="t" id="time_' + data[i].id_flag + '"></span><br>' +
-                        '<span class="t" id="total_' + data[i].id_flag + '"></span>' +
-                        '</div>' +
-                        '</div></td>';
-                }
-                html += '</tr>';
-                $('#tbl_item>tbody').html(html);
-                itemBarClick();
-                loadDateDf();
-
-                if (data != null) {
-                    if (_state.id_flag) {
-                        $("#flag_" + _state.id_flag).addClass('item_bar_active');
-                    } else {
-                        $("#flag_" + data[0].id_flag).addClass('item_bar_active');
-                        
-                        _state.id_flag = data[0].id_flag;
-                    }
-                    // getDataPaperless(data[0].id_flag);
-                    // _state.id_flag = data[0].id_flag;
-                    // getDataPaperless(data[0].id_flag)
-                    getDataPaperless(_state.id_flag);
-                } else {
-                    finishLoadingCycle();
-                }
-
-                $("#factory_name").html($("#select-factory").find("option:selected").html() + ' Statistic');
-            }, error(error) {
-                $(".loader").addClass("d-none");
-                finishLoadingCycle();
+                return data.map((i) => ({
+                    name: i.materialType == null ? "Others" : i.materialType,
+                    y: i.totalRecord,
+                }));
+            } catch (error) {
+                console.error("Fetch error:", error);
+                return [];
             }
-        });
-    }
-
-
-    // var dataTEST = []
-    function getDataPaperless(id_flag) {
-        // console.log("id_flag---", id_flag)
-        $(".loader").removeClass("d-none");
-
-        if (id_flag == null) {
-            var idFlag = 1;
-        } else {
-            var idFlag = id_flag;
         }
-        var sDate = $('#reservation').val();
-        // var title = ' <spring:message code="department.statistic" /> - ' + sDate + tempFLag;
-        var title = '<spring:message code="department.statistic" />';
-        $.ajax({
-            type: 'GET',
-            url: '/paperless/api/v2/statistic/get_data_statistic_bu_team_v2',
-            data: {
-                id_bu: $("#select-factory").val(),
-                id_flag: idFlag,
-                time_span: sDate,
 
-            },
-            success: function (res) {
-                $(".loader").addClass("d-none");
+        async function getDataDonutNCMR() {
+            try {
+                const res = await fetch(
+                    `/production-system/api/iqc/ncmr-material-type?fromDate=${fromDate}&toDate=${toDate}`
+                );
+                if (!res.ok) throw new Error(`HTTP status ${res.status}`);
 
-                var data = res['data'];
-                // dataTEST = data
-                var tmpData = [{
-                    name: "Report",
-                    data: []
-                }];
-                if (data == null) {
-                    alert("No Data!");
-                    $("#n_box-2_1 span").html('<i class="far fa-frown"></i><b> No Data!</b>');
-                    $("#chart_detail").addClass("d-none");
-                    $("#statistic").addClass("d-none");
-                    $("#department").addClass("d-none");
-                    $("#chart-by-team").addClass("d-none");
-                    $("#tbl>tbody").html('<tr><td colspan="6"><i class="far fa-smile-beam"></i> No Data!</td></tr>');
-                    $("#tbl_title").html('No Data!');
-                    $("#n_chart").removeClass('d-none');
-                    $("#n_box-2_1").removeClass('d-none');
-                    $("#n_box-2").removeClass('d-none');
-                    finishLoadingCycle();
-                    return;
-                } else {
+                const json = await res.json();
 
-                    $("#chart_detail").removeClass("d-none");
-                    $("#statistic").removeClass("d-none");
-                    $("#department").removeClass("d-none");
-                    $("#chart-by-team").removeClass("d-none");
-                    $("#n_chart").addClass('d-none');
-                    $("#n_box-2").addClass('d-none');
-                    $("#n_box-2_1").addClass('d-none');
+                const data = json.data;
+                if (!data || !data.length) return [];
 
-                    var sum = data.check + data.un_check;
-                    var dataDepartment = data.teams;
-                    var objData = {};
-                    var team_id = [];
-
-                    var categories = [];
-                    var series = [];
-                    var d_checked = [];
-
-                    var percent_check = [];
-                    var percent_uncheck = [];
-
-                    var d_unchecked = [];
-                    // var sl_check =[]
-                    // var d_abnormal = [];
-
-                    for (i in dataDepartment) {
-                        team_id.push(dataDepartment[i].team_id);
-                        categories.push(dataDepartment[i].team_name);
-                        d_checked.push(dataDepartment[i].check);
-                        d_unchecked.push(dataDepartment[i].un_check);
-                        // d_abnormal.push(dataDepartment[i].abnormal);
-                        percent_check.push(dataDepartment[i].percent_check);
-                        percent_uncheck.push(100 - dataDepartment[i].percent_check)
-                         _state.teamId=team_id;
-                    }
-                    // console.log("percent_check: ", percent_check);
-                    // console.log("percent_uncheck: ", percent_uncheck)
-
-                    objData[0] = {
-                        "categories": categories,
-                        "teamId": team_id
-                    };
-                   
-                    var df1 = 'check';
-                    var df2 = objData[0].teamId[0];
-                    var df3 = '<spring:message code="me.checked" />';
-                    var df4 = objData[0].categories[0];
-
-                    tmpChecked = {
-                        name: "<spring:message code='me.checked' />",
-                        y: data.check,
-                        events: {
-                            click: function (event) {
-                            }
-                        },
-                        sl: d_checked,
-                        enableMouseTracking: false
-                    }
-
-                    tmpUnchecked = {
-                        name: status_name_chart,
-                        y: data.un_check,
-                        events: {
-                            click: function (event) {
-                            }
-                        },
-                        sl: d_unchecked,
-                        enableMouseTracking: false
-                    }
-
-                    $('#number_check').html(data.check);
-                    document.getElementById("checked").value = (data.check / sum) * 100;
-
-                    $('#number_uncheck').html(data.un_check);
-                    document.getElementById("unchecked").value = (data.un_check / sum) * 100;
-
-                    tmpData[0]['data'].push(tmpChecked);
-                    tmpData[0]['data'].push(tmpUnchecked);
-                    loadHightchart(tmpData);
-
-                    var dataChecked = {
-                        name: "<spring:message code='me.checked' />",
-                        data: percent_check,
-                        id_data: 'check',
-                        sl: d_checked,
-                    };
-                    var dataUnhecked = {
-                        name: status_name_chart,
-                        data: percent_uncheck,
-                        id_data: 'un_check',
-                        sl: d_unchecked,
-                    };
-
-                    series.push(dataUnhecked);
-                    series.push(dataChecked);
-                    // console.log("series: ", series)
-                   
-                    loadDepartment(objData, series, title, id_flag, sDate);
-                    _state.teamId = data["teams"][0].team_id;
-                    // _state.id_flag = id_flag;
-                    _state.id_type = 1;
-                    _state.nameTeam = data["teams"][0].team_name;
-                    _state.sDate = sDate;
-                    // getMEchecklist(data["teams"][0].team_id, id_flag, 1, data["teams"][0].team_name);
-                    getMEchecklist(_state.teamId,_state.id_flag,_state.id_type,_state.nameTeam);
-                    count = 1;
-                    loadDataFormChecked(_state.id_flag,_state.teamId,_state.sDate);
-                    // loadDataFormChecked(id_flag, data["teams"][0].team_id, sDate);
-                }
-            },
-            error:function(){
-                finishLoadingCycle();
+                return data.map((i) => ({
+                    name: i.materialType == null ? "Others" : i.materialType,
+                    y: i.totalRecord,
+                }));
+            } catch (error) {
+                console.error("Fetch error:", error);
+                return [];
             }
-        })
-    }
+        }
 
-    function loadHightchart(tmpData) {
-        Highcharts.chart('statistic', {
-            colors: ['#3bdbc0', '#f4eb96'],
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false,
-                type: 'pie',
-                backgroundColor: '#fff0',
-                borderColor: "#4572A7",
-                margin: [0, 0, 0, 0]
-            },
+        const highchartsInit = () => {
+            Highcharts.setOptions({
+                chart: {
+                    backgroundColor: "transparent",
+                    spacing: [10, 5, 5, 5],
+                },
 
-            title: {
-
-                text: 'aaaa',
-                style: {
-                    enabled: false,
-                    color: '#daf9f7',
-                    fontSize: "0px"
-                }
-            },
-            tooltip: {
-                // pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>',
-                backgroundColor: '#063052db',
-                valueSuffix: '',
-                style: {
-                    color: '#fff',
-                }
-            },
-            accessibility: {
-                point: {
-                    valueSuffix: '%'
-                }
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: false,
-                    cursor: 'auto',
-                    dataLabels: {
-                        enabled: true,
-                        format: '{point.name}<br> {point.percentage:.1f}%',
-                        connectorColor: 'silver',
-                        distance: "15",
-                        color: '#ffff',
+                xAxis: {
+                    gridLineWidth: 1,
+                    gridLineColor: "#313f62",
+                    gridLineDashStyle: "Dash",
+                    lineWidth: 1,
+                    lineColor: "#313f62",
+                    lineDashStyle: "ShortDash",
+                    labels: {
                         style: {
-                            fontWeight: 'none',
-                            textOverflow: 'clip',
-                            textOutline: '0',
+                            fontSize: "1rem",
+                            fontWeight: "600",
+                            color: "#7a95c3",
                         },
                     },
-                }
-            },
-            navigation: {
-                buttonOptions: {
-                    height: 14,
-                    width: 14,
-                    symbolSize: 8,
-                    symbolX: 7,
-                    symbolY: 7,
-                    symbolStrokeWidth: 1
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            series: tmpData
-        });
-    }
-
-    // var obj = []
-    function loadDepartment(objData, series, title, id_flag, sDate) {
-        // console.log("series-----: ", series)
-
-        // obj = objData
-        Highcharts.chart('department', {
-            colors: ['#f4eb96', '#3bdbc0'],
-            // [0, 1, 2] | 0: abnomal, 1: uncheck, 2: check
-            chart: {
-                type: 'column',
-                backgroundColor: '#fff0',
-            },
-            title: {
-                text: title,
-                style: {
-                    fontWeight: 'bold',
-                    fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"',
-                    color: '#8ce5ff',
-                    fontSize: "2.7vh",
-                }
-            },
-            xAxis: {
-                categories: objData[0].categories,
-                labels: {
-                    style: {
-                        color: '#FFF',
-                        // fontSize: "14px",
-                    },
-
-                },
-                gridLineWidth: 0,
-                minorGridLineWidth: 0,
-                tickLength: 0,
-                tickWidth: 0,
-            },
-            yAxis: {
-                min: 0,
-                gridLineColor: '#023c37b3',
-                title: {
-                    text: ''
                 },
 
-                stackLabels: {
-                    enabled: false,
-                    style: {
-                        fontWeight: 'bold',
-                        color: ( // theme
-                            Highcharts.defaultOptions.title.style &&
-                            Highcharts.defaultOptions.title.style.color
-                        ) || 'gray'
-                    }
-                },
-                labels: {
-                    format: '{value}%',
-                    style: {
-                        color: '#FFF',
-                    },
-                },
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderColor: '#78d4e1',
-                borderWidth: 1,
-                borderRadius: 6,
-                backgroundColor: null,
-                itemStyle: {
-                    color: '#ffffff',
-                    fontSize: "11px",
-                    fontWeight: null
-                },
-                itemHoverStyle: {
-                    color: '#FFF263',
-                    fontSize: "11.5px",
-                }
-            },
-            // tooltip: {
-            //     headerFormat: '<b style="color: #FFF">{point.x}</b><br/>',
-            //     pointFormat: '<span style="color: #FFF">{series.name}: {point.y}% ({series.sl}: {point.y}) </span><br/><span style="color: #FFF">Total: {point.stackTotal}%</span>',
-            //     backgroundColor: '#063052db'
-            // },
-
-            tooltip: {
-                formatter: function () {
-                    return '<span>' + this.x + '<br>' + this.series.name + ': ' + this.y + '% (' + series[this.series.name == 'Checked' ? 1 : 0].sl[objData[0].categories.indexOf(this.x)] + ')</span>'
-                }
-
-            },
-
-            plotOptions: {
-                column: {
-                    stacking: 'normal',
-                    dataLabels: {
-                        enabled: false,
+                yAxis: {
+                    gridLineWidth: 1,
+                    gridLineColor: "#313f62",
+                    gridLineDashStyle: "Dash",
+                    labels: {
                         style: {
-                            color: '#023c37b3',
+                            fontSize: "1rem",
+                            fontWeight: "600",
+                            color: "#7a95c3",
                         },
-                    }
-                },
-                series: {
-                    borderColor: null,
-                    cursor: 'pointer',
-                    point: {
-                        events: {
-                            click: function () {
-                                // console.log("test click")
-                                //alert('Category: ' + this.category + ', value: ' + this.series.userOptions.id_data);
-                                //alert(objData[0].teamId[this.x]);
-                                // console.log("series:", this);
-
-                                var id_type = this.colorIndex;
-                                // console.log("id_type11111:", id_type);
-
-                                // alert("id_type--------------------:", id_type);
-                                temp_selection = '';
-                                _state.teamId = objData[0].teamId[this.x];
-                                // _state.id_flag =  id_flag;
-                                _state.id_type = id_type;
-                                _state.nameTeam = this.category;
-                                // getMEchecklist(objData[0].teamId[this.x], id_flag, id_type, this.category);
-                                getMEchecklist(_state.teamId,id_flag,_state.id_type,_state.nameTeam)
-                                // console.log(this.series.userOptions.id_data + " | " + objData[0].teamId[this.x] + " | " + this.series.name + " | " + this.category + " | " + id_flag + " | " + id_type);
-                                // console.log("this.category", this.category)
-                                // console.log("this.category", this.category)
-
-                                count = 1
-                                if (id_type == 1) { //1 : checked
-                                    _state.id_flag = id_flag;
-                                    _state.teamId = objData[0].teamId[this.x];
-                                    _state.sDate = sDate;
-                                    _state.nameTeam = this.category;
-                                    _state.nameCheck = this.series.name
-                                    loadDataFormChecked(id_flag,_state.teamId,_state.sDate,_state.nameTeam,_state.nameCheck)
-                                    // loadDataFormChecked(id_flag, objData[0].teamId[this.x], sDate, this.category, this.series.name);
-                                } else {            //0: uncheck
-                                    loadDataFormUnCheck(id_flag, objData[0].teamId[this.x], sDate, this.category, this.series.name);
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            series: series
-        });
-
-    }
-
-    function loadInfoQcc(idQcc) {
-        $(".loader").removeClass("d-none");
-
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v1/get_info_qcc_by_id_qcc",
-            data: {
-                id_qcc: idQcc
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                $(".loader").addClass("d-none");
-
-                var data = response['data'];
-                //console.log(data);
-                $("#name_form").html(data[0]['fr_name']);
-                $("#detail-form-code").html(data[0]['fr_code']);
-                $("#detail-factory").html(data[0]['bu_name']);
-                $("#detail-floor").html(data[0]['floor']);
-                $("#detail-line").html(data[0]['line_name']);
-                $("#detail-qr").html(data[0]['fr_code']);
-                $("#detail-cycle").html(data[0]['fl_name']);
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-                $(".loader").addClass("d-none");
-
-            }
-        });
-    }
-
-    function loadHeaderTime(frmFlag, timeSpan) {
-        var thead = '<tr><th style="min-width: 500px;"><button class="d-none" style="font-size: 15px; border: 0px; background: #fff; padding: 3px 12px;" id="btn-view-chart"> <i class="fas fa-chart-line d-none"></i></button></th>';
-        switch (parseInt(frmFlag)) {
-            case 2:
-                //week
-                for (var i = 1; i <= 53; i++) {
-                    thead += '<th>WK' + i + '<br><span style="font-weight: 400;" class="step_create_time_' + i + '"></span></th>';
-                }
-                break;
-            case 3:
-                //month
-                for (var i = 1; i <= 12; i++) {
-                    thead += '<th>' + i + '<br><span style="font-weight: 400;" class="step_create_time_' + i + '"></span></th>';
-                }
-                break;
-            case 4:
-                //quarter
-                for (var i = 1; i <= 4; i++) {
-                    thead += '<th>' + i + '<br><span style="font-weight: 400;" class="step_create_time_' + i + '"></span></th>';
-                }
-                break;
-            case 5:
-                //year
-                var mDate = new Date();
-                var yearStart = 2019;
-                var yearEnd = mDate.getFullYear();
-                for (var i = yearStart; i <= yearEnd; i++) {
-                    thead += '<th>' + i + '<br><span style="font-weight: 400;" class="step_create_time_' + i + '"></span></th>';
-                }
-                break;
-            case 6:
-                //Lien tuc
-                break;
-            case 7:
-                //Shift
-                var totalDay = getTotalDayInMonth(timeSpan);
-                var thead = '<tr><th rowspan="2" style="min-width: 500px; width: 500px;"></th>';
-                for (var i = 1; i <= totalDay; i++) {
-                    thead += '<th colspan="2">' + i + '</th>';
-                }
-                thead += '</tr><tr>';
-                for (var i = 1; i <= totalDay; i++) {
-                    thead += '<th>D</th><th>N</th>';
-                }
-                thead += '</tr>';
-                break;
-            case 8:
-                //Lession 6h
-                // for (var i = 1; i <= 4; i++) {
-                //     thead += '<th>' + i + '</th>';
-                // }
-                thead += '<th>白班/Ca ngày<br>第一節 Tiết 1<br>07:30-13:30</th>' +
-                    '<th>白班/Ca ngày<br>第二節 Tiết 2<br>13:30-19:300</th>' +
-                    '<th>晚班/Ca Đêm<br>第一節 Tiết 1<br>19:30-01:30</th>' +
-                    '<th>晚班/Ca Đêm<br>第二節 Tiết 2<br>01:30-07:30</th>';
-                break;
-            default:
-                //Day
-                var totalDay = getTotalDayInMonth(timeSpan);
-                for (var i = 1; i <= totalDay; i++) {
-                    thead += '<th>' + i + '</th>';
-                }
-                break;
-        }
-        thead += '</tr>';
-        $("#statistic-data-check-qr thead").html(thead);
-    }
-
-    function showDataStatistic(qccId, frmFlag, time) {
-        $(".loader").removeClass("d-none");
-
-        $("#detail-time").html(time);
-        //$('#icon_loading_detail_qr').css("display", "block");
-        $(".dialog-chart-statistic").html("");
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/web/get_step_form_report_by_qr_code",
-            data: {
-                idQrCode: qccId
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                $(".loader").addClass("d-none");
-
-                var length = response.length;
-                if (length > 0) {
-                    loadHeaderTime(frmFlag, time);
-                    var row = "";
-                    for (var i = 0; i < length; i++) {
-                        var defValue = defaultItemTime(response[i]['step_id'], frmFlag, time);
-                        row += '<tr class="step-' + response[i]['step_id'] + '"><td class="fixed" style="text-align: left;"><span>[' + (i + 1) + '] ' + response[i]['step_name'] + '</span><input type="checkbox" name="cb-show-value" class="cb-show-value d-none" id-step="' + response[i]['step_id'] + '"></td>' + defValue + '</tr>'
-                    }
-                    var defValue = defaultItemTime("_create_user", frmFlag, time);
-                    row += '<tr class="text-center bg-body-blue"><td style="text-align: left;" class="fixed bg-body-blue-first first-col first-col-td"><spring:message code="paperless.checklist.applicant" /></td>' + defValue + '</tr>';
-                    var defValue = defaultItemTime("_signer_user", frmFlag, time);
-                    row += '<tr class="text-center bg-body-blue"><td style="text-align: left;" class="fixed bg-body-blue-first first-col first-col-td"><spring:message code="signer" /></td>' + defValue + '</tr>';
-                    $("#statistic-data-check-qr tbody").html(row);
-
-                    // clickCbShowValue();
-                    loadDataCheck(qccId, frmFlag, time);
-                    loadInfoQcc(qccId);
-                } else {
-                    console.log("Data null");
-                }
-                $('#icon_loading_detail_qr').css("display", "none");
-            },
-            failure: function (errMsg) {
-                $(".loader").addClass("d-none");
-                console.log(errMsg);
-                $('#icon_loading_detail_qr').css("display", "none");
-            }
-        });
-    }
-
-    var dataTest = [];
-    function loadDataCheck(idQcc, frmFlag, timeSpan) {
-        $(".loader").removeClass("d-none");
-
-        var mDate = new getFormatDate(timeSpan);
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/web/get_list_report_result_by_id_qr",
-            data: {
-                id_qr_code: idQcc,
-                time_span: timeM + " - " + timeM
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                $(".loader").addClass("d-none");
-
-                var data = response['data'];
-                dataTest = data
-                var idsReport = [];
-
-                if (frmFlag == 8) {
-                    for (i in data) {
-                        for (j in data[i]) {
-                            console.log("j----", j) //==1
-                            for (k in data[i][j]) {
-                                console.log("k----", k)
-                                var classStyle = "fas fa-times txt-color-error";
-                                switch (data[i][j][k].value_check) {
-                                    case 0:
-                                        // classStyle = "fas fa-check txt-color-success";
-                                        classStyle = "txt-color-success";
-                                        break;
-                                    case 2:
-                                        //  classStyle = "fas fa-minus-circle node-txt-color-default";
-                                        classStyle = "txt-color-default";
-                                        break;
-                                    default:
-                                        //  classStyle = "fas fa-times txt-color-error";
-                                        classStyle = "txt-color-error";
-                                        break;
-                                }
-                                var status = '<span class="value-step ' + classStyle + '">' + data[i][j][k].value_content + '</span>' +
-                                    // '<span data-toggle="tooltip" title="' + data[i][j][k].value_content + '"><i class="value-check ' + classStyle + '"></i></span>'+
-                                    loadDataMedia(data[i][j][k]["media"]);
-                                $('.step' + data[i][j][k].step_id + '_' + j + '').html(status);
-                            }
-                            $('.step_create_time_' + j).html(data[i][j][0]['time'].slice(0, 10));
-                            $('.step_create_user_' + j).html(data[i][j][0]['id_card'] + '<br>' + data[i][j][0]['fullname']);
-                            $('.step_signer_user_' + j).addClass(" signer_user_" + data[i][j][0]['rr_id']);
-                            if (idsReport.indexOf(data[i][j][0]['rr_id']) == -1) {
-                                idsReport.push(data[i][j][0]['rr_id']);
-                            }
-                        }
-                    }
-                }
-                else if (frmFlag == 1) {
-                    for (i in data) {
-                        var convertTime = i.substring(8);
-                        for (j in data[i]) {
-                            var classStyle = "fas fa-times txt-color-error";
-                            switch (data[i][j].value_check) {
-                                case 0:
-                                    classStyle = "fas fa-check txt-color-success";
-                                    classStyle = "txt-color-success";
-                                    break;
-                                case 2:
-                                    classStyle = "fas fa-minus-circle node-txt-color-default";
-                                    classStyle = "txt-color-default";
-                                    break;
-                                default:
-                                    classStyle = "fas fa-times txt-color-error";
-                                    classStyle = "txt-color-error";
-                                    break;
-                            }
-                            var status = '<span class="value-step ' + classStyle + '">' + data[i][j].value_content + '</span><span data-toggle="tooltip" title="' + data[i][j].value_content + '"><i class="value-check ' + classStyle + '"></i></span>' + loadDataMedia(data[i][j]['media']);
-                            $('.step' + data[i][j].step_id + '_' + convertTime).html(status);
-                        }
-                        $('.step_create_time_' + convertTime).html(data[i][0]['time']);
-                        $('.step_create_user_' + convertTime).html(data[i][0]['id_card'] + '<br>' + data[i][0]['fullname']);
-                        $('.step_signer_user_' + convertTime).addClass(" signer_user_" + data[i][0]['rr_id']);
-                        if (idsReport.indexOf(data[i][0]['rr_id']) == -1) {
-                            idsReport.push(data[i][0]['rr_id']);
-                        }
-                    }
-                }
-                else if (frmFlag == 7) {
-                    for (day in data) {
-                        var convertTime = day.substring(8);
-                        for (shift in data[day]) {
-                            var item = data[day][shift];
-                            for (var i = 0; i < item.length; i++) {
-                                var classStyle = "fas fa-times txt-color-error";
-                                switch (item[i].value_check) {
-                                    case 0:
-                                        classStyle = "fas fa-check txt-color-success";
-                                        classStyle = "txt-color-success";
-                                        break;
-                                    case 2:
-                                        classStyle = "fas fa-minus-circle node-txt-color-default";
-                                        classStyle = "txt-color-default";
-                                        break;
-                                    default:
-                                        classStyle = "fas fa-times txt-color-error";
-                                        classStyle = "txt-color-error";
-                                        break;
-                                }
-                                var status = '<span class="value-step ' + classStyle + '">' + item[i].value_content + '</span><span data-toggle="tooltip" title="' + item[i].value_content + '"><i class="value-check ' + classStyle + '"></i></span>' + loadDataMedia(item[i]['media']);
-
-                                $('.step' + item[i].step_id + '_' + convertTime + "_" + shift).html(status);
-                            }
-                            $('.step_create_time_' + convertTime + "_" + shift).html(item[0]['time']);
-                            $('.step_create_user_' + convertTime + "_" + shift).html(item[0]['id_card'] + '<br>' + item[0]['fullname']);
-                            $('.step_signer_user_' + convertTime + "_" + shift).addClass(" signer_user_" + item[0]['rr_id']);
-
-                            if (idsReport.indexOf(item[0]['rr_id']) == -1) {
-                                idsReport.push(item[0]['rr_id']);
-                            }
-                        }
-                    }
-                }
-                else {
-                    for (i in data) {
-                        console.log("i--------", i)
-                        for (j in data[i]) {
-                            var classStyle = "fas fa-times txt-color-error";
-                            switch (data[i][j].value_check) {
-                                case 0:
-                                    classStyle = "fas fa-check txt-color-success";
-                                    classStyle = "txt-color-success";
-                                    break;
-                                case 2:
-                                    classStyle = "fas fa-minus-circle node-txt-color-default";
-                                    classStyle = "txt-color-default";
-                                    break;
-                                default:
-                                    classStyle = "fas fa-times txt-color-error";
-                                    classStyle = "txt-color-error";
-                                    break;
-                            }
-                            var status = '<span class="value-step ' + classStyle + '">' + data[i][j].value_content + '</span><span data-toggle="tooltip" title="' + data[i][j].value_content + '"><i class="value-check ' + classStyle + '"></i></span>' + loadDataMedia(data[i][j]['media']);
-
-                            $('.step' + data[i][j].step_id + '_' + i).html(status);
-                        }
-                        $('.step_create_time_' + i).html(data[i][0]['time'].slice(0, 10));
-                        $('.step_create_user_' + i).html(data[i][0]['id_card'] + '<br>' + data[i][0]['fullname']);
-                        $('.step_signer_user_' + i).addClass(" signer_user_" + data[i][0]['rr_id']);
-                        if (idsReport.indexOf(data[i][0]['rr_id']) == -1) {
-                            idsReport.push(data[i][0]['rr_id']);
-                        }
-                    }
-                }
-                loadDataSigned(idsReport);
-            }
-        });
-    }
-
-    function loadDataSigned(dataRequest) {
-        if (dataRequest.length > 0) {
-            $.ajax({
-                type: 'POST',
-                url: "/paperless/api/v2/get_list_signer_by_ids_report",
-                cache: false,
-                data: JSON.stringify(dataRequest),
-                contentType: "application/json; charset=utf-8",
-                success: function (res) {
-                    var status = res['status'];
-                    var mess = res['message'];
-                    var total = res['total'];
-                    var data = res['data'];
-                    if (total > 0) {
-                        for (var i = 0; i < data.length; i++) {
-                            var classSign = ".signer_user_" + data[i]['rrId'];
-                            $(classSign).append(data[i]['idCard'] + " " + '<br>' + data[i]['fullName']);
-                        }
-                    }
-                },
-                error: function (e) {
-                    alert(e.message);
-                }
-            });
-        }
-    }
-
-    function loadDataMedia(mData) {
-        var medias = JSON.parse(mData);
-        var htmlMedia = "";
-        if (medias.length > 0) {
-            for (var i = 0; i < medias.length; i++) {
-                htmlMedia += '<img data-enlargable src="/paperless/ws-data/images/' + medias[i] + '" width="30px" height="30px" class="img-enlargable" alt="Fail" id="img-data-' + i + '" onclick="zoomImage(' + i + ')">';
-            }
-        }
-        return htmlMedia;
-    }
-
-    function showDetail(id_qcc, flag_id) {
-        if (flag_id == 6) {
-            var timeSpan = $('#reservation').val();
-            showDataStatistic6(id_qcc, flag_id, timeSpan);
-            $('#modal-detail').modal("show");
-            $(".content").css('filter', 'blur(8px)');
-        } else {
-            loadInfoQcc(id_qcc);
-            var timeSpan = $('#reservation').val();
-            loadHeaderTime(flag_id, timeSpan);
-            showDataStatistic(id_qcc, flag_id, timeSpan);
-            $('#modal-detail').modal("show");
-            $(".content").css('filter', 'blur(8px)');
-        }
-    }
-
-    $('#modal-detail').on('hidden.bs.modal', function () {
-        $(".content").css('filter', 'none');
-    });
-
-
-    $('.MEchecklist').bind('click', function () {
-
-        var chart = $('#container').highcharts(),
-            series = chart.series[0],
-            points = series.points;
-
-        points[1].select(true, true);
-        points[10].select(true, true);
-    });
-
-    function itemBarClick() {
-        $('.item_bar').click(function () {
-            isLoading = true;
-            flag_id_value = $(this)[0].id.replace("flag_", "");
-            _state.id_flag = flag_id_value;
-
-            var dateN = new Date();
-            var time = new Date().getHours() + ":" + new Date().getMinutes();
-            var tSift = Date.parse(new Date(dateN) + " " + time);
-            var defaultSift1 = Date.parse(new Date(dateN) + ' 19:30');
-            var defaultSift2 = Date.parse(new Date(dateN) + ' 07:30');
-
-            if (tSift < defaultSift1 && tSift >= defaultSift2) {
-                var dateNow = moment(new Date()).format("YYYY/MM/DD ")
-                var datePick = moment(new Date($('#reservation').val())).format("YYYY/MM/DD HH:mm");
-            } else {
-                var dateNow = moment(new Date()).format("YYYY/MM/DD ").add(-1, "days").format("YYYY/MM/DD HH:mm");
-                var datePick = moment(new Date($('#reservation').val())).format("YYYY/MM/DD HH:mm");
-
-            }
-
-            switch (flag_id_value) {
-                case '1':
-                    if (datePick < dateNow) {
-                        status_name = "Quantity Unchecked";
-                        status_name_chart = "Unchecked";
-                    }
-                    else {
-                        var status_name = 'Needed Check ';
-                        status_name_chart = 'Needed Check';
-                    }
-                    break;
-                case '2':
-                    //week click item D/w/m/y/s
-                    if (datePick.getFullYear < dateNow.getFullYear) {
-                        status_name = "Quantity Unchecked";
-                        status_name_chart = "Unchecked";
-                    } else {
-                        if (new Date(datePick).getWeekNumber() < new Date(dateNow).getWeekNumber()) {
-                            status_name = "Quantity Unchecked";
-                            status_name_chart = "Unchecked";
-                        } else {
-                            var status_name = 'Needed Check ';
-                            status_name_chart = 'Needed Check';
-                        }
-                    }
-                    break;
-                case '3':
-                    if (datePick.getFullYear < dateNow.getFullYear) {
-                        status_name = "Quantity Unchecked";
-                        status_name_chart = "Unchecked";
-                    } else {
-                        if (datePick.getMonth < dateNow.getMonth) {
-                            status_name = "Quantity Unchecked";
-                            status_name_chart = "Unchecked";
-                        } else {
-                            status_name = 'Needed Check ';
-                            status_name_chart = 'Needed Check';
-                        }
-                    }
-                    break;
-                case '4':
-                    if (datePick.getFullYear < dateNow.getFullYear) {
-                        status_name = "Quantity Unchecked";
-                        status_name_chart = "Unchecked";
-                    } else {
-                        if (getQuarter(new Date(datePick)) < getQuarter(new Date(dateNow))) {
-                            status_name = "Quantity Unchecked";
-                            status_name_chart = "Unchecked";
-                        } else {
-                            status_name = 'Needed Check ';
-                            status_name_chart = 'Needed Check';
-                        }
-                    }
-                    break;
-                case '5':
-                    if (datePick.getFullYear < dateNow.getFullYear) {
-                        status_name = "Quantity Unchecked";
-                        status_name_chart = "Unchecked";
-                    } else {
-                        status_name = 'Needed Check ';
-                        status_name_chart = 'Needed Check';
-                    }
-                    break;
-                case '7':
-                    if (datePick.getFullYear < dateNow.getFullYear) {
-                        status_name = "Quantity Unchecked";
-                        status_name_chart = "Unchecked";
-                    } else {
-                        if (getQuarter(new Date(datePick)) < getQuarter(new Date(dateNow))) {
-                            status_name = 'Quantity Unchecked ';
-                            status_name_chart = 'Unchecked';
-                        } else {
-                            status_name = 'Needed Check ';
-                            status_name_chart = 'Needed Check';
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            $("#status_name_un").html(status_name);
-            temp_selection = '';
-            var ft = $(".f").html() + $(".t").html();
-            var arr_f = (this.id).split("_");
-            tempFLag = " | " + $(this).children()[0].innerText.replace("\n\n\n", " ").trim();
-            getDataPaperless(arr_f[1]);
-            // _state.id_flag = arr_f[1];
-            $("." + $(this).parent()[0].className).children().removeClass('item_bar_active');
-            $(this).addClass('item_bar_active');
-        });
-    }
-
-    function showDataStatistic6(qccId, frmFlag, timeSpan) {
-        $("#detail-time").html(timeSpan);
-
-        $(".dialog-detail-qr").css("display", "block");
-        $('#icon_loading_detail_qr').css("display", "block");
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/web/get_step_form_report_by_qr_code",
-            data: {
-                idQrCode: qccId
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                var length = response.length;
-                dataStep = response;
-                if (length > 0) {
-                    loadTitleContinuity(response);
-                    loadDataByTime(qccId, timeSpan);
-                    loadInfoQcc(qccId);
-                } else {
-                    console.log("Data null");
-                }
-
-                $('#icon_loading_detail_qr').css("display", "none");
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-
-                $('#icon_loading_detail_qr').css("display", "none");
-            }
-        });
-    }
-
-    function loadTitleContinuity(res) {
-        var thead = "<tr class='d-none'><th>Paper code: </th><th class='form_name'></th></tr>"
-            + "<tr class='bg-head-blue text-center' id='row_created_at'><th style='width: 20vw'>Created At</th></tr>"
-            + "<tr class='bg-head-blue text-center' id='row_employee'><th>Employee</th></tr>";
-        var tbody = "";
-        for (var i = 0; i < res.length; i++) {
-            tbody += "<tr class='row_step_" + res[i].step_id + "'><th class='step'>[" + (i + 1) + "] " + res[i]['step_name'] + "</th></tr>";
-        }
-        tbody += "<tr class='row_signer'><th>Signer</th></tr>";
-        tbody += "<tr'><td class='row_form_description' colspan='31'>Note: " + res[0].descriptionForm + "</td></tr>";
-        $("#statistic-data-check-qr thead").html(thead);
-        $("#statistic-data-check-qr tbody").html(tbody);
-    }
-
-    function loadRowData(idReport, position) {
-        console.log(idReport);
-        var rowReport = '';
-        $("#statistic-data-check-qr thead tr#row_created_at").append("<th class='time_create" + idReport + "'></th>");
-        $("#statistic-data-check-qr thead tr#row_employee").append("<th class='id_card" + idReport + "'></th>");
-        for (var i = 0; i < dataStep.length; i++) {
-            var idView = "re-" + idReport + "-" + dataStep[i]['step_id'];
-            rowReport = "<td id='" + idView + "' class='step'></td>";
-            $("#statistic-data-check-qr tbody tr.row_step_" + dataStep[i]['step_id']).append(rowReport);
-        }
-        $("#statistic-data-check-qr tbody tr.row_signer").append("<td class='signer_user_" + idReport + "'></td>");
-        x
-    }
-
-    function loadDataByTime(idQcc, time) {
-        var eDate = moment(time).add(-6, "days").format("YYYY/MM/DD") + ' 07:30:00';
-        var sDate = moment(time).add(1, "days").format("YYYY/MM/DD") + ' 07:30:00';
-        var timeSpan = eDate + ' - ' + sDate;
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v1/get_data_report_continuity_qcc",
-            data: {
-                id_qcc: idQcc,
-                time_span: timeSpan
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                var status = response['status'];
-                var total = response['total'];
-                var data = response['data'];
-                var position = 0;
-                if (total > 0) {
-                    var idReports = [];
-                    for (var idReport in data) {
-                        loadRowData(idReport, ++position);
-                        $(".time_create" + idReport).html(data[idReport][0]['rr_create_at']);
-                        $(".id_card" + idReport).html(data[idReport][0]['u_id_card']);
-                        for (var i = 0; i < data[idReport].length; i++) {
-                            var idView = "#re-" + idReport + "-" + data[idReport][i]['rrs_id_step'];
-                            $(idView).html(data[idReport][i]['rrs_content'] + loadDataMedia(data[idReport][i]['rrs_media']));
-                        }
-                        idReports.push(idReport);
-                    }
-                    loadDataSigned(idReports);
-                }
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-            }
-        });
-    }
-
-    $(".ico-close-dialog").click(function () {
-        $(".dialog-detail-qr").css("display", "none");
-    })
-
-    $(".ico-export-excel").click(function () {
-        fnExcelReport();
-    });
-
-    function loadInfoQcc(idQcc) {
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v1/get_info_qcc_by_id_qcc",
-            data: {
-                id_qcc: idQcc
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (response) {
-                var data = response['data'];
-                // if(data.length > 0){
-                $(".detail-name-form").html(data[0]['fr_name']);
-                $("#detail-form-code").html(data[0]['fr_code']);
-                $("#detail-factory").html(data[0]['bu_name']);
-                $("#detail-floor").html(data[0]['floor']);
-                $("#detail-line").html(data[0]['line_name']);
-                $("#detail-qr").html(data[0]['qc_code']);
-                $("#detail-cycle").html(data[0]['fl_name']);
-                // }else{
-                //     // Alert data null
-                // }
-                $(".form_name").html(data[0]['fr_name']);
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-            }
-        });
-    }
-
-    // var dataTest = []
-    function getMEchecklist(teamId, id_flag, id_type, nameTeam) {
-        clearInterval(window.autoReloadTimeout);
-        // console.log("type--------", id_type)
-        $(".loader").removeClass("d-none");
-        trackReloadTaskStart();
-        var textType = ""
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v2/statistic/get_data_statistic_team_v2",
-            data: {
-                id_bu: $("#select-factory").val(),
-                id_flag: id_flag,
-                id_team: teamId,
-                time_span: timeSpan,
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (res) {
-                var data = res['data'];
-                var dataCheck = [];
-                var dataCate = [];
-                var dataUnCheck = [];
-                var dataStartDate = []
-                // var dataTotalQr = []
-
-                if (res.status == 1 && res.total > 0) {
-                    for (var itemDate in data) {
-                        // dataTest = data
-                        // console.log("itemData", data[itemDate].mData)
-                        var item = {
-                            key: itemDate,
-                            // name: data[itemDate].team_name,
-                            check: data[itemDate].mData.check,
-                            uncheck: data[itemDate].mData.un_check,
-                            date: data[itemDate].startDate
-                        }
-                        // console.log("item----", item)
-                        dataCate.push(item.key);
-                        dataCheck.push(item.check);
-                        dataUnCheck.push(item.uncheck);
-                        dataStartDate.push(item.date);
-                        // dataTotalQr.push(item.qr);
-                    }
-
-                    // console.log("dataCate:", dataCate)
-                    // console.log("dataCate:", dataCheck)
-                    // console.log("dataCate:", dataUnCheck)
-                    if (id_type == 1) {
-                        loadDataHightChartByTeam(dataStartDate, dataCheck, dataCate, "#3bdbc0", "<spring:message code='me.checked' />", nameTeam, id_flag, teamId, 1);
-                        textType = "<spring:message code='me.checked' />"
-                    } else {
-                        loadDataHightChartByTeam(dataStartDate, dataUnCheck, dataCate, "#f4eb96", "<spring:message code='needed.check' />", nameTeam, id_flag, teamId, 0);
-                        textType = "<spring:message code='needed.check' />"
-
-                    }
-                    // console.log("dataTotalQR: ", dataTotalQr)
-                    $(".loader").addClass("d-none");
-                    $("#chart_detail").removeClass("d-none");
-                    $("#statistic").removeClass("d-none");
-                    $("#department").removeClass("d-none");
-                    $("#chart-by-team").removeClass("d-none");
-                    $("#n_chart").addClass('d-none');
-                    $("#n_box-2").addClass('d-none');
-                    $("#n_box-2_1").addClass('d-none');
-                    // $("#tbl_title").html(nameTeam + " (" + timeSpan + ") - " + textType)
-                    $("#tbl_title").html(nameTeam + " - " + textType)
-
-                } else {
-                    alert("No data");
-                    $("#n_box-2_1 span").html('<i class="far fa-frown"></i><b> No Data!</b>');
-                    $("#chart_detail").addClass("d-none");
-                    $("#statistic").addClass("d-none");
-                    $("#department").addClass("d-none");
-                    $("#chart-by-team").addClass("d-none");
-                    $("#tbl>tbody").html('<tr><td colspan="6"><i class="far fa-smile-beam"></i> No Data!</td></tr>');
-                    $("#tbl_title").html('No Data!');
-                    $("#n_chart").removeClass('d-none');
-                    $("#n_box-2_1").removeClass('d-none');
-                    $("#n_box-2").removeClass('d-none');
-                }
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-                $(".loader").addClass("d-none");
-            },
-            complete: function () {
-                var wasReloading = isReloading;
-                isLoading = false;
-                trackReloadTaskEnd();
-                if (!wasReloading) {
-                    finishLoadingCycle();
-                }
-            }
-        });
-    }
-
-
-    function loadDataHightChartByTeam(mDate, mCheck, mCate, colorColum, nameCheck, nameTeam, idFlag, idTeam, idType) {
-        // console.log("mDate: ", mDate)
-        Highcharts.chart('chart-by-team', {
-            chart: {
-                type: 'column',
-                backgroundColor: '#fff0',
-            },
-            title: {
-                // text: nameTeam + " (" + timeSpan + ") - " + nameCheck,
-                text: nameTeam + " - " + nameCheck,
-                style: {
-                    fontWeight: 'bold',
-                    fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"',
-                    color: '#8ce5ff',
-                    fontSize: "2.7vh",
-                }
-            },
-            xAxis: {
-                categories: mCate,
-                labels: {
-                    style: {
-                        color: '#FFF',
-                        // fontSize: "14px",
                     },
                 },
-                gridLineWidth: 0,
-                minorGridLineWidth: 0,
-                tickLength: 0,
-                tickWidth: 0,
-            },
-            yAxis: {
-                min: 0,
-                gridLineColor: '#023c37b3',
-                title: {
-                    text: ''
-                },
 
-                stackLabels: {
-                    enabled: false,
-                    style: {
-                        fontWeight: 'bold',
-                        color: ( // theme
-                            Highcharts.defaultOptions.title.style &&
-                            Highcharts.defaultOptions.title.style.color
-                        ) || 'gray'
-                    }
-                },
-                labels: {
-                    style: {
-                        color: '#FFF',
-                    },
-                },
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderColor: '#78d4e1',
-                borderWidth: 1,
-                borderRadius: 6,
-                backgroundColor: null,
-                itemStyle: {
-                    color: '#ffffff',
-                    fontSize: "11px",
-                    fontWeight: null
-                },
-                itemHoverStyle: {
-                    color: '#FFF263',
-                    fontSize: "11.5px",
-                }
-            },
-            tooltip: {
-                headerFormat: '<b style="color: #FFF">{point.x}</b><br/>',
-                pointFormat: '<span style="color: #FFF">{series.name}: {point.y}</span><br/><span style="color: #FFF"><spring:message code="home.total" />: {point.stackTotal}</span>',
-                backgroundColor: '#063052db'
-            },
-
-            plotOptions: {
-                column: {
-                    pointWidth: 40,
-                    stacking: 'normal',
-                    dataLabels: {
-                        enabled: false,
-                        style: {
-                            color: '#023c37b3',
-                        },
-                    }
-                },
-                series: {
-                    borderColor: null,
-                    cursor: 'pointer',
-                    point: {
-                        events: {
-                            click: function () {
-                                // console.log("test click day by day")
-                                var id_type = this.colorIndex;
-                                count = 1
-                                var dateTimeConvert = mDate[this.x].slice(0, 16).replaceAll("-", "/")
-                                // getMEchecklist(this.series.userOptions.id_data, objData[0].teamId[this.x], this.series.name, this.category, id_flag, id_type);
-                                if (idType == 1) {
-                                    // _state.id_flag = idFlag;
-                                    _state.teamId = idTeam;
-                                    _state.sDate = dateTimeConvert;
-                                    _state.nameTeam = nameTeam;
-                                    _state.nameCheck = nameCheck
-                                    loadDataFormChecked(idFlag,_state.teamId,_state.sDate,_state.nameTeam,_state.nameCheck);
-                                    // loadDataFormChecked(idFlag, idTeam, dateTimeConvert, nameTeam, nameCheck);
-                                } else {
-                                    loadDataFormUnCheck(idFlag, idTeam, dateTimeConvert, nameTeam, nameCheck)
-                                }
-                                // console.log("series Date-----", mDate[this.x]);
-                            }
-                        }
-                    }
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            series: [{
-                name: nameCheck,
-                type: 'column',
-                color: colorColum,
-                data: mCheck,
                 tooltip: {
-                    valueSuffix: ''
-                }
+                    outside: true,
+                    style: {
+                        fontSize: "1rem",
+                    },
+                },
 
-            },
-                // {
-                //     name: nameCheck,
-                //     type: 'line',
-                //     color: colorColum,
-                //     data: mCheck,
-                //     tooltip: {
-                //         valueSuffix: ''
-                //     }
+                credits: {
+                    enabled: false,
+                },
 
-                // }
-            ]
-        });
-
-    }
-    function loadDataFormUnCheck(idFlag, idTeam, sDate, nameTeam, nameCheck) {
-        $(".icon-loading").removeClass("d-none");
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v2/statistic/get_qr_code_uncheck_data_statistic_bu_team_v2",
-            data: {
-                id_bu: $("#select-factory").val() * 1,
-                id_flag: idFlag,
-                id_team: idTeam,
-                time_span: sDate,
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (res) {
-                $(".icon-loading").addClass("d-none");
-                // $("#tbl_title").html(nameTeam + " (" + sDate + ") - " + nameCheck)
-                $("#tbl_title").html(nameTeam + " - " + nameCheck)
-                var data = res['data'];
-                if (res.status == 1 && res.total > 0) {
-                    bultTable(data);
-
-                }
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-
-            }
-        });
-    }
-
-    function loadDataFormChecked(idFlag, idTeam, sDate, nameTeam, nameCheck) {
-        $(".icon-loading").removeClass("d-none");
-        trackReloadTaskStart();
-        $.ajax({
-            type: "GET",
-            url: "/paperless/api/v2/statistic/get_qr_code_checked_data_statistic_bu_team_v2",
-            data: {
-                id_bu: $("#select-factory").val() * 1,
-                id_flag: idFlag,
-                id_team: idTeam,
-                time_span: sDate,
-            },
-            contentType: "application/json; charset=utf-8",
-            success: function (res) {
-                $(".icon-loading").addClass("d-none");
-                // $("#tbl_title").html(nameTeam + " (" + sDate + ") - " + nameCheck)
-                $("#tbl_title").html(nameTeam + " - " + nameCheck)
-                var data = res['data'];
-                if (data != null) {
-                    if (res.status == 1 && res.total > 0) {
-                        bultTable(data);
-                    } else {
-                        $("#tbl tbody").html('<tr><td colspan="6"><i class="far fa-smile-beam"></i> No Data!</td></tr>');
-                        $("#totalForm").html(" - Total Checklist: 0")
-                    }
-                } else {
-                    $("#tbl tbody").html('<tr><td colspan="6"><i class="far fa-smile-beam"></i> No Data!</td></tr>');
-                }
-             
-            },
-            failure: function (errMsg) {
-                console.log(errMsg);
-            },
-            complete: function () {
-                trackReloadTaskEnd();
-            }
-        });
-    }
-
-    var isReloading = false;
-    var reloadPendingTasks = 0;
-
-    function restartAutoReloadTimer() {
-        window.autoReloadTimeout && clearInterval(window.autoReloadTimeout);
-        window.autoReloadTimeout = setInterval(reloadData, 10000);
-    }
-
-    function finishLoadingCycle() {
-        isLoading = false;
-        isReloading = false;
-        reloadPendingTasks = 0;
-        restartAutoReloadTimer();
-    }
-
-    function trackReloadTaskStart() {
-        if (isReloading) {
-            reloadPendingTasks++;
-        }
-    }
-
-    function trackReloadTaskEnd() {
-        if (isReloading && reloadPendingTasks > 0) {
-            reloadPendingTasks--;
-            if (reloadPendingTasks === 0) {
-                finishLoadingCycle();
-            }
-        }
-    }
-    function reloadData() {
-        if (isLoading || isReloading) {
-            console.log("loading or already reloading");
-            return; 
-        }
-
-        isReloading = true;
-        reloadPendingTasks = 0;
-        restoreSelections();
-        
-        var currentTime = moment().format("YYYY/MM/DD HH:mm");
-        $('#reservation').data('daterangepicker').setStartDate(currentTime);
-        $('#reservation').val(currentTime);
-        
-        timeSpan = currentTime;
-        _state.sDate = currentTime;
-        
-        loadItem(_state.idFac);
-    }
-
-    function bultTable(data) {
-        var html = "";
-        for (var i = 0; i < data.length; i++) {
-            var mergeSn = data[i].qr_code
-
-            var mergeBu = data[i].qr_id
-            html += '<tr class="icon_detail" onclick="showDetail(' + data[i].qcc_id + ', ' + data[i].flag_id + ')">' +
-                '<td class="sn sn-' + mergeBu + '" sn_name="' + mergeBu + '">' + (i + 1) + '</td>' +
-                '<td class="bu bu-' + mergeBu + '" bu_name="' + mergeBu + '">' + data[i].qr_code + '</td>' +
-                '<td style="white-space: nowrap; padding: 0 5px 0 5px;">' + data[i].line_name + '</td>' +
-                '<td style="text-align: left" class="pl-2 pr-2">' + data[i].form_code + '&nbsp - &nbsp ' + data[i].form_name + '</td>' +
-                '<td>' + data[i].description + '</td>' +
-                '</tr>'
-        }
-        $("#tbl tbody").html(html);
-        mergeRow("sn");
-        mergeRow("bu");
-    }
-    const mergeRow = function (param) {
-        var rowObj = {};
-        var elem = document.getElementsByClassName(param);
-
-        for (var i = 0; i < elem.length; i++) {
-            var param_name = elem[i].getAttribute(param + '_name');
-            // console.log("rowOBJ:", rowObj[param_name]);
-            //  console.log("param_name:", param_name);
-
-            //   rowObj.push(param_name)
-            if (rowObj[param_name] == null) {
-                rowObj[param_name] = 1;
-                // console.log("rowOBJ 1:", rowObj[param_name]);
-
-            } else {
-                rowObj[param_name] += 1;
-                // console.log("rowOBJ 2:", rowObj[param_name]);
-
-            }
-        }
-        //   console.log("rowObj", rowObj);
-
-        if (param != 'sn') {
-            for (var i in rowObj) {
-                $('.' + param + '-' + i + ':not(:first)').remove();  // da co remove r
-                var param_first = document.getElementsByClassName(param + '-' + i);
-                param_first[0].setAttribute("rowspan", rowObj[i]);
-                // console.log("rowspan: ", rowObj[i])
-                // console.log("paramlist.length: ", param_first.length)
-                // console.log("paramlist[0]: ", param_first[0])
-                // console.log("pram_first: " + rowObj[i], param_first)
-
-                // for (var i = 1; i < param_first.length; i++) {
-                //     param_first[i].remove();
-                //     i--;
-                // }
-            }
-        }
-        else {
-            for (var i in rowObj) {
-                $('.' + param + '-' + i + ':not(:first)').remove();
-                var param_first = document.getElementsByClassName(param + '-' + i);
-                param_first[0].setAttribute("rowspan", rowObj[i]);
-                // param_first[0].innerHTML = count;
-                count++;
-                // for (var i = 1; i < param_first.length; i++) {
-                //     param_first[i].remove();
-                //     i--;
-                // }
-
-            }
-            $("#totalForm").html(" <spring:message code='total.Checklist' />: " + (count - 1))
-        }
-    }
-
-    $('#view-image').click(function () {
-        $(this).fadeOut();
-        $('meta[name="viewport"]').attr('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
-        // window.onpopstate = function (event) {
-        //     event.preventDefault();
-        // };
-    })
-
-    function zoomImage(index) {
-        var src = $("#img-data-" + index).attr("src");
-        $('#view-image').css({
-            background: 'RGB(47,48,59) url(' + src + ') no-repeat center',
-            backgroundSize: 'contain',
-            width: '100%',
-            height: '100%',
-            position: 'fixed',
-            zIndex: '10000',
-            top: '0',
-            left: '0',
-            cursor: 'zoom_out',
-            display: 'block'
-        });
-
-        $('meta[name="viewport"]').attr('content', 'width=device-width, initial-scale=1');
-        history.pushState(null, null, location.href);
-        window.onpopstate = function () {
-            $('#view-image').css('display', 'none');
-            $('meta[name="viewport"]').attr('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
-            history.go(1);
-            // window.onpopstate = function (event) {
-            //     event.preventDefault();
-            // };
-        }
-    }
-
-    function searchParams(name) {
-        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        if (results == null) {
-            return null;
-        } else {
-            return decodeURIComponent(results[1]) || 0;
-        }
-    }
-
-    $(document).ready(function () {
-        $("#myInput").on("keyup", function () {
-            var value = $(this).val().toLowerCase();
-            $("#myTable tr").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                plotOptions: {
+                    series: {
+                        borderWidth: 0,
+                        dataLabels: {
+                            enabled: true,
+                            style: {
+                                color: "#fff",
+                                textOutline: 0,
+                                fontWeight: "normal",
+                                fontSize: "0.7rem",
+                            },
+                        },
+                    },
+                },
             });
-        });
-        init();
-    });
-    // function reloadData(){
-    //     if (!window.autoReloadInterval) {
-    //     window.autoReloadInterval = setInterval(() => {
-    //         loadItem(_state.idFac);
-    //         getDataPaperless(_state.id_flag);
-    //         getMEchecklist(_state.teamId,_state.id_flag,_state.id_type,_state.nameTeam);
-    //         loadDataFormChecked(_state.id_flag, _state.teamId,_state.sDate, _state.nameTeam, _state.nameCheck);
-    //     }, 7000);
-    //     }
-    // }
+        };
 
-</script>
+        function drawDonutChart(containerId, chartData) {
+            const container = document.getElementById(containerId);
+            if (!container) {
+                return null;
+            }
+
+            const chart = Highcharts.chart(containerId, {
+                chart: {
+                    type: "pie",
+                    custom: {},
+                    events: {
+                        render() {
+                            const chart = this;
+                            const series = chart.series[0];
+                            if (!series) return;
+
+                            const total = series.data.reduce(
+                                (sum, point) => sum + (typeof point.y === "number" ? point.y : 0),
+                                0
+                            );
+
+                            let customLabel = chart.options.chart.custom.label;
+                            const labelText =
+                                "Total<br/><strong>" + Highcharts.numberFormat(total, 0, ".", " ") + "</strong>";
+
+                            if (!customLabel) {
+                                customLabel = chart.options.chart.custom.label = chart.renderer
+                                    .label(labelText)
+                                    .css({
+                                        color: "#fff",
+                                        textAlign: "center",
+                                    })
+                                    .add();
+                            } else {
+                                customLabel.attr({
+                                    text: labelText,
+                                });
+                            }
+
+                            const bbox = customLabel.getBBox();
+                            const x = series.center[0] + chart.plotLeft - bbox.width / 2;
+                            const y = series.center[1] + chart.plotTop - bbox.height / 2;
+
+                            customLabel.attr({ x, y });
+                            customLabel.css({
+                                fontSize: series.center && series.center[2] ? series.center[2] / 12 + "px" : "1.2rem",
+                            });
+
+                            applyScaleToChart(chart);
+                        },
+                    },
+                },
+                title: { text: "" },
+                tooltip: { pointFormat: "{series.name}: <b>{point.percentage:.0f}%</b>" },
+                legend: { enabled: true, itemStyle: { color: "#fff", fontSize: "0.55rem" } },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: "pointer",
+                        point: {
+                            events: {
+                                click: function () {
+                                    handleDonutClick(containerId, this.name);
+                                },
+                            },
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            distance: 20,
+                            format: "{point.name}<br/>{point.y} ({point.percentage:.2f}%)",
+                            style: { fontSize: "0.65rem", color: "#fff", textOutline: "none" },
+                        },
+                        showInLegend: true,
+                    },
+                },
+                series: [
+                    {
+                        name: "Count",
+                        colorByPoint: true,
+                        innerSize: "70%",
+                        data: chartData,
+                    },
+                ],
+            });
+
+            chartsList.push(chart);
+            return chart;
+        }
+
+        async function loadDonutIQC() {
+            const chartData = await getDataDonutIQC();
+            if (!chartData.length) return;
+
+            drawDonutChart("donut-chart-1", chartData);
+        }
+
+        async function loadDonutNCMR() {
+            const chartData = await getDataDonutNCMR();
+            if (!chartData.length) return;
+
+            drawDonutChart("donut-chart-2", chartData);
+        }
+
+        async function fetchTopReject(fieldName) {
+            try {
+                const params = new URLSearchParams({
+                    fieldName,
+                    fromDate,
+                    toDate,
+                    page: 0,
+                    size: 20,
+                });
+                const res = await fetch(`${API_TOP_REJECT}?${params}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const json = await res.json();
+                return json.data || [];
+            } catch (err) {
+                console.error(`fetchTopReject ${fieldName}:`, err);
+                return [];
+            }
+        }
+
+        function drawColumnChart(containerId, categories, values) {
+            const container = document.getElementById(containerId);
+            if (!container) {
+                return null;
+            }
+
+            container.innerHTML = "";
+
+            const maxVal = Math.max(...values, 1);
+            const yMax = Math.ceil((maxVal * 1.2) / 5) * 5;
+
+            const chart = Highcharts.chart(containerId, {
+                chart: {
+                    type: "column",
+                    spacing: [10, 10, 10, 10],
+                    marginBottom: 80,
+                    events: {
+                        render() {
+                            applyScaleToChart(this);
+                        },
+                    },
+                },
+                title: { text: "" },
+                legend: { enabled: false },
+                xAxis: {
+                    categories,
+                    crosshair: true,
+                    labels: {
+                        useHTML: true,
+                        style: {
+                            fontSize: "9px",
+                            fontWeight: "700",
+                            whiteSpace: "nowrap",
+                            width: "50px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            // lineHeight: "1rem",
+                        },
+                        rotation: 75,
+                        align: "left",
+                    },
+                    lineWidth: 1,
+                    tickLength: 0,
+                },
+                yAxis: {
+                    min: 0,
+                    max: yMax,
+                    tickInterval: Math.ceil(yMax / 5),
+                    title: { text: "" },
+                },
+                tooltip: { enabled: true, pointFormat: "<b>{point.y}</b>" },
+                plotOptions: {
+                    column: {
+                        cursor: "pointer",
+                        point: {
+                            events: {
+                                click: function () {
+                                    handleColumnClick(containerId, this.category);
+                                },
+                            },
+                        },
+                    },
+                },
+                series: [
+                    {
+                        name: "Value",
+                        data: values,
+                        color: "rgba(128, 99, 255, 0.65)",
+                    },
+                ],
+            });
+
+            chartsList.push(chart);
+            return chart;
+        }
+
+        function showNoData(containerId, message = "NO DATA") {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = "";
+            const el = document.createElement("div");
+            el.className = "no-data";
+            el.textContent = message;
+            container.appendChild(el);
+        }
+
+        const TABLE1_COLUMNS = [
+            { key: "materialType", label: "Material Type" },
+            { key: "mfrcode", label: "MFR Code" },
+            { key: "mfrname", label: "MFR Name" },
+            { key: "numberRecord", label: "Reject Qty" },
+            // { key: "model", label: "Model" },
+        ];
+
+        const TABLE2_COLUMNS = [
+            { key: "mfrcode", label: "MFR Code" },
+            { key: "mfrname", label: "MFR Name" },
+            { key: "numberRecord", label: "Reject Qty" },
+            // { key: "model", label: "Model" },
+            // { key: "materialType", label: "Material Type" },
+        ];
+
+        const TABLE3_COLUMNS = [
+            { key: "model", label: "Model" },
+            { key: "mfrcode", label: "MFR Code" },
+            { key: "mfrname", label: "MFR Name" },
+            { key: "numberRecord", label: "Reject Qty" },
+            // { key: "materialType", label: "Material Type" },
+        ];
+
+        const TABLE4_COLUMNS = [
+            { key: "stt", label: "#" },
+            { key: "ncmrNo", label: "NCMR No" },
+            { key: "docNo", label: "Doc No" },
+            { key: "caseOwner", label: "Case Owner" },
+            { key: "department", label: "Department" },
+            { key: "custKpNo", label: "KpNo" },
+            { key: "priorityFlag", label: "Priority" },
+            { key: "mfrName", label: "MFR Name" },
+            { key: "editEmp", label: "Edit Emp" },
+            { key: "inspectionDate", label: "Inspection Date" },
+            { key: "rejectReason", label: "Reject Reason" },
+            { key: "improvementAction", label: "Improvement Action" },
+            { key: "judgement", label: "Judgement" },
+            { key: "nextStep", label: "Next-Step" },
+            { key: "status", label: "Status" },
+            { key: "agingDay", label: "Aging Day" },
+        ];
+
+        const TABLE5_COLUMNS = [
+            { key: "stt", label: "#" },
+            { key: "docNo", label: "Doc No" },
+            { key: "custKpNo", label: "KpNo" },
+            { key: "poNo", label: "Po No" },
+            { key: "poItem", label: "Item" },
+            { key: "mfrCode", label: "MFR Code" },
+            { key: "mfrName", label: "MFR Name" },
+            { key: "materialType", label: "Type" },
+            { key: "floor", label: "Floor" },
+            { key: "receiveTime", label: "Receive Time" },
+            { key: "iqcEmp", label: "IQC Emp" },
+            { key: "iqcStatus", label: "IQC Status" },
+            { key: "iqcRemark", label: "IQC Remark" },
+            { key: "iqcQty", label: "IQC Quantity" },
+            { key: "iqcTime", label: "IQC Time" },
+        ];
+
+        function handleDonutClick(containerId, materialType) {
+            if (containerId === "donut-chart-1") {
+                donutFilters.materialTypeIQC = donutFilters.materialTypeIQC === materialType ? null : materialType;
+
+                // Set default iqcStatus to 0 when clicking donut, or clear if toggling off
+                if (donutFilters.materialTypeIQC !== null) {
+                    donutFilters.iqcStatus = 0;
+                } else {
+                    donutFilters.iqcStatus = null;
+                }
+
+                updateTableTitleBadge("table-5");
+                renderTable5();
+
+                const table5 = document.getElementById("table-5");
+                if (table5) {
+                    setTimeout(() => {
+                        table5.closest(".component-item").scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
+                    }, 100);
+                }
+            } else if (containerId === "donut-chart-2") {
+                donutFilters.materialTypeNCMR = donutFilters.materialTypeNCMR === materialType ? null : materialType;
+                updateTableTitleBadge("table-4", donutFilters.materialTypeNCMR);
+                renderTable4();
+            }
+        }
+
+        function handleColumnClick(containerId, category) {
+            const cleanCategory =
+                typeof category === "string" ? category.replace(/<[^>]*>/g, "").trim() : String(category || "N/A");
+
+            if (containerId === "col-chart-3") {
+                const tableId = "table-1";
+                const filterKey = TABLE1_COLUMNS[0].key; // "materialType"
+
+                if (lotTableFilters[tableId] === cleanCategory) {
+                    lotTableFilters[tableId] = null;
+                } else {
+                    lotTableFilters[tableId] = cleanCategory;
+                }
+                updateTableTitleBadge(tableId);
+                renderTable1();
+            } else if (containerId === "col-chart-4") {
+                const tableId = "table-2";
+                const filterKey = TABLE2_COLUMNS[0].key; // "mfrcode"
+
+                if (lotTableFilters[tableId] === cleanCategory) {
+                    lotTableFilters[tableId] = null;
+                } else {
+                    lotTableFilters[tableId] = cleanCategory;
+                }
+                updateTableTitleBadge(tableId);
+                renderTable2();
+            } else if (containerId === "col-chart-5") {
+                const tableId = "table-3";
+                const filterKey = TABLE3_COLUMNS[0].key; // "model"
+
+                if (lotTableFilters[tableId] === cleanCategory) {
+                    lotTableFilters[tableId] = null;
+                } else {
+                    lotTableFilters[tableId] = cleanCategory;
+                }
+                updateTableTitleBadge(tableId);
+                renderTable3();
+            }
+        }
+
+        function createFilterBadge(text, onClose, isStatusBadge = false, onStatusClick = null) {
+            const badge = document.createElement("span");
+            badge.className = "filter-badge";
+            badge.style.display = "inline-flex";
+            badge.style.alignItems = "center";
+            badge.style.gap = "0.3rem";
+            badge.style.cursor = isStatusBadge ? "pointer" : "default";
+
+            const textSpan = document.createElement("span");
+            textSpan.textContent = text;
+
+            // If it's a status badge, make the text clickable
+            if (isStatusBadge && onStatusClick) {
+                textSpan.style.cursor = "pointer";
+                textSpan.style.textDecoration = "underline";
+                textSpan.onclick = (e) => {
+                    e.stopPropagation();
+                    onStatusClick();
+                };
+            }
+
+            const closeBtn = document.createElement("span");
+            closeBtn.innerHTML = "<i class='bi bi-x'></i>";
+            closeBtn.style.fontSize = "1rem";
+            closeBtn.style.fontWeight = "normal";
+            closeBtn.style.lineHeight = "1.1";
+            closeBtn.style.cursor = "pointer";
+
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                onClose();
+            };
+
+            badge.appendChild(textSpan);
+            badge.appendChild(closeBtn);
+
+            return badge;
+        }
+
+        function updateTableTitleBadge(tableId, filterValue) {
+            const tableElement = document.getElementById(tableId);
+            if (!tableElement) return;
+
+            const titleElement = tableElement.closest(".component-item").querySelector(".component-title");
+            if (!titleElement) return;
+
+            // Remove all existing badges
+            const existingBadges = titleElement.querySelectorAll(".filter-badge");
+            existingBadges.forEach(badge => badge.remove());
+
+            // Handle table-5 with dual badges (material type + status)
+            if (tableId === "table-5") {
+                // Material Type Badge
+                if (donutFilters.materialTypeIQC) {
+                    const materialBadge = createFilterBadge(
+                        donutFilters.materialTypeIQC,
+                        () => {
+                            donutFilters.materialTypeIQC = null;
+                            donutFilters.iqcStatus = null;
+                            renderTable5();
+                            updateTableTitleBadge("table-5");
+                        }
+                    );
+                    titleElement.appendChild(materialBadge);
+                }
+
+                // IQC Status Badge (clickable to cycle through options)
+                if (donutFilters.iqcStatus !== null) {
+                    const statusText = IQC_STATUS_MAP[donutFilters.iqcStatus];
+                    const statusBadge = createFilterBadge(
+                        statusText,
+                        () => {
+                            donutFilters.iqcStatus = null;
+                            donutFilters.materialTypeIQC = null;
+                            renderTable5();
+                            updateTableTitleBadge("table-5");
+                        },
+                        true, // isStatusBadge
+                        () => {
+                            // Cycle to next status
+                            const statuses = [0, 1, 2, 3, 4];
+                            const currentIndex = statuses.indexOf(donutFilters.iqcStatus);
+                            const nextIndex = (currentIndex + 1) % statuses.length;
+                            donutFilters.iqcStatus = statuses[nextIndex];
+                            renderTable5();
+                            updateTableTitleBadge("table-5");
+                        }
+                    );
+                    titleElement.appendChild(statusBadge);
+                }
+            } else {
+                // Original logic for other tables
+                const filter = filterValue !== undefined ? filterValue : lotTableFilters[tableId];
+
+                if (filter) {
+                    const badge = createFilterBadge(filter, () => {
+                        if (tableId === "table-4") {
+                            donutFilters.materialTypeNCMR = null;
+                            renderTable4();
+                        } else {
+                            lotTableFilters[tableId] = null;
+                            if (tableId === "table-1") renderTable1();
+                            else if (tableId === "table-2") renderTable2();
+                            else if (tableId === "table-3") renderTable3();
+                        }
+                        updateTableTitleBadge(tableId);
+                    });
+                    titleElement.appendChild(badge);
+                }
+            }
+        }
+
+        async function loadMaterialTypeChart() {
+            const data = await fetchTopReject("MaterialType");
+            if (!data.length) {
+                showNoData("col-chart-3", "NO DATA");
+                return;
+            }
+
+            const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
+            const categories = top10.map((i) => i.materialType || "N/A");
+            const values = top10.map((i) => i.numberRecord || 0);
+
+            drawColumnChart("col-chart-3", categories, values);
+        }
+
+        async function loadMFRChart() {
+            const data = await fetchTopReject("MFR");
+            if (!data.length) {
+                showNoData("col-chart-4", "NO DATA");
+                return;
+            }
+
+            const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
+            const categories = top10.map((i) => i.mfrcode || "N/A");
+            const values = top10.map((i) => i.numberRecord || 0);
+
+            drawColumnChart("col-chart-4", categories, values);
+        }
+
+        async function loadModelChart() {
+            const data = await fetchTopReject("Model");
+            if (!data.length) {
+                showNoData("col-chart-5", "NO DATA");
+                return;
+            }
+
+            const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
+            const categories = top10.map((i) => i.model || "N/A");
+            const values = top10.map((i) => i.numberRecord || 0);
+
+            drawColumnChart("col-chart-5", categories, values);
+        }
+
+        async function renderTable1() {
+            const table = document.getElementById("table-1");
+            if (!table) return;
+
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+            thead.innerHTML = "";
+            tbody.innerHTML = "";
+
+            if (table1Instance) {
+                table1Instance.destroy();
+            }
+
+            table1Instance = new DataTableLib({
+                tableId: "table-1",
+                serverSide: true,
+                rows: 9999,
+                pagination: false,
+                paginationId: null,
+                emptyMessage: "NO DATA",
+                sort: false,
+
+                buildUrl: (page) => {
+                    const params = new URLSearchParams({
+                        fieldName: "MaterialTypeAndMFR",
+                        fromDate: fromDate,
+                        toDate: toDate,
+                        page: 0,
+                        size: 9999,
+                    });
+                    return `/production-system/api/iqc/top-reject?${params}`;
+                },
+
+                formatData: (result) => {
+                    let data = result?.data || [];
+                    dataset.table1Data = data;
+
+                    const filter = lotTableFilters["table-1"];
+                    const firstColKey = TABLE1_COLUMNS[0].key; // "materialType"
+
+                    if (filter) {
+                        data = data.filter((row) => {
+                            const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
+                            return cellValue === filter;
+                        });
+                    }
+
+                    result.total = data.length;
+                    return data;
+                },
+
+                columnsConfig: TABLE1_COLUMNS.map((col) => ({ label: col.label })),
+
+                rowRenderer: (item, index, meta) => {
+                    const page = meta?.currentPage ?? 1;
+                    const size = meta?.rows ?? 10;
+                    const stt = (page - 1) * size + index + 1;
+
+                    if (!item || Object.keys(item).length === 0) {
+                        return `<td colspan="${TABLE1_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                    }
+
+                    return TABLE1_COLUMNS.map((col) => `<td>${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
+                },
+            });
+
+            await table1Instance.init();
+        }
+
+        async function renderTable2() {
+            const table = document.getElementById("table-2");
+            if (!table) return;
+
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+            thead.innerHTML = "";
+            tbody.innerHTML = "";
+
+            if (table2Instance) {
+                table2Instance.destroy();
+            }
+
+            table2Instance = new DataTableLib({
+                tableId: "table-2",
+                serverSide: true,
+                rows: 9999,
+                pagination: false,
+                paginationId: null,
+                emptyMessage: "NO DATA",
+                sort: false,
+
+                buildUrl: (page) => {
+                    const params = new URLSearchParams({
+                        fieldName: "MFR",
+                        fromDate: fromDate,
+                        toDate: toDate,
+                        page: 0,
+                        size: 9999,
+                    });
+                    return `/production-system/api/iqc/top-reject?${params}`;
+                },
+
+                formatData: (result) => {
+                    let data = result?.data || [];
+                    dataset.table2Data = data;
+
+                    const filter = lotTableFilters["table-2"];
+                    const firstColKey = TABLE2_COLUMNS[0].key; // "mfrcode"
+
+                    if (filter) {
+                        data = data.filter((row) => {
+                            const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
+                            return cellValue === filter;
+                        });
+                    }
+
+                    result.total = data.length;
+                    return data;
+                },
+
+                columnsConfig: TABLE2_COLUMNS.map((col) => ({ label: col.label })),
+
+                rowRenderer: (item, index, meta) => {
+                    const page = meta?.currentPage ?? 1;
+                    const size = meta?.rows ?? 10;
+                    const stt = (page - 1) * size + index + 1;
+
+                    if (!item || Object.keys(item).length === 0) {
+                        return `<td colspan="${TABLE2_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                    }
+
+                    return TABLE2_COLUMNS.map((col) => `<td>${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
+                },
+            });
+
+            await table2Instance.init();
+        }
+
+        async function renderTable3() {
+            const table = document.getElementById("table-3");
+            if (!table) return;
+
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+            thead.innerHTML = "";
+            tbody.innerHTML = "";
+
+            if (table3Instance) {
+                table3Instance.destroy();
+            }
+
+            table3Instance = new DataTableLib({
+                tableId: "table-3",
+                serverSide: true,
+                rows: 9999,
+                pagination: false,
+                paginationId: null,
+                emptyMessage: "NO DATA",
+                sort: false,
+
+                buildUrl: (page) => {
+                    const params = new URLSearchParams({
+                        fieldName: "ModelAndMFR",
+                        fromDate: fromDate,
+                        toDate: toDate,
+                        page: 0,
+                        size: 9999,
+                    });
+                    return `/production-system/api/iqc/top-reject?${params}`;
+                },
+
+                formatData: (result) => {
+                    let data = result?.data || [];
+                    dataset.table3Data = data;
+
+                    const filter = lotTableFilters["table-3"];
+                    const firstColKey = TABLE3_COLUMNS[0].key; // "model"
+
+                    if (filter) {
+                        data = data.filter((row) => {
+                            const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
+                            return cellValue === filter;
+                        });
+                    }
+
+                    result.total = data.length;
+                    return data;
+                },
+
+                columnsConfig: TABLE3_COLUMNS.map((col) => ({ label: col.label })),
+
+                rowRenderer: (item, index, meta) => {
+                    const page = meta?.currentPage ?? 1;
+                    const size = meta?.rows ?? 10;
+                    const stt = (page - 1) * size + index + 1;
+
+                    if (!item || Object.keys(item).length === 0) {
+                        return `<td colspan="${TABLE3_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                    }
+
+                    return TABLE3_COLUMNS.map((col) => `<td>${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
+                },
+            });
+
+            await table3Instance.init();
+        }
+
+        async function renderTable4() {
+            const table = document.getElementById("table-4");
+            if (!table) return;
+
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+
+            thead.innerHTML = "";
+            tbody.innerHTML = "";
+
+            if (table4Instance) {
+                table4Instance.destroy();
+            }
+
+            let paginationContainer = document.getElementById("pagination-table-4");
+            if (!paginationContainer) {
+                paginationContainer = document.createElement("div");
+                paginationContainer.id = "pagination-table-4";
+                paginationContainer.style.marginTop = "0.4rem";
+
+                const componentItem = table.closest(".component-item");
+                if (componentItem) {
+                    componentItem.appendChild(paginationContainer);
+                }
+            }
+
+            table4Instance = new DataTableLib({
+                tableId: "table-4",
+                serverSide: true,
+                rows: 10,
+                paginationId: "pagination-table-4",
+                emptyMessage: "NO DATA",
+                sort: false,
+
+                buildUrl: (page) => {
+                    const params = new URLSearchParams({
+                        page: page - 1,
+                        size: 10,
+                        fromDate: fromDate,
+                        toDate: toDate,
+                    });
+
+                    if (donutFilters.materialTypeNCMR) {
+                        params.append("materialType", donutFilters.materialTypeNCMR);
+                    }
+
+                    return `/production-system/api/iqc/ncmr?${params}`;
+                },
+
+                formatData: (result) => {
+                    result.total = result?.size || 0;
+                    return result?.data || [];
+                },
+
+                columnsConfig: TABLE4_COLUMNS.map((col) => ({ label: col.label })),
+
+                rowRenderer: (item, index, meta) => {
+                    const page = meta?.currentPage ?? 1;
+                    const size = meta?.rows ?? 10;
+                    const stt = (page - 1) * size + index + 1;
+
+                    if (!item || Object.keys(item).length === 0) {
+                        return `<td colspan="${TABLE4_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                    }
+
+                    const cells = [`<td>${stt}</td>`];
+                    TABLE4_COLUMNS.forEach((col) => {
+                        if (col.key === "stt") return;
+                        const value = item?.[col.key] != null ? item[col.key] : "-";
+                        if (col.key === "rejectReason" || col.key === "improvementAction") {
+                            cells.push(
+                                `<td style="max-width: 200px; word-wrap: break-word; white-space: normal;">${value}</td>`
+                            );
+                        } else {
+                            cells.push(`<td>${value}</td>`);
+                        }
+                    });
+                    return cells.join("");
+                },
+            });
+
+            await table4Instance.init();
+        }
+
+        async function renderTable5() {
+            const table = document.getElementById("table-5");
+            if (!table) return;
+
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+            thead.innerHTML = "";
+            tbody.innerHTML = "";
+
+            if (table5Instance) {
+                table5Instance.destroy();
+            }
+
+            table5Instance = new DataTableLib({
+                tableId: "table-5",
+                serverSide: true,
+                rows: 50,
+                paginationId: "pagination-table-5",
+                emptyMessage: "NO DATA",
+                sort: false,
+
+                buildUrl: (page) => {
+                    const params = new URLSearchParams({
+                        page: page - 1,
+                        size: 50,
+                        fromDate: fromDate,
+                        toDate: toDate,
+                    });
+
+                    if (donutFilters.materialTypeIQC) {
+                        params.append("materialType", donutFilters.materialTypeIQC);
+                    }
+
+                    if (donutFilters.iqcStatus !== null) {
+                        params.append("iqcStatus", donutFilters.iqcStatus);
+                    }
+
+                    return `/production-system/api/iqc/iqc-lot?${params}`;
+                },
+
+                formatData: (result) => {
+                    result.total = result?.size || 0;
+                    dataset.table5Data = result?.data || [];
+                    return result?.data || [];
+                },
+
+                columnsConfig: TABLE5_COLUMNS.map((col) => ({ label: col.label })),
+
+                rowRenderer: (item, index, meta) => {
+                    const page = meta?.currentPage ?? 1;
+                    const size = meta?.rows ?? 10;
+                    const stt = (page - 1) * size + index + 1;
+
+                    if (!item || Object.keys(item).length === 0) {
+                        return `<td colspan="\${TABLE5_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
+                    }
+
+                    const cells = [`<td>\${stt}</td>`];
+                    TABLE5_COLUMNS.forEach((col) => {
+                        if (col.key === "stt") return;
+                        cells.push(`<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`);
+                    });
+                    return cells.join("");
+                },
+            });
+
+            await table5Instance.init();
+        }
+
+        // async function loadTable5() {
+        //     await renderTable5();
+        // }
+
+        async function loadAllTopReject() {
+            await Promise.all([
+                loadMaterialTypeChart(),
+                loadMFRChart(),
+                loadModelChart(),
+                renderTable1(),
+                renderTable2(),
+                renderTable3(),
+            ]);
+        }
+
+        async function getDataCPN() {
+            try {
+                const res = await fetch(`/production-system/api/iqc/event?fromDate=\${fromDate}&toDate=\${toDate}`);
+                if (!res.ok) throw new Error(`\${res.status}`);
+                const json = await res.json();
+                const result = json.result;
+                if (!result) return [];
+                document.querySelector("#be-inspected").textContent = result.toBeInspected;
+                document.querySelector("#timeout_inspect").textContent = result.timeOutToBeInspected;
+                document.querySelector("#scanned").textContent = result.toBeScanned;
+                document.querySelector("#timeout_scan").textContent = result.timeOutTobeScanned;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function getDataLotInject() {
+            try {
+                const slTime = document.getElementById("sl-time");
+                const selected = slTime && slTime.value ? slTime.value : "today";
+
+                let fromMoment = moment();
+                let toMoment = moment();
+
+                if (selected === "today") {
+                    fromMoment = moment();
+                    toMoment = moment();
+                } else if (selected === "7") {
+                    fromMoment = moment().subtract(6, "days");
+                    toMoment = moment();
+                } else if (selected === "30") {
+                    fromMoment = moment().subtract(29, "days");
+                    toMoment = moment();
+                }
+
+                const lotFromDate = getFormattedDate(fromMoment, "00:00:00");
+                const lotToDate = getFormattedDate(toMoment, "23:59:59");
+
+                const res = await fetch(
+                    `/production-system/api/iqc/lot-reject?fromDate=\${lotFromDate}&toDate=\${lotToDate}`
+                );
+                if (!res.ok) throw new Error(`\${res.status}`);
+                const json = await res.json();
+                const result = json.result;
+                if (!result) return [];
+                document.querySelector("#inspected").textContent = result.inspectedTotal;
+                document.querySelector("#lot-rejected").textContent = result.lotRejectedTotal;
+                document.querySelector("#lrr").textContent = `\${result.lotRejectedRate}%`;
+                return result;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function getDateRangeLastWeeks(weeks) {
+            const start = moment()
+                .subtract(weeks - 1, "weeks")
+                .startOf("isoWeek");
+            const end = moment().endOf("isoWeek");
+            return {
+                from: getFormattedDate(start, "00:00:00"),
+                to: getFormattedDate(end, "23:59:59"),
+            };
+        }
+
+        function getDateRangeLastDays(days) {
+            const start = moment().subtract(days - 1, "days");
+            const end = moment();
+            return {
+                from: getFormattedDate(start, "00:00:00"),
+                to: getFormattedDate(end, "23:59:59"),
+            };
+        }
+
+        async function getLotRejectDataWithRange(from, to) {
+            try {
+                const res = await fetch(`/production-system/api/iqc/lot-reject?fromDate=\${from}&toDate=\${to}`);
+                if (!res.ok) throw new Error(`\${res.status}`);
+                const json = await res.json();
+                return json.result || null;
+            } catch (error) {
+                console.error(error);
+                return null;
+            }
+        }
+
+        async function loadLotRejectWeeklyChart() {
+            const range = getDateRangeLastWeeks(8);
+            const result = await getLotRejectDataWithRange(range.from, range.to);
+            if (!result) return;
+
+            const weeklyData = processWeekData(result);
+            renderMirrorChart("col-chart-1", weeklyData.xLabels, weeklyData.inspected, weeklyData.rejected);
+        }
+
+        async function loadLotRejectDailyChart() {
+            const range = getDateRangeLastDays(7);
+            const result = await getLotRejectDataWithRange(range.from, range.to);
+            if (!result) return;
+
+            const dailyData = processDayData(result);
+            renderMirrorChart("col-chart-2", dailyData.xLabels, dailyData.inspected, dailyData.rejected);
+        }
+
+        const processWeekData = (result) => {
+            const xLabels = [];
+            const inspected = [];
+            const rejected = [];
+
+            result.data.forEach((week) => {
+                xLabels.push(`W\${week.weekNumber}`);
+                inspected.push(week.inspectedTotal || 0);
+                rejected.push(week.lotRejectedTotal || 0);
+            });
+
+            return { xLabels, inspected, rejected };
+        };
+
+        const processDayData = (result) => {
+            const xLabels = [];
+            const inspected = [];
+            const rejected = [];
+
+            result.data.forEach((week) => {
+                week.data.forEach((day) => {
+                    const formattedDate = day.workDate.split("-").slice(1).join("-");
+                    xLabels.push(formattedDate);
+                    inspected.push(day.inspectedTotal || 0);
+                    rejected.push(day.lotRejectedTotal || 0);
+                });
+            });
+
+            return { xLabels, inspected, rejected };
+        };
+
+        const renderMirrorChart = (chartId, xLabels, checkIn, checkOut) => {
+            const container = document.getElementById(chartId);
+            if (!container) {
+                return null;
+            }
+            const maxCheckOut = checkOut.reduce((a, b) => Math.max(a, b), 0);
+            const yMaxBottom = Math.ceil(maxCheckOut * 1.5);
+            const lineData = checkIn.map((inspected, i) => {
+                const rejected = checkOut[i] || 0;
+                return inspected > 0 ? parseFloat(((rejected / inspected) * 100).toFixed(2)) : 0;
+            });
+            const yMaxLine = Math.ceil(Math.max(...lineData) * 4);
+            const chart = Highcharts.chart(chartId, {
+                chart: {
+                    type: "column",
+                    events: {
+                        load: function () {
+                            const chart = this;
+                            const legendContainer = document.getElementById(`legend-\${chartId}`);
+                            if (!legendContainer) return;
+                            legendContainer.innerHTML = "";
+
+                            chart.series.forEach((series) => {
+                                const btn = document.createElement("span");
+                                btn.textContent = series.name;
+                                btn.style.display = "flex";
+                                btn.style.alignItems = "center";
+                                btn.style.columnGap = "5px";
+                                btn.style.margin = "5px";
+                                btn.style.fontSize = "1rem";
+                                // btn.style.color = series.visible ? series.color : "#fff";
+                                btn.style.color = "#fff";
+                                btn.style.textDecoration = series.visible ? "unset" : "line-through";
+                                btn.onclick = () => {
+                                    series.setVisible(!series.visible);
+                                    btn.style.color = "#fff";
+                                    // btn.style.color = series.visible ? series.color : "#fff";
+                                    btn.style.textDecoration = series.visible ? "unset" : "line-through";
+                                };
+
+                                const circle = document.createElement("span");
+                                circle.style.display = "inline-block";
+                                circle.style.width = "10px";
+                                circle.style.height = "10px";
+                                circle.style.backgroundColor = series.visible ? series.color : "#fff";
+                                btn.prepend(circle);
+
+                                legendContainer.appendChild(btn);
+                            });
+                        },
+                        render: function () {
+                            applyScaleToChart(this);
+                        },
+                    },
+                },
+                title: null,
+                xAxis: {
+                    categories: xLabels,
+                    lineWidth: 0,
+                    tickLength: 5,
+                    offset: -110,
+                    labels: { align: "center", y: 0, style: { fontSize: "0.75rem" } },
+                },
+
+                yAxis: [
+                    { title: null, height: "43%", offset: 0, softMax: 600 },
+                    { title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: yMaxBottom },
+                    {
+                        title: null,
+                        top: 0,
+                        height: "43%",
+                        offset: 0,
+                        opposite: true,
+                        max: yMaxLine,
+                        labels: { enabled: false },
+                        gridLineWidth: 0,
+                    },
+                ],
+                tooltip: { enabled: false },
+                legend: {
+                    enabled: true,
+                    itemStyle: { color: "#fff" },
+                },
+                plotOptions: {
+                    column: {
+                        grouping: false,
+                        maxPointWidth: 30,
+                        dataLabels: {
+                            allowOverlap: true,
+                            style: { textOutline: "1px contrast" },
+                            // rotation: -90,
+                            rotation: 0,
+                        },
+                    },
+                },
+                series: [
+                    { name: "Inspected", color: "#fddd60", data: checkIn, yAxis: 0 },
+                    {
+                        name: "Rejected",
+                        color: "#7cffb2",
+                        data: checkOut,
+                        yAxis: 1,
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function () {
+                                return this.y < 0.1 ? 0 : this.y;
+                            },
+                            align: "center",
+                        },
+                    },
+                    {
+                        name: "Ratio (Rejected/Inspected)",
+                        type: "line",
+                        color: "#38C3FE",
+                        data: checkIn.map((inspected, i) =>
+                            inspected > 0 ? parseFloat(((checkOut[i] / inspected) * 100).toFixed(2)) : 0
+                        ),
+                        yAxis: 2,
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function () {
+                                return this.y + "%";
+                            },
+                            align: "center",
+                        },
+                        marker: { enabled: true, radius: 3 },
+                    },
+                ],
+            });
+            chartsList.push(chart);
+            return chart;
+        };
+
+        async function fetchDataIQC(page, size) { }
+
+        const loadData = async () => {
+            getDataCPN();
+            getDataLotInject();
+            loadLotRejectWeeklyChart();
+            loadLotRejectDailyChart();
+        };
+
+        const loadEvent = () => {
+            highchartsInit();
+            if (!selectElement.value) {
+                selectElement.selectedIndex = 2;
+            }
+            const initVal = selectElement.value || "30";
+            updateDates(initVal);
+            loadDonutIQC();
+            loadDonutNCMR();
+            loadAllTopReject();
+            getDataCPN();
+            renderTable4();
+            renderTable5();
+
+            selectElement.addEventListener("change", function () {
+                const selectedOption = this.value;
+                updateDates(selectedOption);
+
+                loadDonutIQC();
+                loadDonutNCMR();
+                loadAllTopReject();
+                getDataCPN();
+                renderTable4();
+                renderTable5();
+            });
+
+            const slTime = document.getElementById("sl-time");
+            if (slTime) {
+                if (!slTime.value) {
+                    slTime.selectedIndex = 0;
+                }
+                slTime.addEventListener("change", function () {
+                    getDataLotInject();
+                });
+            }
+        };
+
+        ready(() => {
+            loadEvent();
+            loadData();
+        });
+    </script>
