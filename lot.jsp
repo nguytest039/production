@@ -7,6 +7,12 @@
 <script src="/production-system/assets/plugins/highcharts/highcharts.js"></script>
 
 <style>
+    #sl-time-chart,
+    #daterangepicker-chart {
+        background-color: #2a2d3a !important;
+        color: #ffc107 !important;
+        border: 1px solid #5264b6;
+    }
     .component-wrapper {
         /* border: 1px solid green; */
         padding: 0.35rem 0.35rem;
@@ -263,6 +269,67 @@
     .cpnCustom .component-wrapper > .component-item {
         flex: 1;
     }
+
+    .daterangepicker {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
+    .daterangepicker .drp-calendar.left,
+    .daterangepicker .drp-calendar.right {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+    }
+    .daterangepicker .calendar-table {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: none !important;
+    }
+    .daterangepicker .calendar-table th,
+    .daterangepicker .calendar-table td {
+        color: #e2e8f0 !important;
+    }
+    .daterangepicker td.off,
+    .daterangepicker td.disabled {
+        color: #64748b !important;
+        background-color: transparent !important;
+    }
+    .daterangepicker td.active,
+    .daterangepicker td.active:hover {
+        background-color: #125d9b !important;
+        color: #ffffff !important;
+    }
+    .daterangepicker td.in-range {
+        background-color: #19875433 !important;
+    }
+    .daterangepicker .calendar-time {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border-top: 1px solid #334155 !important;
+    }
+    .daterangepicker .calendar-time select {
+        background-color: #334155 !important;
+        color: #e2e8f0 !important;
+        border: none !important;
+    }
+    .daterangepicker td.available:hover,
+    .daterangepicker td.in-range:hover {
+        background-color: #125d9b !important;
+        color: #fff !important;
+    }
+    .daterangepicker td.in-range {
+        background-color: #125d9b33 !important;
+        color: #fff !important;
+    }
+    .daterangepicker .applyBtn {
+        background-color: #0d6efd !important;
+        border: none !important;
+    }
+    .daterangepicker .cancelBtn {
+        background-color: #475569 !important;
+        color: #fff !important;
+        border: none !important;
+    }
 </style>
 
 <div class="container-fluid">
@@ -275,18 +342,26 @@
     <jsp:include page="/WEB-INF/jsp/common/header-dashboard.jsp">
         <jsp:param name="titlePage" value="IQC Inspection Report" />
         <jsp:param name="subTitlePage" value="" />
-        <jsp:param name="vietnamese" value="<%=pageContext.getAttribute(\"vietnamese\") %>" /> <jsp:param name="chinese"
-        value="<%=pageContext.getAttribute(\"chinese\") %>" /> <jsp:param name="english"
-        value="<%=pageContext.getAttribute(\"english\") %>" /> <jsp:param name="profile"
-        value="<%=pageContext.getAttribute(\"profile\") %>" /> <jsp:param name="logout"
-        value="<%=pageContext.getAttribute(\"logout\") %>" />
+        <jsp:param name="vietnamese" value="<%=pageContext.getAttribute(\" vietnamese\") %>" /> <jsp:param
+        name="chinese" value="<%=pageContext.getAttribute(\" chinese\") %>" /> <jsp:param name="english"
+        value="<%=pageContext.getAttribute(\" english\") %>" /> <jsp:param name="profile"
+        value="<%=pageContext.getAttribute(\" profile\") %>" /> <jsp:param name="logout"
+        value="<%=pageContext.getAttribute(\" logout\") %>" />
     </jsp:include>
-    <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
-        <option value="today">Time: Today</option>
-        <option value="7">Time: Last 7 Days</option>
-        <option value="30" selected>Time: Last 30 Days</option>
-        <option value="custom">Time: Custom</option>
-    </select>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem">
+        <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
+            <option value="today">Time: Today</option>
+            <option value="7">Time: Last 7 Days</option>
+            <option value="30" selected>Time: Last 30 Days</option>
+            <option value="custom">Time: Custom</option>
+        </select>
+        <input
+            type="text"
+            id="daterangepicker-chart"
+            class="form-control form-control-sm w-auto"
+            style="display: none; margin-left: 0.5rem"
+        />
+    </div>
     <div class="container-fluid p-0 content-wrapper">
         <div class="row">
             <div class="col-md-3 component-wrapper">
@@ -338,18 +413,18 @@
             </div>
 
             <div class="col-md-9">
-                <div class="row" style="height: 100%;">
+                <div class="row" style="height: 100%">
                     <div class="col-md-6 component-wrapper">
-                        <div class="component-item" style="height: 100%;">
+                        <div class="component-item" style="height: 100%">
                             <h5 class="component-title">LLR Last 7 Days</h5>
-                            <div class="component-body chart-box flex-grow-1 " id="col-chart-2"></div>
+                            <div class="component-body chart-box flex-grow-1" id="col-chart-2"></div>
                         </div>
                     </div>
 
                     <div class="col-md-6 component-wrapper">
-                        <div class="component-item" style="height: 100%;">
+                        <div class="component-item" style="height: 100%">
                             <h5 class="component-title">LLR By Weeks</h5>
-                            <div class="component-body chart-box flex-grow-1 " id="col-chart-1"></div>
+                            <div class="component-body chart-box flex-grow-1" id="col-chart-1"></div>
                         </div>
                     </div>
                 </div>
@@ -482,7 +557,17 @@
 
             <div class="col-md-9 component-wrapper">
                 <div class="component-item">
-                    <h5 class="component-title">Inspection List</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h5 class="component-title mb-0">Inspection List</h5>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            id="export-table5-btn"
+                            title="Download Excel"
+                        >
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
                     <div class="component-body table-box">
                         <table class="table table-sm table-striped" id="table-5">
                             <thead></thead>
@@ -503,7 +588,17 @@
             </div>
             <div class="col-md-9 component-wrapper">
                 <div class="component-item">
-                    <h5 class="component-title">NCMR List</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h5 class="component-title mb-0">NCMR List</h5>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            id="export-table4-btn"
+                            title="Download Excel"
+                        >
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
                     <div class="component-body table-box">
                         <table class="table table-sm table-striped" id="table-4">
                             <thead></thead>
@@ -524,6 +619,14 @@
     const donutFilters = {
         materialTypeIQC: null,
         materialTypeNCMR: null,
+        iqcStatus: 1,
+    };
+    const IQC_STATUS_MAP = {
+        0: "TO BE INSPECTED",
+        1: "ALL",
+        2: "REJECTED",
+        // 3: "PASS",
+        // 4: "PASS OR FAIL",
     };
     const lotTableFilters = {
         "table-1": null,
@@ -565,6 +668,7 @@
         } else if (selectedOption === "30") {
             fromDate = getFormattedDate(moment().subtract(29, "days"), "00:00:00");
             toDate = getFormattedDate(moment(), "23:59:59");
+        } else if (selectedOption === "custom") {
         }
     }
 
@@ -949,18 +1053,25 @@
     function handleDonutClick(containerId, materialType) {
         if (containerId === "donut-chart-1") {
             donutFilters.materialTypeIQC = donutFilters.materialTypeIQC === materialType ? null : materialType;
-            updateTableTitleBadge("table-5", donutFilters.materialTypeIQC);
+
+            if (donutFilters.materialTypeIQC !== null) {
+                donutFilters.iqcStatus = 0;
+            } else {
+                donutFilters.iqcStatus = 1;
+            }
+
+            updateTableTitleBadge("table-5");
             renderTable5();
 
-            const table5 = document.getElementById("table-5");
-            if (table5) {
-                setTimeout(() => {
-                    table5.closest(".component-item").scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                    });
-                }, 100);
-            }
+            // const table5 = document.getElementById("table-5");
+            // if (table5) {
+            //     setTimeout(() => {
+            //         table5.closest(".component-item").scrollIntoView({
+            //             behavior: "smooth",
+            //             block: "start",
+            //         });
+            //     }, 100);
+            // }
         } else if (containerId === "donut-chart-2") {
             donutFilters.materialTypeNCMR = donutFilters.materialTypeNCMR === materialType ? null : materialType;
             updateTableTitleBadge("table-4", donutFilters.materialTypeNCMR);
@@ -1008,6 +1119,45 @@
         }
     }
 
+    function createFilterBadge(text, onClose, isStatusBadge = false, onStatusClick = null) {
+        const badge = document.createElement("span");
+        badge.className = "filter-badge";
+        badge.style.display = "inline-flex";
+        badge.style.alignItems = "center";
+        badge.style.gap = "0.3rem";
+        badge.style.cursor = isStatusBadge ? "pointer" : "default";
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = text;
+
+        // If it's a status badge, make the text clickable
+        if (isStatusBadge && onStatusClick) {
+            textSpan.style.cursor = "pointer";
+            textSpan.style.textDecoration = "underline";
+            textSpan.onclick = (e) => {
+                e.stopPropagation();
+                onStatusClick();
+            };
+        }
+
+        const closeBtn = document.createElement("span");
+        closeBtn.innerHTML = "<i class='bi bi-x'></i>";
+        closeBtn.style.fontSize = "1rem";
+        closeBtn.style.fontWeight = "normal";
+        closeBtn.style.lineHeight = "1.1";
+        closeBtn.style.cursor = "pointer";
+
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            onClose();
+        };
+
+        badge.appendChild(textSpan);
+        badge.appendChild(closeBtn);
+
+        return badge;
+    }
+
     function updateTableTitleBadge(tableId, filterValue) {
         const tableElement = document.getElementById(tableId);
         if (!tableElement) return;
@@ -1015,52 +1165,85 @@
         const titleElement = tableElement.closest(".component-item").querySelector(".component-title");
         if (!titleElement) return;
 
-        const existingBadge = titleElement.querySelector(".filter-badge");
-        if (existingBadge) {
-            existingBadge.remove();
-        }
+        const existingBadges = titleElement.querySelectorAll(".filter-badge");
+        existingBadges.forEach((badge) => badge.remove());
 
-        const filter = filterValue !== undefined ? filterValue : lotTableFilters[tableId];
-
-        if (filter) {
-            const badge = document.createElement("span");
-            badge.className = "filter-badge";
-            badge.style.display = "inline-flex";
-            badge.style.alignItems = "center";
-            badge.style.gap = "0.3rem";
-            badge.style.cursor = "pointer";
-
-            const text = document.createElement("span");
-            text.textContent = filter;
-
-            const closeBtn = document.createElement("span");
-            closeBtn.innerHTML = "<i class='bi bi-x'></i>";
-            closeBtn.style.fontSize = "1rem";
-            closeBtn.style.fontWeight = "normal";
-            closeBtn.style.lineHeight = "1.1";
-
-            closeBtn.onclick = (e) => {
-                e.stopPropagation();
-
-                if (tableId === "table-4") {
-                    donutFilters.materialTypeNCMR = null;
-                    renderTable4();
-                } else if (tableId === "table-5") {
+        if (tableId === "table-5") {
+            // Material Type Badge
+            if (donutFilters.materialTypeIQC) {
+                const materialBadge = createFilterBadge(donutFilters.materialTypeIQC, () => {
                     donutFilters.materialTypeIQC = null;
+                    donutFilters.iqcStatus = 1;
                     renderTable5();
-                } else {
-                    lotTableFilters[tableId] = null;
-                    if (tableId === "table-1") renderTable1();
-                    else if (tableId === "table-2") renderTable2();
-                    else if (tableId === "table-3") renderTable3();
-                }
+                    updateTableTitleBadge("table-5");
+                });
+                titleElement.appendChild(materialBadge);
+            }
 
-                updateTableTitleBadge(tableId);
-            };
+            // ✓ LUÔN hiển thị IQC Status Badge (kể cả ALL)
+            if (donutFilters.iqcStatus !== null && donutFilters.iqcStatus !== undefined) {
+                const statusText = IQC_STATUS_MAP[donutFilters.iqcStatus];
+                const statusBadge = createFilterBadge(
+                    statusText,
+                    () => {
+                        // ✓ Khi nhấn X, reset về ALL
+                        donutFilters.iqcStatus = 1;
+                        donutFilters.materialTypeIQC = null;
+                        renderTable5();
+                        updateTableTitleBadge("table-5");
+                    },
+                    true, // isStatusBadge
+                    () => {
+                        // Cycle to next status
+                        const statuses = [0, 1, 2];
+                        const currentIndex = statuses.indexOf(donutFilters.iqcStatus);
+                        const nextIndex = (currentIndex + 1) % statuses.length;
+                        donutFilters.iqcStatus = statuses[nextIndex];
+                        renderTable5();
+                        updateTableTitleBadge("table-5");
+                    }
+                );
+                titleElement.appendChild(statusBadge);
+            }
 
-            badge.appendChild(text);
-            badge.appendChild(closeBtn);
-            titleElement.appendChild(badge);
+            // ✓ Update export button state
+            updateExportButtonState();
+        } else {
+            const filter = filterValue !== undefined ? filterValue : lotTableFilters[tableId];
+
+            if (filter) {
+                const badge = createFilterBadge(filter, () => {
+                    if (tableId === "table-4") {
+                        donutFilters.materialTypeNCMR = null;
+                        renderTable4();
+                    } else {
+                        lotTableFilters[tableId] = null;
+                        if (tableId === "table-1") renderTable1();
+                        else if (tableId === "table-2") renderTable2();
+                        else if (tableId === "table-3") renderTable3();
+                    }
+                    updateTableTitleBadge(tableId);
+                });
+                titleElement.appendChild(badge);
+            }
+        }
+    }
+
+    function updateExportButtonState() {
+        const exportBtn5 = document.getElementById("export-table5-btn");
+        if (!exportBtn5) return;
+
+        // ✓ Disable khi status = ALL (1)
+        if (donutFilters.iqcStatus === 1) {
+            exportBtn5.disabled = true;
+            exportBtn5.title = "Cannot export when status is ALL. Please select a specific status.";
+            exportBtn5.style.opacity = "0.5";
+            exportBtn5.style.cursor = "not-allowed";
+        } else {
+            exportBtn5.disabled = false;
+            exportBtn5.title = "Download Excel";
+            exportBtn5.style.opacity = "1";
+            exportBtn5.style.cursor = "pointer";
         }
     }
 
@@ -1430,6 +1613,10 @@
                     params.append("materialType", donutFilters.materialTypeIQC);
                 }
 
+                if (donutFilters.iqcStatus !== undefined && donutFilters.iqcStatus !== null) {
+                    params.append("iqcStatus", donutFilters.iqcStatus);
+                }
+
                 return `/production-system/api/iqc/iqc-lot?\${params}`;
             },
 
@@ -1461,10 +1648,6 @@
 
         await table5Instance.init();
     }
-
-    // async function loadTable5() {
-    //     await renderTable5();
-    // }
 
     async function loadAllTopReject() {
         await Promise.all([
@@ -1745,7 +1928,96 @@
         return chart;
     };
 
-    async function fetchDataIQC(page, size) {}
+    function setupExportButtons() {
+        const exportBtn5 = document.getElementById("export-table5-btn");
+        const exportBtn4 = document.getElementById("export-table4-btn");
+
+        if (exportBtn5) {
+            exportBtn5.addEventListener("click", () => {
+                // ✓ Double check khi click
+                if (donutFilters.iqcStatus === 1) {
+                    alert(
+                        "Cannot export when status is ALL. Please select a specific status (TO BE INSPECTED or FAIL)."
+                    );
+                    return;
+                }
+                exportTable(5, "IqcReport");
+            });
+        }
+
+        if (exportBtn4) {
+            exportBtn4.addEventListener("click", () => {
+                exportTable(4, "NcmrReport");
+            });
+        }
+    }
+
+    async function exportTable(tableNum, filename) {
+        const apiUrl =
+            tableNum === 5 ? "/production-system/api/iqc/iqc-lot/export" : "/production-system/api/iqc/ncmr/export";
+
+        const params = new URLSearchParams();
+        params.append("page", 0);
+        params.append("size", 40000);
+        params.append("fromDate", fromDate);
+        params.append("toDate", toDate);
+
+        if (tableNum === 5) {
+            if (donutFilters.materialTypeIQC) {
+                params.append("materialType", donutFilters.materialTypeIQC);
+            }
+            if (donutFilters.iqcStatus !== undefined && donutFilters.iqcStatus !== null) {
+                params.append("iqcStatus", donutFilters.iqcStatus);
+            }
+        } else if (tableNum === 4) {
+            if (donutFilters.materialTypeNCMR) {
+                params.append("materialType", donutFilters.materialTypeNCMR);
+            }
+        }
+
+        // Show loading
+        const btnId = tableNum === 5 ? "export-table5-btn" : "export-table4-btn";
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting...';
+        }
+
+        try {
+            const response = await fetch(`\${apiUrl}?\${params.toString()}`, {
+                method: "GET",
+                headers: {
+                    Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP \${response.status}: \${response.statusText}`);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `\${filename}_\${new Date().getTime()}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+        } catch (error) {
+            console.error("Export failed:", error);
+            alert(`Failed to export file: \${error.message}`);
+        } finally {
+            // Restore button
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-download"></i> Export';
+            }
+        }
+    }
 
     const loadData = async () => {
         getDataCPN();
@@ -1767,17 +2039,72 @@
         getDataCPN();
         renderTable4();
         renderTable5();
+        updateTableTitleBadge("table-5");
+        setupExportButtons();
+        updateExportButtonState();
 
-        selectElement.addEventListener("change", function () {
-            const selectedOption = this.value;
-            updateDates(selectedOption);
+        const daterangepickerChart = $("#daterangepicker-chart");
+        daterangepickerChart.daterangepicker({
+            opens: "left",
+            autoUpdateInput: false,
+            locale: {
+                cancelLabel: "Clear",
+                applyLabel: "Apply",
+                format: "YYYY/MM/DD",
+            },
+            startDate: moment().subtract(29, "days"),
+            endDate: moment(),
+        });
 
+        daterangepickerChart.on("apply.daterangepicker", function (ev, picker) {
+            fromDate = picker.startDate.format("YYYY/MM/DD 00:00:00");
+            toDate = picker.endDate.format("YYYY/MM/DD 23:59:59");
+
+            $(this).val(picker.startDate.format("YYYY/MM/DD") + " - " + picker.endDate.format("YYYY/MM/DD"));
+
+            // Reload all data
             loadDonutIQC();
             loadDonutNCMR();
             loadAllTopReject();
             getDataCPN();
             renderTable4();
             renderTable5();
+        });
+
+        daterangepickerChart.on("cancel.daterangepicker", function (ev, picker) {
+            $(this).val("");
+            $(this).hide();
+            selectElement.value = "30";
+            updateDates("30");
+
+            // Reload with default dates
+            loadDonutIQC();
+            loadDonutNCMR();
+            loadAllTopReject();
+            getDataCPN();
+            renderTable4();
+            renderTable5();
+        });
+
+        selectElement.addEventListener("change", function () {
+            const selectedOption = this.value;
+            const daterangepickerChartEl = document.getElementById("daterangepicker-chart");
+
+            if (selectedOption === "custom") {
+                daterangepickerChartEl.style.display = "inline-block";
+                $(daterangepickerChartEl).data("daterangepicker").show();
+            } else {
+                daterangepickerChartEl.style.display = "none";
+                daterangepickerChartEl.value = "";
+
+                updateDates(selectedOption);
+                loadDonutIQC();
+                loadDonutNCMR();
+                loadAllTopReject();
+                getDataCPN();
+                renderTable4();
+                renderTable5();
+            }
         });
 
         const slTime = document.getElementById("sl-time");
