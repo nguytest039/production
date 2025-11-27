@@ -1,541 +1,514 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-    <link rel="stylesheet" href="/production-system/assets/plugins/daterangepicker/daterangepicker.css" />
-    <link rel="stylesheet" href="/production-system/assets/plugins/bootstrap-icons/bootstrap-icons.css" />
-    <script src="/production-system/assets/plugins/jquery/jquery.min.js"></script>
-    <script src="/production-system/assets/plugins/daterangepicker/moment.min.js"></script>
-    <script src="/production-system/assets/plugins/daterangepicker/daterangepicker.js"></script>
-    <script src="/production-system/assets/plugins/highcharts/highcharts.js"></script>
+<link rel="stylesheet" href="/production-system/assets/plugins/daterangepicker/daterangepicker.css" />
+<link rel="stylesheet" href="/production-system/assets/plugins/bootstrap-icons/bootstrap-icons.css" />
+<script src="/production-system/assets/plugins/jquery/jquery.min.js"></script>
+<script src="/production-system/assets/plugins/daterangepicker/moment.min.js"></script>
+<script src="/production-system/assets/plugins/daterangepicker/daterangepicker.js"></script>
+<script src="/production-system/assets/plugins/highcharts/highcharts.js"></script>
 
-    <style>
-        #sl-time-chart,
-        #daterangepicker-chart {
-            background-color: #2a2d3a !important;
-            color: #ffc107 !important;
-            border: 1px solid #5264b6;
-        }
+<style>
+    #sl-time-chart,
+    #daterangepicker-chart {
+        /* background-color: #2a2d3a !important; */
+        background-color: transparent !important;
+        color: #ffc107 !important;
+        font-weight: bold;
+        /* border: 1px solid #5264b6; */
+        border: none;
+    }
 
-        .component-wrapper {
-            /* border: 1px solid green; */
-            padding: 0.35rem 0.35rem;
-        }
+    .component-wrapper {
+        /* border: 1px solid green; */
+        padding: 0.35rem 0.35rem;
+    }
 
-        .component-item {
-            height: 100%;
-            padding: 0.5rem 0.75rem;
-            background-color: rgba(73, 146, 255, 0.15);
-            box-shadow: 0 3px 17px #030616;
-            border-radius: 0.3rem;
-            overflow: hidden;
-            display: flex;
-            justify-content: flex-start;
-            flex-direction: column;
-            -webkit-border-radius: 0.3rem;
-            -moz-border-radius: 0.3rem;
-            -ms-border-radius: 0.3rem;
-            -o-border-radius: 0.3rem;
-        }
+    .component-item {
+        height: 100%;
+        padding: 0.5rem 0.75rem;
+        background-color: rgba(73, 146, 255, 0.15);
+        box-shadow: 0 3px 17px #030616;
+        border-radius: 0.3rem;
+        overflow: hidden;
+        display: flex;
+        justify-content: flex-start;
+        flex-direction: column;
+        -webkit-border-radius: 0.3rem;
+        -moz-border-radius: 0.3rem;
+        -ms-border-radius: 0.3rem;
+        -o-border-radius: 0.3rem;
+    }
 
-        .component-item .chart-box {
-            height: 30vh;
-        }
+    .component-item .chart-box {
+        height: 30vh;
+    }
 
-        .component-item .table-box {
-            height: 30vh;
-            overflow: auto;
-        }
+    .component-item .table-box {
+        height: 30vh;
+        overflow: auto;
+    }
 
-        .component-item .info-box {
-            height: 6vh;
-            background-color: rgba(73, 146, 255, 0.15);
-        }
+    .component-item .info-box {
+        height: 6vh;
+        background-color: rgba(73, 146, 255, 0.15);
+    }
 
-        .component-title {
-            font-size: 1rem;
-            margin: 0;
-            padding-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+    .component-title {
+        font-size: 1rem;
+        margin: 0;
+        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-        .filter-badge {
-            display: inline-block;
-            background-color: #e74c3c;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.8rem;
-            font-weight: bold;
-            white-space: nowrap;
-        }
+    .filter-badge {
+        display: inline-block;
+        background-color: #e74c3c;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: bold;
+        white-space: nowrap;
+    }
 
-        .text-span {
-            font-size: 1.12rem;
-        }
+    .text-span {
+        font-size: 1.12rem;
+    }
 
-        .table-responsive::-webkit-scrollbar,
-        .component-item .table-box::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
+    .table-responsive::-webkit-scrollbar,
+    .component-item .table-box::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
 
-        .table-responsive::-webkit-scrollbar-thumb,
-        .component-item .table-box::-webkit-scrollbar-thumb {
-            background-color: #264b8b;
-            border-radius: 3px;
-        }
+    .table-responsive::-webkit-scrollbar-thumb,
+    .component-item .table-box::-webkit-scrollbar-thumb {
+        background-color: #264b8b;
+        border-radius: 3px;
+    }
 
-        .table-responsive::-webkit-scrollbar-track,
-        .component-item .table-box::-webkit-scrollbar-track {
-            background-color: rgba(73, 146, 255, 0.1);
-            border-radius: 3px;
-        }
+    .table-responsive::-webkit-scrollbar-track,
+    .component-item .table-box::-webkit-scrollbar-track {
+        background-color: rgba(73, 146, 255, 0.1);
+        border-radius: 3px;
+    }
 
-        .table-responsive::-webkit-scrollbar-corner,
-        .component-item .table-box::-webkit-scrollbar-corner {
-            background-color: rgba(73, 146, 255, 0.1);
-        }
+    .table-responsive::-webkit-scrollbar-corner,
+    .component-item .table-box::-webkit-scrollbar-corner {
+        background-color: rgba(73, 146, 255, 0.1);
+    }
 
-        .table {
-            --border-color: #6290b5;
-            margin-bottom: 0;
-            border-right: 1px solid #37567f;
-            /* border-top: 1px solid #37567f; */
-        }
+    .table {
+        --border-color: #6290b5;
+        margin-bottom: 0;
+        border-right: 1px solid #37567f;
+        /* border-top: 1px solid #37567f; */
+    }
 
-        .table th,
-        .table td {
-            text-align: center;
-            vertical-align: middle;
-            color: #fff;
-            border: none;
-            box-shadow: inset 0.5px -0.5px 0px var(--border-color);
-            font-weight: normal;
-            line-height: 1.2;
-        }
+    .table th,
+    .table td {
+        text-align: center;
+        vertical-align: middle;
+        color: #fff;
+        border: none;
+        box-shadow: inset 0.5px -0.5px 0px var(--border-color);
+        font-weight: normal;
+        line-height: 1.2;
+    }
 
-        .table thead,
-        .table thead th {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background-color: #264b8b;
-            font-size: 0.7rem;
-            /* border-top: 1px solid var(--border-color); */
-        }
+    .table thead,
+    .table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background-color: #264b8b;
+        font-size: 0.7rem;
+        /* border-top: 1px solid var(--border-color); */
+    }
 
-        .table tbody td {
-            font-size: 0.7rem;
-            background-color: transparent;
-        }
+    .table tbody td {
+        font-size: 0.7rem;
+        background-color: transparent;
+    }
 
-        .table-striped>tbody>tr.odd {
-            background-color: #264e9256;
-        }
+    .table-striped > tbody > tr.odd {
+        background-color: #264e9256;
+    }
 
-        .table tbody td.grand-value {
-            /* color: #5e9fff; */
-            color: #03a9f4;
-        }
+    .table tbody td.grand-value {
+        /* color: #5e9fff; */
+        color: #03a9f4;
+    }
 
-        select {
-            background-color: #cfe2ff !important;
-            cursor: pointer;
-        }
+    select {
+        background-color: #cfe2ff !important;
+        cursor: pointer;
+    }
 
-        select:focus,
-        select:focus-visible {
-            outline: 0;
-            box-shadow: none;
-        }
+    select:focus,
+    select:focus-visible {
+        outline: 0;
+        box-shadow: none;
+    }
 
-        select option {
-            background: #0c1b40;
-            color: #fff;
-        }
+    select option {
+        background: #0c1b40;
+        color: #fff;
+    }
 
-        [id^="pagination-table"] {
-            display: flex;
-            justify-content: end;
-            align-items: center;
-            gap: 5px;
-        }
+    [id^="pagination-table"] {
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        gap: 5px;
+    }
 
-        [id^="pagination-table"] button {
-            border: 1px solid #0a58ca;
-            background-color: transparent;
-            color: #0a58ca;
-            border-radius: 5px;
-            min-width: 2rem;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-            height: 2rem;
-            font-size: 1rem;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    [id^="pagination-table"] button {
+        border: 1px solid #0a58ca;
+        background-color: transparent;
+        color: #0a58ca;
+        border-radius: 5px;
+        min-width: 2rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        height: 2rem;
+        font-size: 1rem;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-        [id^="pagination-table"] button:hover {
-            background-color: #0a58ca;
-            color: #fff;
-        }
+    [id^="pagination-table"] button:hover {
+        background-color: #0a58ca;
+        color: #fff;
+    }
 
-        [id^="pagination-table"] button.active {
-            background-color: #4982d8;
-            color: #fff;
-        }
+    [id^="pagination-table"] button.active {
+        background-color: #4982d8;
+        color: #fff;
+    }
 
-        [id^="pagination-table"] button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            color: #888;
-            border-color: #444;
-        }
+    [id^="pagination-table"] button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        color: #888;
+        border-color: #444;
+    }
 
-        ::-webkit-scrollbar {
-            width: 0.3rem;
-            height: 0.3rem;
-        }
+    ::-webkit-scrollbar {
+        width: 0.3rem;
+        height: 0.3rem;
+    }
 
-        /* Nền của scrollbar */
-        ::-webkit-scrollbar-track {
-            background: #acacac;
-            border-radius: 0px;
-        }
+    /* Nền của scrollbar */
+    ::-webkit-scrollbar-track {
+        background: #acacac;
+        border-radius: 0px;
+    }
 
-        /* Thanh cuộn */
-        ::-webkit-scrollbar-thumb {
-            background: #264b8b;
-            border-radius: 0px;
-            /* background-color: rgba(255, 235, 59, 0.637); */
-        }
+    /* Thanh cuộn */
+    ::-webkit-scrollbar-thumb {
+        background: #264b8b;
+        border-radius: 0px;
+        /* background-color: rgba(255, 235, 59, 0.637); */
+    }
 
-        .filter-badge {
-            background-color: rgb(8, 58, 143);
-            font-size: 0.7rem;
-            padding: 0rem 0.3rem;
-        }
+    .filter-badge {
+        background-color: rgb(8, 58, 143);
+        font-size: 0.7rem;
+        padding: 0rem 0.3rem;
+    }
 
-        .filter-badge .bi-x:hover {
-            color: #ffc107;
-        }
+    .filter-badge .bi-x:hover {
+        color: #ffc107;
+    }
 
-        .form-select,
-        .form-control {
-            background: transparent;
-            border: 1px solid #5264b6;
-            color: #000 !important;
-            border-radius: 6px;
-            font-size: 1rem;
-            border-radius: 10px;
-        }
+    .form-select,
+    .form-control {
+        /* background: transparent; */
+        border: 1px solid #5264b6;
+        color: #fff !important;
+        border-radius: 6px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
 
-        .form-select:focus,
-        .form-control:focus {
-            background: #2a2d3a;
-            border-color: #5a5d6a;
-            color: #fff;
-            box-shadow: none;
-        }
+    .form-select:focus,
+    .form-control:focus {
+        background: #2a2d3a;
+        border-color: #5a5d6a;
+        color: #fff;
+        box-shadow: none;
+    }
 
-        .no-data {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #fff;
-            font-weight: 700;
-            font-size: 1rem;
-            background: transparent;
-        }
+    .no-data {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        background: transparent;
+    }
 
-        .cpnCustom {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
+    .cpnCustom {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
 
-        .cpnCustom>.row {
-            flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-        }
+    .cpnCustom > .row {
+        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
+    }
 
-        .cpnCustom .component-wrapper {
-            display: flex;
-        }
+    .cpnCustom .component-wrapper {
+        display: flex;
+    }
 
-        .cpnCustom .component-wrapper>.component-item {
-            flex: 1;
-        }
+    .cpnCustom .component-wrapper > .component-item {
+        flex: 1;
+    }
 
-        .daterangepicker {
-            background-color: #1e293b !important;
-            color: #e2e8f0 !important;
-            border: 1px solid #334155 !important;
-        }
+    .daterangepicker {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
 
-        .daterangepicker .drp-calendar.left,
-        .daterangepicker .drp-calendar.right {
-            background-color: #1e293b !important;
-            color: #e2e8f0 !important;
-        }
+    .daterangepicker .drp-calendar.left,
+    .daterangepicker .drp-calendar.right {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+    }
 
-        .daterangepicker .calendar-table {
-            background-color: #1e293b !important;
-            color: #e2e8f0 !important;
-            border: none !important;
-        }
+    .daterangepicker .calendar-table {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: none !important;
+    }
 
-        .daterangepicker .calendar-table th,
-        .daterangepicker .calendar-table td {
-            color: #e2e8f0 !important;
-        }
+    .daterangepicker .calendar-table th,
+    .daterangepicker .calendar-table td {
+        color: #e2e8f0 !important;
+    }
 
-        .daterangepicker td.off,
-        .daterangepicker td.disabled {
-            color: #64748b !important;
-            background-color: transparent !important;
-        }
+    .daterangepicker td.off,
+    .daterangepicker td.disabled {
+        color: #64748b !important;
+        background-color: transparent !important;
+    }
 
-        .daterangepicker td.active,
-        .daterangepicker td.active:hover {
-            background-color: #125d9b !important;
-            color: #ffffff !important;
-        }
+    .daterangepicker td.active,
+    .daterangepicker td.active:hover {
+        background-color: #125d9b !important;
+        color: #ffffff !important;
+    }
 
-        .daterangepicker td.in-range {
-            background-color: #19875433 !important;
-        }
+    .daterangepicker td.in-range {
+        background-color: #19875433 !important;
+    }
 
-        .daterangepicker .calendar-time {
-            background-color: #1e293b !important;
-            color: #e2e8f0 !important;
-            border-top: 1px solid #334155 !important;
-        }
+    .daterangepicker .calendar-time {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border-top: 1px solid #334155 !important;
+    }
 
-        .daterangepicker .calendar-time select {
-            background-color: #334155 !important;
-            color: #e2e8f0 !important;
-            border: none !important;
-        }
+    .daterangepicker .calendar-time select {
+        background-color: #334155 !important;
+        color: #e2e8f0 !important;
+        border: none !important;
+    }
 
-        .daterangepicker td.available:hover,
-        .daterangepicker td.in-range:hover {
-            background-color: #125d9b !important;
-            color: #fff !important;
-        }
+    .daterangepicker td.available:hover,
+    .daterangepicker td.in-range:hover {
+        background-color: #125d9b !important;
+        color: #fff !important;
+    }
 
-        .daterangepicker td.in-range {
-            background-color: #125d9b33 !important;
-            color: #fff !important;
-        }
+    .daterangepicker td.in-range {
+        background-color: #125d9b33 !important;
+        color: #fff !important;
+    }
 
-        .daterangepicker .applyBtn {
-            background-color: #0d6efd !important;
-            border: none !important;
-        }
+    .daterangepicker .applyBtn {
+        background-color: #0d6efd !important;
+        border: none !important;
+    }
 
-        .daterangepicker .cancelBtn {
-            background-color: #475569 !important;
-            color: #fff !important;
-            border: none !important;
-        }
-    </style>
+    .daterangepicker .cancelBtn {
+        background-color: #475569 !important;
+        color: #fff !important;
+        border: none !important;
+    }
 
-    <div class="container-fluid">
-        <spring:message code="vietnamese" var="vietnamese" />
-        <spring:message code="chinese" var="chinese" />
-        <spring:message code="english" var="english" />
-        <spring:message code="profile" var="profile" />
-        <spring:message code="logout" var="logout" />
+    .customBadge {
+        background-color: rgb(8, 58, 143) !important;
+        color: white;
+        cursor: pointer;
+        border: none;
+        font-weight: bold;
+    }
 
-        <jsp:include page="/WEB-INF/jsp/common/header-dashboard.jsp">
-            <jsp:param name="titlePage" value="IQC Inspection Report" />
-            <jsp:param name="subTitlePage" value="" />
-            <jsp:param name="vietnamese" value="<%=pageContext.getAttribute(\" vietnamese\") %>" /> <jsp:param
-                    name="chinese" value="<%=pageContext.getAttribute(\" chinese\") %>" /> <jsp:param name="english"
-                        value="<%=pageContext.getAttribute(\" english\") %>" /> <jsp:param name="profile"
-                            value="<%=pageContext.getAttribute(\" profile\") %>" /> <jsp:param name="logout"
-                                value="<%=pageContext.getAttribute(\" logout\") %>" />
-        </jsp:include>
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem">
-            <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
-                <option value="today">Time: Today</option>
-                <option value="7">Time: Last 7 Days</option>
-                <option value="30" selected>Time: Last 30 Days</option>
-                <option value="custom">Time: Custom</option>
-            </select>
-            <input type="text" id="daterangepicker-chart" class="form-control form-control-sm w-auto"
-                style="display: none; margin-left: 0.5rem" />
+    .component-title.title-with-badges {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .component-title.title-with-badges > span:first-child {
+        display: inline;
+    }
+
+    .component-title .filter-badge {
+        margin-top: 0.3rem;
+    }
+</style>
+
+<div class="container-fluid">
+    <spring:message code="vietnamese" var="vietnamese" />
+    <spring:message code="chinese" var="chinese" />
+    <spring:message code="english" var="english" />
+    <spring:message code="profile" var="profile" />
+    <spring:message code="logout" var="logout" />
+
+    <jsp:include page="/WEB-INF/jsp/common/header-dashboard.jsp">
+        <jsp:param name="titlePage" value="IQC Inspection Report" />
+        <jsp:param name="subTitlePage" value="" />
+        <jsp:param name="vietnamese" value="<%=pageContext.getAttribute(\" vietnamese\") %>" /> <jsp:param
+        name="chinese" value="<%=pageContext.getAttribute(\" chinese\") %>" /> <jsp:param name="english"
+        value="<%=pageContext.getAttribute(\" english\") %>" /> <jsp:param name="profile"
+        value="<%=pageContext.getAttribute(\" profile\") %>" /> <jsp:param name="logout"
+        value="<%=pageContext.getAttribute(\" logout\") %>" />
+    </jsp:include>
+    <div class="container-fluid p-0 content-wrapper">
+        <div class="row">
+            <div class="col-md-3 component-wrapper">
+                <div class="component-item">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="component-title mb-0">
+                            Lot Rejected Rate <span style="font-size: 0.9rem">(Today)</span>
+                        </h5>
+                        <select name="" id="sl-time" class="form-select form-select-sm w-auto d-none">
+                            <option value="today" selected>Time: Today</option>
+                            <option value="7">Time: 7 Days Ago</option>
+                            <option value="30">Time: 30 Days Ago</option>
+                            <option value="custom">Time: Custom</option>
+                        </select>
+                        <div id="daterangepicker-container" style="display: none; position: absolute">
+                            <input type="text" id="daterangepicker" />
+                        </div>
+                    </div>
+
+                    <div class="row d-flex flex-column">
+                        <div class="col-md-12 component-wrapper">
+                            <div
+                                class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                            >
+                                <div class="component-title">Inspected</div>
+                                <span id="inspected" class="fw-bold text-warning text-span"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 component-wrapper">
+                            <div
+                                class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                            >
+                                <div class="component-title">Lot Rejected</div>
+                                <span id="lot-rejected" class="fw-bold text-warning text-span"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 component-wrapper">
+                            <div
+                                class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                            >
+                                <div class="component-title">LRR</div>
+                                <span id="lrr" class="fw-bold text-warning text-span"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="row" style="height: 100%">
+                    <div class="col-md-6 component-wrapper">
+                        <div class="component-item" style="height: 100%">
+                            <h5 class="component-title">LLR Last 7 Days</h5>
+                            <div class="component-body chart-box flex-grow-1" id="col-chart-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 component-wrapper">
+                        <div class="component-item" style="height: 100%">
+                            <h5 class="component-title">LLR By Weeks</h5>
+                            <div class="component-body chart-box flex-grow-1" id="col-chart-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="container-fluid p-0 content-wrapper">
-            <div class="row">
-                <div class="col-md-3 component-wrapper">
-                    <div class="component-item">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="component-title mb-0">
-                                Lot Rejected Rate <span style="font-size: 0.9rem">(Today)</span>
-                            </h5>
-                            <select name="" id="sl-time" class="form-select form-select-sm w-auto d-none">
-                                <option value="today" selected>Time: Today</option>
-                                <option value="7">Time: 7 Days Ago</option>
-                                <option value="30">Time: 30 Days Ago</option>
-                                <option value="custom">Time: Custom</option>
-                            </select>
-                            <div id="daterangepicker-container" style="display: none; position: absolute">
-                                <input type="text" id="daterangepicker" />
-                            </div>
-                        </div>
 
-                        <div class="row d-flex flex-column">
-                            <div class="col-md-12 component-wrapper">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem">
+            <label for="sl-time-chart" class="fw-bold">Time: </label>
+            <select name="" id="sl-time-chart" class="form-select form-select-sm w-auto">
+                <option value="today">Today</option>
+                <option value="7">Last 7 Days</option>
+                <option value="30" selected>Last 30 Days</option>
+                <option value="custom">Custom</option>
+            </select>
+            <input
+                type="text"
+                id="daterangepicker-chart"
+                class="form-control form-control-sm w-auto"
+                style="display: none; margin-left: 0.5rem"
+            />
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 component-wrapper">
+                <div class="component-item">
+                    <h5 class="component-title">CPN Status</h5>
+                    <div class="component-body cpnCustom" id="">
+                        <div class="row">
+                            <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                    <div class="component-title">Inspected</div>
-                                    <span id="inspected" class="fw-bold text-warning text-span"></span>
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
+                                    <div class="component-title">To Be Inspected</div>
+                                    <span id="be-inspected" class="fw-bold text-warning text-span"></span>
                                 </div>
                             </div>
 
-                            <div class="col-md-12 component-wrapper">
+                            <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                    <div class="component-title">Lot Rejected</div>
-                                    <span id="lot-rejected" class="fw-bold text-warning text-span"></span>
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
+                                    <div class="component-title">Timeout Inspected</div>
+                                    <span id="timeout_inspect" class="fw-bold text-warning text-span"></span>
                                 </div>
                             </div>
 
-                            <div class="col-md-12 component-wrapper">
+                            <div class="col-md-6 component-wrapper">
                                 <div
-                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                    <div class="component-title">LRR</div>
-                                    <span id="lrr" class="fw-bold text-warning text-span"></span>
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
+                                    <div class="component-title">To Be Scanned</div>
+                                    <span id="scanned" class="fw-bold text-warning text-span"></span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="col-md-9">
-                    <div class="row" style="height: 100%">
-                        <div class="col-md-6 component-wrapper">
-                            <div class="component-item" style="height: 100%">
-                                <h5 class="component-title">LLR Last 7 Days</h5>
-                                <div class="component-body chart-box flex-grow-1" id="col-chart-2"></div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 component-wrapper">
-                            <div class="component-item" style="height: 100%">
-                                <h5 class="component-title">LLR By Weeks</h5>
-                                <div class="component-body chart-box flex-grow-1" id="col-chart-1"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-3 component-wrapper">
-                    <div class="component-item">
-                        <h5 class="component-title">CPN Status</h5>
-                        <div class="component-body cpnCustom" id="">
-                            <div class="row">
-                                <div class="col-md-6 component-wrapper">
-                                    <div
-                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                        <div class="component-title">To Be Inspected</div>
-                                        <span id="be-inspected" class="fw-bold text-warning text-span"></span>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 component-wrapper">
-                                    <div
-                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                        <div class="component-title">Timeout Inspected</div>
-                                        <span id="timeout_inspect" class="fw-bold text-warning text-span"></span>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 component-wrapper">
-                                    <div
-                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                        <div class="component-title">To Be Scanned</div>
-                                        <span id="scanned" class="fw-bold text-warning text-span"></span>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 component-wrapper">
-                                    <div
-                                        class="component-item d-flex flex-column justify-content-center align-items-center text-center">
-                                        <div class="component-title">Timeout Scanned</div>
-                                        <span id="timeout_scan" class="fw-bold text-warning text-span"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-9">
-                    <div class="row">
-                        <div class="col-md-4 component-wrapper">
-                            <div class="component-item">
-                                <h5 class="component-title">Lot Rejected By Material Type</h5>
-                                <div class="component-body chart-box" id="col-chart-3"></div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 component-wrapper">
-                            <div class="component-item">
-                                <h5 class="component-title">Top Lot Rejected By MFR</h5>
-                                <div class="component-body chart-box" id="col-chart-4"></div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 component-wrapper">
-                            <div class="component-item">
-                                <h5 class="component-title">Top Lot Rejected By Models</h5>
-                                <div class="component-body chart-box" id="col-chart-5"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 component-wrapper d-none">
-                            <div class="component-item">
-                                <h5 class="component-title">Lot Rejected By Material Type Details</h5>
-                                <div class="component-body table-box">
-                                    <table class="table table-sm table-striped" id="table-1">
-                                        <thead></thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 component-wrapper d-none">
-                            <div class="component-item">
-                                <h5 class="component-title">Top Lot Rejected By MFR Details</h5>
-                                <div class="component-body table-box">
-                                    <table class="table table-sm table-striped" id="table-2">
-                                        <thead></thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 component-wrapper d-none">
-                            <div class="component-item">
-                                <h5 class="component-title">Top Lot Rejected By Models Details</h5>
-                                <div class="component-body table-box">
-                                    <table class="table table-sm table-striped" id="table-3">
-                                        <thead></thead>
-                                        <tbody></tbody>
-                                    </table>
+                            <div class="col-md-6 component-wrapper">
+                                <div
+                                    class="component-item d-flex flex-column justify-content-center align-items-center text-center"
+                                >
+                                    <div class="component-title">Timeout Scanned</div>
+                                    <span id="timeout_scan" class="fw-bold text-warning text-span"></span>
                                 </div>
                             </div>
                         </div>
@@ -543,471 +516,209 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-3 component-wrapper">
-                    <div class="component-item">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h5 class="component-title mb-0">To be Inspected Distribution by Material Type</h5>
-
-                            <div id="daterangepicker-container" style="display: none; position: absolute">
-                                <input type="text" id="daterangepicker" />
-                            </div>
+            <div class="col-md-9">
+                <div class="row">
+                    <div class="col-md-4 component-wrapper">
+                        <div class="component-item">
+                            <h5 class="component-title">Lot Rejected By Material Type</h5>
+                            <div class="component-body chart-box" id="col-chart-3"></div>
                         </div>
-                        <div class="component-body chart-box flex-grow-1" id="donut-chart-1"></div>
+                    </div>
+
+                    <div class="col-md-4 component-wrapper">
+                        <div class="component-item">
+                            <h5 class="component-title">Top Lot Rejected By MFR</h5>
+                            <div class="component-body chart-box" id="col-chart-4"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 component-wrapper">
+                        <div class="component-item">
+                            <h5 class="component-title">Top Lot Rejected By Models</h5>
+                            <div class="component-body chart-box" id="col-chart-5"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="col-md-9 component-wrapper">
-                    <div class="component-item">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <h5 class="component-title mb-0">Inspection List</h5>
-                            <button type="button" class="btn btn-sm btn-primary" id="export-table5-btn"
-                                title="Download Excel">
-                                <i class="bi bi-download"></i> Export
-                            </button>
+                <div class="row">
+                    <div class="col-md-4 component-wrapper d-none">
+                        <div class="component-item">
+                            <h5 class="component-title">Lot Rejected By Material Type Details</h5>
+                            <div class="component-body table-box">
+                                <table class="table table-sm table-striped" id="table-1">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="component-body table-box">
-                            <table class="table table-sm table-striped" id="table-5">
-                                <thead></thead>
-                                <tbody></tbody>
-                            </table>
+                    </div>
+
+                    <div class="col-md-4 component-wrapper d-none">
+                        <div class="component-item">
+                            <h5 class="component-title">Top Lot Rejected By MFR Details</h5>
+                            <div class="component-body table-box">
+                                <table class="table table-sm table-striped" id="table-2">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div id="pagination-table-5" style="margin-top: 0.4rem"></div>
+                    </div>
+
+                    <div class="col-md-4 component-wrapper d-none">
+                        <div class="component-item">
+                            <h5 class="component-title">Top Lot Rejected By Models Details</h5>
+                            <div class="component-body table-box">
+                                <table class="table table-sm table-striped" id="table-3">
+                                    <thead></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="row">
-                <div class="col-md-3 component-wrapper">
-                    <div class="component-item">
-                        <h5 class="component-title mt-1">NCMR Status</h5>
-                        <div class="component-body chart-box flex-grow-1" id="donut-chart-2"></div>
+        <div class="row">
+            <div class="col-md-3 component-wrapper">
+                <div class="component-item">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="component-title mb-0">To be Inspected Distribution by Material Type</h5>
+
+                        <div id="daterangepicker-container" style="display: none; position: absolute">
+                            <input type="text" id="daterangepicker" />
+                        </div>
                     </div>
+                    <div class="component-body chart-box flex-grow-1" id="donut-chart-1"></div>
                 </div>
-                <div class="col-md-9 component-wrapper">
-                    <div class="component-item">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <h5 class="component-title mb-0">NCMR List</h5>
-                            <button type="button" class="btn btn-sm btn-primary" id="export-table4-btn"
-                                title="Download Excel">
-                                <i class="bi bi-download"></i> Export
-                            </button>
-                        </div>
-                        <div class="component-body table-box">
-                            <table class="table table-sm table-striped" id="table-4">
-                                <thead></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+            </div>
+
+            <div class="col-md-9 component-wrapper">
+                <div class="component-item">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h5 class="component-title mb-0">Inspection List</h5>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            id="export-table5-btn"
+                            title="Download Excel"
+                        >
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                    <div class="component-body table-box">
+                        <table class="table table-sm table-striped" id="table-5">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-table-5" style="margin-top: 0.4rem"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 component-wrapper">
+                <div class="component-item">
+                    <h5 class="component-title mt-1">NCMR Status</h5>
+                    <div class="component-body chart-box flex-grow-1" id="donut-chart-2"></div>
+                </div>
+            </div>
+            <div class="col-md-9 component-wrapper">
+                <div class="component-item">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h5 class="component-title mb-0">NCMR List</h5>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            id="export-table4-btn"
+                            title="Download Excel"
+                        >
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                    <div class="component-body table-box">
+                        <table class="table table-sm table-striped" id="table-4">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script type="module" src="/production-system/js/modules/applib.js"></script>
-    <script type="module">
-        import { DataTableLib } from "/production-system/js/modules/applib.js";
-        const dataset = {};
-        const chartsList = [];
-        const donutFilters = {
-            materialTypeIQC: null,
-            materialTypeNCMR: null,
-            iqcStatus: 1,
-        };
-        const IQC_STATUS_MAP = {
-            0: "TO BE INSPECTED",
-            1: "ALL",
-            2: "REJECTED",
-            // 3: "PASS",
-            // 4: "PASS OR FAIL",
-        };
-        const lotTableFilters = {
-            "table-1": null,
-            "table-2": null,
-            "table-3": null,
-        };
-        const API_TOP_REJECT = "/production-system/api/iqc/top-reject";
-        let table1Instance = null;
-        let table2Instance = null;
-        let table3Instance = null;
-        let table4Instance = null;
-        let table5Instance = null;
+<script type="module" src="/production-system/js/modules/applib.js"></script>
+<script type="module">
+    import { DataTableLib } from "/production-system/js/modules/applib.js";
+    // state
+    const state = {
+        dataset: {},
+        chartsList: [],
+        filters: {
+            donut: {
+                materialTypeIQC: null,
+                materialTypeNCMR: null,
+                iqcStatus: 1,
+            },
+            lot: {
+                "table-1": null,
+                "table-2": null,
+                "table-3": null,
+            },
+        },
+        tables: {
+            table1: null,
+            table2: null,
+            table3: null,
+            table4: null,
+            table5: null,
+        },
+        dates: {
+            from: null,
+            to: null,
+        },
+    };
 
-        function applyScaleToChart(chart) {
-            if (!chart) return;
-            chart.reflow();
-        }
+    const IQC_STATUS_MAP = {
+        0: "TO BE INSPECTED",
+        1: "ALL",
+        2: "REJECTED",
+    };
 
-        window.addEventListener("resize", () => {
-            chartsList.forEach((chart) => applyScaleToChart(chart));
-        });
+    const API = {
+        TOP_REJECT: "/production-system/api/iqc/top-reject",
+        IQC_MATERIAL: "/production-system/api/iqc/iqc-material-type",
+        NCMR_MATERIAL: "/production-system/api/iqc/ncmr-material-type",
+        EVENT: "/production-system/api/iqc/event",
+        LOT_REJECT: "/production-system/api/iqc/lot-reject",
+        IQC_LOT: "/production-system/api/iqc/iqc-lot",
+        NCMR: "/production-system/api/iqc/ncmr",
+        IQC_EXPORT: "/production-system/api/iqc/iqc-lot/export",
+        NCMR_EXPORT: "/production-system/api/iqc/ncmr/export",
+    };
 
-        let fromDate = null;
-        let toDate = null;
-
-        const selectElement = document.getElementById("sl-time-chart");
-
-        function getFormattedDate(date, time) {
-            return date.format(`YYYY/MM/DD \${time}`);
-        }
-
-        function updateDates(selectedOption) {
-            if (selectedOption === "today") {
-                fromDate = getFormattedDate(moment(), "00:00:00");
-                toDate = getFormattedDate(moment(), "23:59:59");
-            } else if (selectedOption === "7") {
-                fromDate = getFormattedDate(moment().subtract(6, "days"), "00:00:00");
-                toDate = getFormattedDate(moment(), "23:59:59");
-            } else if (selectedOption === "30") {
-                fromDate = getFormattedDate(moment().subtract(29, "days"), "00:00:00");
-                toDate = getFormattedDate(moment(), "23:59:59");
-            } else if (selectedOption === "custom") {
-            }
-        }
-
-        async function getDataDonutIQC() {
-            try {
-                const res = await fetch(
-                    `/production-system/api/iqc/iqc-material-type?fromDate=\${fromDate}&toDate=\${toDate}`
-                );
-                if (!res.ok) throw new Error(`HTTP status \${res.status}`);
-
-                const json = await res.json();
-
-                const data = json.data;
-                if (!data || !data.length) return [];
-
-                return data.map((i) => ({
-                    name: i.materialType == null ? "Others" : i.materialType,
-                    y: i.totalRecord,
-                }));
-            } catch (error) {
-                console.error("Fetch error:", error);
-                return [];
-            }
-        }
-
-        async function getDataDonutNCMR() {
-            try {
-                const res = await fetch(
-                    `/production-system/api/iqc/ncmr-material-type?fromDate=\${fromDate}&toDate=\${toDate}`
-                );
-                if (!res.ok) throw new Error(`HTTP status \${res.status}`);
-
-                const json = await res.json();
-
-                const data = json.data;
-                if (!data || !data.length) return [];
-
-                return data.map((i) => ({
-                    name: i.materialType == null ? "Others" : i.materialType,
-                    y: i.totalRecord,
-                }));
-            } catch (error) {
-                console.error("Fetch error:", error);
-                return [];
-            }
-        }
-
-        const highchartsInit = () => {
-            Highcharts.setOptions({
-                chart: {
-                    backgroundColor: "transparent",
-                    spacing: [10, 5, 5, 5],
-                },
-
-                xAxis: {
-                    gridLineWidth: 1,
-                    gridLineColor: "#313f62",
-                    gridLineDashStyle: "Dash",
-                    lineWidth: 1,
-                    lineColor: "#313f62",
-                    lineDashStyle: "ShortDash",
-                    labels: {
-                        style: {
-                            fontSize: "1rem",
-                            fontWeight: "600",
-                            color: "#7a95c3",
-                        },
-                    },
-                },
-
-                yAxis: {
-                    gridLineWidth: 1,
-                    gridLineColor: "#313f62",
-                    gridLineDashStyle: "Dash",
-                    labels: {
-                        style: {
-                            fontSize: "1rem",
-                            fontWeight: "600",
-                            color: "#7a95c3",
-                        },
-                    },
-                },
-
-                tooltip: {
-                    outside: true,
-                    style: {
-                        fontSize: "1rem",
-                    },
-                },
-
-                credits: {
-                    enabled: false,
-                },
-
-                plotOptions: {
-                    series: {
-                        borderWidth: 0,
-                        dataLabels: {
-                            enabled: true,
-                            style: {
-                                color: "#fff",
-                                textOutline: 0,
-                                fontWeight: "normal",
-                                fontSize: "0.7rem",
-                            },
-                        },
-                    },
-                },
-            });
-        };
-
-        function drawDonutChart(containerId, chartData) {
-            const container = document.getElementById(containerId);
-            if (!container) {
-                return null;
-            }
-
-            const chart = Highcharts.chart(containerId, {
-                chart: {
-                    type: "pie",
-                    custom: {},
-                    events: {
-                        render() {
-                            const chart = this;
-                            const series = chart.series[0];
-                            if (!series) return;
-
-                            const total = series.data.reduce(
-                                (sum, point) => sum + (typeof point.y === "number" ? point.y : 0),
-                                0
-                            );
-
-                            let customLabel = chart.options.chart.custom.label;
-                            const labelText =
-                                "Total<br/><strong>" + Highcharts.numberFormat(total, 0, ".", " ") + "</strong>";
-
-                            if (!customLabel) {
-                                customLabel = chart.options.chart.custom.label = chart.renderer
-                                    .label(labelText)
-                                    .css({
-                                        color: "#fff",
-                                        textAlign: "center",
-                                    })
-                                    .add();
-                            } else {
-                                customLabel.attr({
-                                    text: labelText,
-                                });
-                            }
-
-                            const bbox = customLabel.getBBox();
-                            const x = series.center[0] + chart.plotLeft - bbox.width / 2;
-                            const y = series.center[1] + chart.plotTop - bbox.height / 2;
-
-                            customLabel.attr({ x, y });
-                            customLabel.css({
-                                fontSize: series.center && series.center[2] ? series.center[2] / 12 + "px" : "1.2rem",
-                            });
-
-                            applyScaleToChart(chart);
-                        },
-                    },
-                },
-                title: { text: "" },
-                tooltip: { pointFormat: "{series.name}: <b>{point.percentage:.0f}%</b>" },
-                legend: { enabled: true, itemStyle: { color: "#fff", fontSize: "0.55rem" } },
-                plotOptions: {
-                    pie: {
-                        allowPointSelect: true,
-                        cursor: "pointer",
-                        point: {
-                            events: {
-                                click: function () {
-                                    handleDonutClick(containerId, this.name);
-                                },
-                            },
-                        },
-                        dataLabels: {
-                            enabled: true,
-                            distance: 20,
-                            format: "{point.name}<br/>{point.y} ({point.percentage:.2f}%)",
-                            style: { fontSize: "0.65rem", color: "#fff", textOutline: "none" },
-                        },
-                        showInLegend: true,
-                    },
-                },
-                series: [
-                    {
-                        name: "Count",
-                        colorByPoint: true,
-                        innerSize: "70%",
-                        data: chartData,
-                    },
-                ],
-            });
-
-            chartsList.push(chart);
-            return chart;
-        }
-
-        async function loadDonutIQC() {
-            const chartData = await getDataDonutIQC();
-            if (!chartData.length) return;
-
-            drawDonutChart("donut-chart-1", chartData);
-        }
-
-        async function loadDonutNCMR() {
-            const chartData = await getDataDonutNCMR();
-            if (!chartData.length) return;
-
-            drawDonutChart("donut-chart-2", chartData);
-        }
-
-        async function fetchTopReject(fieldName) {
-            try {
-                const params = new URLSearchParams({
-                    fieldName,
-                    fromDate,
-                    toDate,
-                    page: 0,
-                    size: 20,
-                });
-                const res = await fetch(`\${API_TOP_REJECT}?\${params}`);
-                if (!res.ok) throw new Error(`HTTP \${res.status}`);
-
-                const json = await res.json();
-                return json.data || [];
-            } catch (err) {
-                console.error(`fetchTopReject \${fieldName}:`, err);
-                return [];
-            }
-        }
-
-        function drawColumnChart(containerId, categories, values) {
-            const container = document.getElementById(containerId);
-            if (!container) {
-                return null;
-            }
-
-            container.innerHTML = "";
-
-            const maxVal = Math.max(...values, 1);
-            const yMax = Math.ceil((maxVal * 1.2) / 5) * 5;
-
-            const chart = Highcharts.chart(containerId, {
-                chart: {
-                    type: "column",
-                    spacing: [10, 10, 10, 10],
-                    marginBottom: 80,
-                    events: {
-                        render() {
-                            applyScaleToChart(this);
-                        },
-                    },
-                },
-                title: { text: "" },
-                legend: { enabled: false },
-                xAxis: {
-                    categories,
-                    crosshair: true,
-                    labels: {
-                        useHTML: true,
-                        style: {
-                            fontSize: "9px",
-                            fontWeight: "700",
-                            whiteSpace: "nowrap",
-                            width: "50px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            // lineHeight: "1rem",
-                        },
-                        rotation: 75,
-                        align: "left",
-                    },
-                    lineWidth: 1,
-                    tickLength: 0,
-                },
-                yAxis: {
-                    min: 0,
-                    max: yMax,
-                    tickInterval: Math.ceil(yMax / 5),
-                    title: { text: "" },
-                },
-                tooltip: { enabled: true, pointFormat: "<b>{point.y}</b>" },
-                plotOptions: {
-                    column: {
-                        cursor: "pointer",
-                        point: {
-                            events: {
-                                click: function () {
-                                    handleColumnClick(containerId, this.category);
-                                },
-                            },
-                        },
-                    },
-                },
-                series: [
-                    {
-                        name: "Value",
-                        data: values,
-                        color: "rgba(128, 99, 255, 0.65)",
-                    },
-                ],
-            });
-
-            chartsList.push(chart);
-            return chart;
-        }
-
-        function showNoData(containerId, message = "NO DATA") {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = "";
-            const el = document.createElement("div");
-            el.className = "no-data";
-            el.textContent = message;
-            container.appendChild(el);
-        }
-
-        const TABLE1_COLUMNS = [
+    const TABLE_CONFIGS = {
+        table1: [
             { key: "materialType", label: "Material Type" },
             { key: "mfrcode", label: "MFR Code" },
             { key: "mfrname", label: "MFR Name" },
             { key: "numberRecord", label: "Reject Qty" },
-            // { key: "model", label: "Model" },
-        ];
-
-        const TABLE2_COLUMNS = [
+        ],
+        table2: [
             { key: "mfrcode", label: "MFR Code" },
             { key: "mfrname", label: "MFR Name" },
             { key: "numberRecord", label: "Reject Qty" },
-            // { key: "model", label: "Model" },
-            // { key: "materialType", label: "Material Type" },
-        ];
-
-        const TABLE3_COLUMNS = [
+        ],
+        table3: [
             { key: "model", label: "Model" },
             { key: "mfrcode", label: "MFR Code" },
             { key: "mfrname", label: "MFR Name" },
             { key: "numberRecord", label: "Reject Qty" },
-            // { key: "materialType", label: "Material Type" },
-        ];
-
-        const TABLE4_COLUMNS = [
+        ],
+        table4: [
             { key: "stt", label: "#" },
             { key: "ncmrNo", label: "NCMR No" },
             { key: "docNo", label: "Doc No" },
@@ -1024,9 +735,8 @@
             { key: "nextStep", label: "Next-Step" },
             { key: "status", label: "Status" },
             { key: "agingDay", label: "Aging Day" },
-        ];
-
-        const TABLE5_COLUMNS = [
+        ],
+        table5: [
             { key: "stt", label: "#" },
             { key: "docNo", label: "Doc No" },
             { key: "custKpNo", label: "KpNo" },
@@ -1042,1099 +752,1178 @@
             { key: "iqcRemark", label: "IQC Remark" },
             { key: "iqcQty", label: "IQC Quantity" },
             { key: "iqcTime", label: "IQC Time" },
-        ];
+        ],
+    };
 
-        function handleDonutClick(containerId, materialType) {
-            if (containerId === "donut-chart-1") {
-                donutFilters.materialTypeIQC = donutFilters.materialTypeIQC === materialType ? null : materialType;
+    // util
+    const fmt = (date, time) => date.format(`YYYY/MM/DD \${time}`);
 
-                if (donutFilters.materialTypeIQC !== null) {
-                    donutFilters.iqcStatus = 0;
-                } else {
-                    donutFilters.iqcStatus = 1;
-                }
+    const updateDates = (option) => {
+        const now = moment();
+        const configs = {
+            today: { from: now, to: now },
+            7: { from: now.clone().subtract(6, "days"), to: now },
+            30: { from: now.clone().subtract(29, "days"), to: now },
+        };
 
-                updateTableTitleBadge("table-5");
-                renderTable5();
-
-                // const table5 = document.getElementById("table-5");
-                // if (table5) {
-                //     setTimeout(() => {
-                //         table5.closest(".component-item").scrollIntoView({
-                //             behavior: "smooth",
-                //             block: "start",
-                //         });
-                //     }, 100);
-                // }
-            } else if (containerId === "donut-chart-2") {
-                donutFilters.materialTypeNCMR = donutFilters.materialTypeNCMR === materialType ? null : materialType;
-                updateTableTitleBadge("table-4", donutFilters.materialTypeNCMR);
-                renderTable4();
-            }
+        const cfg = configs[option];
+        if (cfg) {
+            state.dates.from = fmt(cfg.from, "00:00:00");
+            state.dates.to = fmt(cfg.to, "23:59:59");
         }
+    };
 
-        function handleColumnClick(containerId, category) {
-            const cleanCategory =
-                typeof category === "string" ? category.replace(/<[^>]*>/g, "").trim() : String(category || "N/A");
+    const buildUrl = (path, params) => `\${path}?\${new URLSearchParams(params)}`;
 
-            if (containerId === "col-chart-3") {
-                const tableId = "table-1";
-                const filterKey = TABLE1_COLUMNS[0].key; // "materialType"
-
-                if (lotTableFilters[tableId] === cleanCategory) {
-                    lotTableFilters[tableId] = null;
-                } else {
-                    lotTableFilters[tableId] = cleanCategory;
-                }
-                updateTableTitleBadge(tableId);
-                renderTable1();
-            } else if (containerId === "col-chart-4") {
-                const tableId = "table-2";
-                const filterKey = TABLE2_COLUMNS[0].key; // "mfrcode"
-
-                if (lotTableFilters[tableId] === cleanCategory) {
-                    lotTableFilters[tableId] = null;
-                } else {
-                    lotTableFilters[tableId] = cleanCategory;
-                }
-                updateTableTitleBadge(tableId);
-                renderTable2();
-            } else if (containerId === "col-chart-5") {
-                const tableId = "table-3";
-                const filterKey = TABLE3_COLUMNS[0].key; // "model"
-
-                if (lotTableFilters[tableId] === cleanCategory) {
-                    lotTableFilters[tableId] = null;
-                } else {
-                    lotTableFilters[tableId] = cleanCategory;
-                }
-                updateTableTitleBadge(tableId);
-                renderTable3();
-            }
+    const fetchData = async (url) => {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP \${res.status}`);
+            return await res.json();
+        } catch (err) {
+            console.error("Fetch error:", err);
+            return null;
         }
+    };
 
-        function createFilterBadge(text, onClose, isStatusBadge = false, onStatusChange = null) {
-            const badge = document.createElement("span");
-            badge.className = "filter-badge";
-            badge.style.display = "inline-flex";
-            badge.style.alignItems = "center";
-            badge.style.gap = "0.3rem";
-            badge.style.cursor = "default";
+    const mapData = (items, mapper) => items?.map(mapper) || [];
 
-            // If it's a status badge, create a select dropdown
-            if (isStatusBadge && onStatusChange) {
-                const select = document.createElement("select");
-                select.style.backgroundColor = "transparent";
-                select.style.color = "white";
-                select.style.border = "none";
-                select.style.outline = "none";
-                select.style.cursor = "pointer";
-                select.style.fontSize = "0.7rem";
-                select.style.fontWeight = "bold";
-                select.style.padding = "0";
+    // highchart init
+    const initHighcharts = () => {
+        Highcharts.setOptions({
+            chart: { backgroundColor: "transparent", spacing: [10, 5, 5, 5] },
+            xAxis: {
+                gridLineWidth: 1,
+                gridLineColor: "#313f62",
+                gridLineDashStyle: "Dash",
+                lineWidth: 1,
+                lineColor: "#313f62",
+                labels: { style: { fontSize: "1rem", fontWeight: "600", color: "#7a95c3" } },
+            },
+            yAxis: {
+                gridLineWidth: 1,
+                gridLineColor: "#313f62",
+                gridLineDashStyle: "Dash",
+                labels: { style: { fontSize: "1rem", fontWeight: "600", color: "#7a95c3" } },
+            },
+            tooltip: { outside: true, style: { fontSize: "1rem" } },
+            credits: { enabled: false },
+            plotOptions: {
+                series: {
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: true,
+                        style: { color: "#fff", textOutline: 0, fontWeight: "normal", fontSize: "0.7rem" },
+                    },
+                },
+            },
+        });
+    };
 
-                // Add options
-                Object.entries(IQC_STATUS_MAP).forEach(([value, label]) => {
-                    const option = document.createElement("option");
-                    option.value = value;
-                    option.textContent = label;
-                    if (parseInt(value) === donutFilters.iqcStatus) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
+    const reflowChart = (chart) => chart?.reflow();
+
+    window.addEventListener("resize", () => {
+        state.chartsList.forEach(reflowChart);
+    });
+
+    // render chart
+    const drawDonut = (id, data) => {
+        const dataUpper = Array.isArray(data)
+            ? data.map((d) => ({ ...d, name: d.name ? d.name.toUpperCase() : d.name }))
+            : data;
+        const el = document.getElementById(id);
+        if (!el) return null;
+
+        const chart = Highcharts.chart(id, {
+            chart: {
+                // animation: false,
+                type: "pie",
+                custom: {},
+                events: {
+                    render() {
+                        const series = this.series[0];
+                        if (!series) return;
+
+                        const total = series.data.reduce((sum, p) => sum + (p.y || 0), 0);
+                        const text = `Total<br/><strong>\${Highcharts.numberFormat(total, 0, ".", " ")}</strong>`;
+
+                        let label = this.options.chart.custom.label;
+                        if (!label) {
+                            label = this.options.chart.custom.label = this.renderer
+                                .label(text)
+                                .css({ color: "#fff", textAlign: "center" })
+                                .add();
+                        } else {
+                            label.attr({ text });
+                        }
+
+                        const bbox = label.getBBox();
+                        label.attr({
+                            x: series.center[0] + this.plotLeft - bbox.width / 2,
+                            y: series.center[1] + this.plotTop - bbox.height / 2,
+                        });
+                        label.css({ fontSize: series.center[2] / 12 + "px" });
+
+                        reflowChart(this);
+                    },
+                },
+            },
+            title: { text: "" },
+            tooltip: { pointFormat: "{series.name}: <b>{point.percentage:.0f}%</b>" },
+            legend: {
+                enabled: true,
+                itemStyle: { color: "#fff", fontSize: "0.55rem" },
+                labelFormatter: function () {
+                    return this.name ? this.name.toUpperCase() : "";
+                },
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: "pointer",
+                    point: {
+                        events: {
+                            click: function () {
+                                handleDonutClick(id, this.name);
+                            },
+                        },
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        distance: 20,
+                        format: "{point.name}<br/>{point.y} ({point.percentage:.2f}%)",
+                        style: { fontSize: "0.65rem", color: "#fff", textOutline: "none" },
+                    },
+                    showInLegend: true,
+                },
+            },
+            series: [{ name: "Count", colorByPoint: true, innerSize: "70%", data: dataUpper }],
+        });
+
+        state.chartsList.push(chart);
+        return chart;
+    };
+
+    const drawColumn = (id, categories, values) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+
+        el.innerHTML = "";
+        const max = Math.max(...values, 1);
+        const yMax = Math.ceil((max * 1.2) / 5) * 5;
+
+        const chart = Highcharts.chart(id, {
+            chart: {
+                type: "column",
+                spacing: [10, 10, 10, 10],
+                marginBottom: 80,
+                events: {
+                    render() {
+                        reflowChart(this);
+                    },
+                },
+            },
+            title: { text: "" },
+            legend: { enabled: false },
+            xAxis: {
+                categories,
+                crosshair: true,
+                labels: {
+                    useHTML: true,
+                    style: {
+                        fontSize: "9px",
+                        fontWeight: "700",
+                        whiteSpace: "nowrap",
+                        width: "50px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    },
+                    rotation: 75,
+                    align: "left",
+                },
+                lineWidth: 1,
+                tickLength: 0,
+            },
+            yAxis: { min: 0, max: yMax, tickInterval: Math.ceil(yMax / 5), title: { text: "" } },
+            tooltip: { enabled: true, pointFormat: "<b>{point.y}</b>" },
+            plotOptions: {
+                column: {
+                    cursor: "pointer",
+                    point: {
+                        events: {
+                            click: function () {
+                                handleColumnClick(id, this.category);
+                            },
+                        },
+                    },
+                },
+            },
+            series: [{ name: "Value", data: values, color: "rgba(128, 99, 255, 0.65)" }],
+        });
+
+        state.chartsList.push(chart);
+        return chart;
+    };
+
+    const drawMirror = (id, labels, inspected, rejected) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+
+        const maxRej = Math.max(...rejected, 0);
+        const yMaxBottom = Math.ceil(maxRej * 1.5);
+        const ratio = inspected.map((ins, i) => (ins > 0 ? parseFloat(((rejected[i] / ins) * 100).toFixed(2)) : 0));
+        const yMaxLine = Math.ceil(Math.max(...ratio) * 4);
+
+        const chart = Highcharts.chart(id, {
+            chart: {
+                type: "column",
+                events: {
+                    load: function () {
+                        const legendEl = document.getElementById(`legend-\${id}`);
+                        if (!legendEl) return;
+
+                        legendEl.innerHTML = "";
+                        this.series.forEach((s) => {
+                            const btn = document.createElement("span");
+                            btn.textContent = s.name;
+                            btn.style.cssText =
+                                "display:flex;align-items:center;column-gap:5px;margin:5px;font-size:1rem;color:#fff;";
+                            btn.style.textDecoration = s.visible ? "unset" : "line-through";
+                            btn.onclick = () => {
+                                s.setVisible(!s.visible);
+                                btn.style.textDecoration = s.visible ? "unset" : "line-through";
+                            };
+
+                            const circle = document.createElement("span");
+                            circle.style.cssText = `display:inline-block;width:10px;height:10px;background-color:\${s.visible ? s.color : '#fff'}`;
+                            btn.prepend(circle);
+                            legendEl.appendChild(btn);
+                        });
+                    },
+                    render: function () {
+                        reflowChart(this);
+                    },
+                },
+            },
+            title: null,
+            xAxis: {
+                categories: labels,
+                lineWidth: 0,
+                tickLength: 5,
+                offset: -110,
+                labels: { align: "center", y: 0, style: { fontSize: "0.75rem" } },
+            },
+            yAxis: [
+                { title: null, height: "43%", offset: 0, softMax: 600 },
+                { title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: yMaxBottom },
+                {
+                    title: null,
+                    top: 0,
+                    height: "43%",
+                    offset: 0,
+                    opposite: true,
+                    max: yMaxLine,
+                    labels: { enabled: false },
+                    gridLineWidth: 0,
+                },
+            ],
+            tooltip: { enabled: false },
+            legend: { enabled: true, itemStyle: { color: "#fff" } },
+            plotOptions: {
+                column: {
+                    grouping: false,
+                    maxPointWidth: 30,
+                    dataLabels: { allowOverlap: true, style: { textOutline: "1px contrast" }, rotation: 0 },
+                },
+            },
+            series: [
+                { name: "Inspected", color: "#7cffb2", data: inspected, yAxis: 0 },
+                {
+                    name: "Rejected",
+                    color: "#fddd60",
+                    data: rejected,
+                    yAxis: 1,
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function () {
+                            return this.y < 0.1 ? 0 : this.y;
+                        },
+                        align: "center",
+                    },
+                },
+                {
+                    name: "Ratio (Rejected/Inspected)",
+                    type: "line",
+                    color: "#38C3FE",
+                    data: ratio,
+                    yAxis: 2,
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function () {
+                            return this.y + "%";
+                        },
+                        align: "center",
+                    },
+                    marker: { enabled: true, radius: 3 },
+                },
+            ],
+        });
+
+        state.chartsList.push(chart);
+        return chart;
+    };
+
+    const showNoData = (id, msg = "NO DATA") => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = `<div class="no-data">\${msg}</div>`;
+    };
+
+    // get data
+    const getDonutIQC = async () => {
+        const url = buildUrl(API.IQC_MATERIAL, { fromDate: state.dates.from, toDate: state.dates.to });
+        const json = await fetchData(url);
+        const data = mapData(json?.data, (i) => ({ name: i.materialType || "OTHERS", y: i.totalRecord }));
+        return data.sort((a, b) => b.y - a.y);
+    };
+
+    const getDonutNCMR = async () => {
+        const url = buildUrl(API.NCMR_MATERIAL, { fromDate: state.dates.from, toDate: state.dates.to });
+        const json = await fetchData(url);
+        const data = mapData(json?.data, (i) => ({ name: i.materialType || "OTHERS", y: i.totalRecord }));
+        return data.sort((a, b) => b.y - a.y);
+    };
+
+    const getTopReject = async (field) => {
+        const url = buildUrl(API.TOP_REJECT, {
+            fieldName: field,
+            fromDate: state.dates.from,
+            toDate: state.dates.to,
+            page: 0,
+            size: 20,
+        });
+        const json = await fetchData(url);
+        return json?.data || [];
+    };
+
+    const getEvent = async () => {
+        loader.load();
+        try {
+            const url = buildUrl(API.EVENT, { fromDate: state.dates.from, toDate: state.dates.to });
+            const json = await fetchData(url);
+            const r = json?.result;
+            if (r) {
+                document.querySelector("#be-inspected").textContent = r.toBeInspected;
+                document.querySelector("#timeout_inspect").textContent = r.timeOutToBeInspected;
+                document.querySelector("#scanned").textContent = r.toBeScanned;
+                document.querySelector("#timeout_scan").textContent = r.timeOutTobeScanned;
+            }
+        } finally {
+            loader.unload();
+        }
+    };
+
+    const getLotReject = async (from, to) => {
+        const url = buildUrl(API.LOT_REJECT, { fromDate: from, toDate: to });
+        const json = await fetchData(url);
+        return json?.result;
+    };
+
+    const getDateRange = (type, val) => {
+        const start =
+            type === "weeks"
+                ? moment()
+                      .subtract(val - 1, "weeks")
+                      .startOf("isoWeek")
+                : moment().subtract(val - 1, "days");
+        const end = type === "weeks" ? moment().endOf("isoWeek") : moment();
+        return { from: fmt(start, "00:00:00"), to: fmt(end, "23:59:59") };
+    };
+
+    // load chart
+    const loadDonutIQC = async () => {
+        loader.load();
+        try {
+            const data = await getDonutIQC();
+            state.dataset.donutIQCData = data;
+            if (data.length) drawDonut("donut-chart-1", data);
+        } finally {
+            loader.unload();
+        }
+    };
+
+    const loadDonutNCMR = async () => {
+        loader.load();
+        try {
+            const data = await getDonutNCMR();
+            state.dataset.donutNCMRData = data;
+            if (data.length) drawDonut("donut-chart-2", data);
+        } finally {
+            loader.unload();
+        }
+    };
+
+    const loadMaterialChart = async () => {
+        loader.load();
+        try {
+            const data = await getTopReject("MaterialType");
+            if (!data.length) return showNoData("col-chart-3");
+
+            const top = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
+            drawColumn(
+                "col-chart-3",
+                top.map((i) => i.materialType || "N/A"),
+                top.map((i) => i.numberRecord || 0)
+            );
+        } finally {
+            loader.unload();
+        }
+    };
+
+    const loadMFRChart = async () => {
+        const data = await getTopReject("MFR");
+        if (!data.length) return showNoData("col-chart-4");
+
+        const top = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
+        drawColumn(
+            "col-chart-4",
+            top.map((i) => `\${i.mfrcode || "N/A"}-\${i.mfrname || "N/A"}`),
+            top.map((i) => i.numberRecord || 0)
+        );
+    };
+
+    const loadModelChart = async () => {
+        loader.load();
+        try {
+            const data = await getTopReject("Model");
+            if (!data.length) return showNoData("col-chart-5");
+
+            const top = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
+            drawColumn(
+                "col-chart-5",
+                top.map((i) => i.model || "N/A"),
+                top.map((i) => i.numberRecord || 0)
+            );
+        } finally {
+            loader.unload();
+        }
+    };
+
+    const loadLotInject = async () => {
+        const sl = document.getElementById("sl-time")?.value || "today";
+        const range = getDateRange(sl === "7" || sl === "30" ? "days" : null, sl === "7" ? 7 : sl === "30" ? 30 : 1);
+        const r = await getLotReject(range.from, range.to);
+        if (r) {
+            document.querySelector("#inspected").textContent = r.inspectedTotal;
+            document.querySelector("#lot-rejected").textContent = r.lotRejectedTotal;
+            document.querySelector("#lrr").textContent = `\${r.lotRejectedRate}%`;
+        }
+    };
+
+    const loadWeeklyChart = async () => {
+        const range = getDateRange("weeks", 8);
+        const r = await getLotReject(range.from, range.to);
+        if (!r) return;
+
+        const labels = [],
+            inspected = [],
+            rejected = [];
+        r.data.forEach((w) => {
+            labels.push(`W\${w.weekNumber}`);
+            inspected.push(w.inspectedTotal || 0);
+            rejected.push(w.lotRejectedTotal || 0);
+        });
+        drawMirror("col-chart-1", labels, inspected, rejected);
+    };
+
+    const loadDailyChart = async () => {
+        loader.load();
+        try {
+            const range = getDateRange("days", 7);
+            const r = await getLotReject(range.from, range.to);
+            if (!r) return;
+
+            const labels = [],
+                inspected = [],
+                rejected = [];
+            r.data.forEach((w) => {
+                w.data.forEach((d) => {
+                    labels.push(d.workDate.split("-").slice(1).join("-"));
+                    inspected.push(d.inspectedTotal || 0);
+                    rejected.push(d.lotRejectedTotal || 0);
                 });
+            });
+            drawMirror("col-chart-2", labels, inspected, rejected);
+        } finally {
+            loader.unload();
+        }
+    };
 
-                select.onchange = (e) => {
-                    e.stopPropagation();
-                    onStatusChange(parseInt(e.target.value));
-                };
+    const loadAllCharts = () =>
+        Promise.all([
+            loadMaterialChart(),
+            loadMFRChart(),
+            loadModelChart(),
+            renderTable1(),
+            renderTable2(),
+            renderTable3(),
+        ]);
 
-                badge.appendChild(select);
-            } else {
-                const textSpan = document.createElement("span");
-                textSpan.textContent = text;
-                badge.appendChild(textSpan);
-            }
+    // event handler
+    const handleDonutClick = (id, name) => {
+        if (id === "donut-chart-1") {
+            const f = state.filters.donut;
+            f.materialTypeIQC = f.materialTypeIQC === name ? null : name;
+            f.iqcStatus = f.materialTypeIQC ? 0 : 1;
+            updateBadge("table-5");
+            renderTable5();
+        } else if (id === "donut-chart-2") {
+            const f = state.filters.donut;
+            f.materialTypeNCMR = f.materialTypeNCMR === name ? null : name;
+            updateBadge("table-4", f.materialTypeNCMR);
+            renderTable4();
+        }
+    };
 
-            const closeBtn = document.createElement("span");
-            closeBtn.innerHTML = "<i class='bi bi-x'></i>";
-            closeBtn.style.fontSize = "1rem";
-            closeBtn.style.fontWeight = "normal";
-            closeBtn.style.lineHeight = "1.1";
-            closeBtn.style.cursor = "pointer";
+    const handleColumnClick = (id, cat) => {
+        const clean = typeof cat === "string" ? cat.replace(/<[^>]*>/g, "").trim() : String(cat || "N/A");
+        const map = { "col-chart-3": "table-1", "col-chart-4": "table-2", "col-chart-5": "table-3" };
+        const tbl = map[id];
+        if (!tbl) return;
 
-            closeBtn.onclick = (e) => {
+        const f = state.filters.lot;
+        f[tbl] = f[tbl] === clean ? null : clean;
+        updateBadge(tbl);
+
+        if (tbl === "table-1") renderTable1();
+        else if (tbl === "table-2") renderTable2();
+        else if (tbl === "table-3") renderTable3();
+    };
+
+    // badge & title
+    const createBadge = (text, onClose, isStatus = false, onChange = null, currentValue = null, isNCMR = false) => {
+        const badge = document.createElement("span");
+        badge.className = "filter-badge";
+        badge.style.cssText = "display:inline-flex;align-items:center;gap:0.3rem;cursor:default;";
+
+        if (Array.isArray(onChange)) {
+            const sel = document.createElement("select");
+            sel.className = "customBadge";
+            onChange.forEach((mat) => {
+                const opt = document.createElement("option");
+                opt.value = mat;
+                opt.textContent = mat;
+                if (mat === currentValue) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            sel.onchange = (e) => {
                 e.stopPropagation();
-                onClose();
+                if (isNCMR) {
+                    state.filters.donut.materialTypeNCMR = e.target.value;
+                    renderTable4();
+                    updateBadge("table-4");
+                } else {
+                    state.filters.donut.materialTypeIQC = e.target.value;
+                    renderTable5();
+                    updateBadge("table-5");
+                }
             };
+            badge.appendChild(sel);
+        } else if (isStatus && onChange) {
+            const sel = document.createElement("select");
+            sel.className = "customBadge";
 
-            badge.appendChild(closeBtn);
+            const allOpt = document.createElement("option");
+            allOpt.value = "1";
+            allOpt.textContent = IQC_STATUS_MAP[1];
+            if (state.filters.donut.iqcStatus === 1) allOpt.selected = true;
+            sel.appendChild(allOpt);
 
-            return badge;
+            Object.entries(IQC_STATUS_MAP).forEach(([v, l]) => {
+                if (v !== "1") {
+                    const opt = document.createElement("option");
+                    opt.value = v;
+                    opt.textContent = l;
+                    if (parseInt(v) === state.filters.donut.iqcStatus) opt.selected = true;
+                    sel.appendChild(opt);
+                }
+            });
+            sel.onchange = (e) => {
+                e.stopPropagation();
+                onChange(parseInt(e.target.value));
+            };
+            badge.appendChild(sel);
+        } else {
+            const span = document.createElement("span");
+            span.textContent = text;
+            badge.appendChild(span);
         }
 
-        function updateTableTitleBadge(tableId, filterValue) {
-            const tableElement = document.getElementById(tableId);
-            if (!tableElement) return;
+        const close = document.createElement("span");
+        close.innerHTML = "<i class='bi bi-x'></i>";
+        close.style.cssText = "font-size:1rem;font-weight:normal;line-height:1.1;cursor:pointer;";
+        close.onclick = (e) => {
+            e.stopPropagation();
+            onClose();
+        };
+        badge.appendChild(close);
 
-            const titleElement = tableElement.closest(".component-item").querySelector(".component-title");
-            if (!titleElement) return;
+        return badge;
+    };
 
-            const existingBadges = titleElement.querySelectorAll(".filter-badge");
-            existingBadges.forEach((badge) => badge.remove());
+    const updateBadge = (tblId, filterVal) => {
+        const el = document.getElementById(tblId);
+        if (!el) return;
 
-            if (tableId === "table-5") {
-                // Material Type Badge
-                if (donutFilters.materialTypeIQC) {
-                    const materialBadge = createFilterBadge(donutFilters.materialTypeIQC, () => {
-                        donutFilters.materialTypeIQC = null;
-                        donutFilters.iqcStatus = 1;
+        const title = el.closest(".component-item")?.querySelector(".component-title");
+        if (!title) return;
+
+        if (tblId === "table-4" || tblId === "table-5") {
+            title.classList.add("title-with-badges");
+        }
+
+        if (!title.dataset.originalTitle) {
+            const text = title.textContent.trim();
+            title.dataset.originalTitle = text.replace(/\s*\(.*?\)\s*$/, "").trim();
+        }
+
+        title.querySelectorAll(".filter-badge").forEach((b) => b.remove());
+
+        const timeRange = getTimeRangeText();
+        title.innerHTML =
+            title.innerHTML = `<span>\${title.dataset.originalTitle} <span style="font-size: 0.85rem; color: #fff; font-weight: 500;">\${timeRange}</span></span>`;
+
+        if (tblId === "table-5") {
+            const f = state.filters.donut;
+            if (f.materialTypeIQC) {
+                const materialTypes = [...new Set(state.dataset.donutIQCData?.map((i) => i.name) || [])];
+
+                const badge = createBadge(
+                    null,
+                    () => {
+                        f.materialTypeIQC = null;
+                        f.iqcStatus = 1;
                         renderTable5();
-                        updateTableTitleBadge("table-5");
-                    });
-                    titleElement.appendChild(materialBadge);
-                }
-
-                // ✓ LUÔN hiển thị IQC Status Badge (kể cả ALL)
-                if (donutFilters.iqcStatus !== null && donutFilters.iqcStatus !== undefined) {
-                    const statusBadge = createFilterBadge(
-                        null,
-                        () => {
-                            // ✓ Khi nhấn X, reset về ALL
-                            donutFilters.iqcStatus = 1;
-                            donutFilters.materialTypeIQC = null;
-                            renderTable5();
-                            updateTableTitleBadge("table-5");
-                        },
-                        true, // isStatusBadge
-                        (newStatus) => {
-                            // When status changes from select
-                            donutFilters.iqcStatus = newStatus;
-                            renderTable5();
-                            updateTableTitleBadge("table-5");
-                        }
-                    );
-                    titleElement.appendChild(statusBadge);
-                }
-
-                // ✓ Update export button state
-                updateExportButtonState();
-            } else {
-                const filter = filterValue !== undefined ? filterValue : lotTableFilters[tableId];
-
-                if (filter) {
-                    const badge = createFilterBadge(filter, () => {
-                        if (tableId === "table-4") {
-                            donutFilters.materialTypeNCMR = null;
-                            renderTable4();
-                        } else {
-                            lotTableFilters[tableId] = null;
-                            if (tableId === "table-1") renderTable1();
-                            else if (tableId === "table-2") renderTable2();
-                            else if (tableId === "table-3") renderTable3();
-                        }
-                        updateTableTitleBadge(tableId);
-                    });
-                    titleElement.appendChild(badge);
-                }
-            }
-        }
-
-        function updateExportButtonState() {
-            const exportBtn5 = document.getElementById("export-table5-btn");
-            if (!exportBtn5) return;
-
-            // ✓ Disable khi status = ALL (1)
-            if (donutFilters.iqcStatus === 1) {
-                exportBtn5.disabled = true;
-                exportBtn5.title = "Cannot export when status is ALL. Please select a specific status.";
-                exportBtn5.style.opacity = "0.5";
-                exportBtn5.style.cursor = "not-allowed";
-            } else {
-                exportBtn5.disabled = false;
-                exportBtn5.title = "Download Excel";
-                exportBtn5.style.opacity = "1";
-                exportBtn5.style.cursor = "pointer";
-            }
-        }
-
-        async function loadMaterialTypeChart() {
-            const data = await fetchTopReject("MaterialType");
-            if (!data.length) {
-                showNoData("col-chart-3", "NO DATA");
-                return;
-            }
-
-            const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
-            const categories = top10.map((i) => i.materialType || "N/A");
-            const values = top10.map((i) => i.numberRecord || 0);
-
-            drawColumnChart("col-chart-3", categories, values);
-        }
-
-        async function loadMFRChart() {
-            const data = await fetchTopReject("MFR");
-            if (!data.length) {
-                showNoData("col-chart-4", "NO DATA");
-                return;
-            }
-
-            const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
-            const categories = top10.map((i) => {
-                const mfrcode = i.mfrcode || "N/A";
-                const mfrname = i.mfrname || "N/A";
-                return `${mfrcode}-${mfrname}`;
-            });
-            const values = top10.map((i) => i.numberRecord || 0);
-
-            drawColumnChart("col-chart-4", categories, values);
-        }
-
-        async function loadModelChart() {
-            const data = await fetchTopReject("Model");
-            if (!data.length) {
-                showNoData("col-chart-5", "NO DATA");
-                return;
-            }
-
-            const top10 = data.sort((a, b) => (b.numberRecord || 0) - (a.numberRecord || 0)).slice(0, 10);
-            const categories = top10.map((i) => i.model || "N/A");
-            const values = top10.map((i) => i.numberRecord || 0);
-
-            drawColumnChart("col-chart-5", categories, values);
-        }
-
-        async function renderTable1() {
-            const table = document.getElementById("table-1");
-            if (!table) return;
-
-            const thead = table.querySelector("thead");
-            const tbody = table.querySelector("tbody");
-            thead.innerHTML = "";
-            tbody.innerHTML = "";
-
-            if (table1Instance) {
-                table1Instance.destroy();
-            }
-
-            table1Instance = new DataTableLib({
-                tableId: "table-1",
-                serverSide: true,
-                rows: 9999,
-                pagination: false,
-                paginationId: null,
-                emptyMessage: "NO DATA",
-                sort: false,
-
-                buildUrl: (page) => {
-                    const params = new URLSearchParams({
-                        fieldName: "MaterialTypeAndMFR",
-                        fromDate: fromDate,
-                        toDate: toDate,
-                        page: 0,
-                        size: 9999,
-                    });
-                    return `/production-system/api/iqc/top-reject?\${params}`;
-                },
-
-                formatData: (result) => {
-                    let data = result?.data || [];
-                    dataset.table1Data = data;
-
-                    const filter = lotTableFilters["table-1"];
-                    const firstColKey = TABLE1_COLUMNS[0].key; // "materialType"
-
-                    if (filter) {
-                        data = data.filter((row) => {
-                            const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
-                            return cellValue === filter;
-                        });
-                    }
-
-                    result.total = data.length;
-                    return data;
-                },
-
-                columnsConfig: TABLE1_COLUMNS.map((col) => ({ label: col.label })),
-
-                rowRenderer: (item, index, meta) => {
-                    const page = meta?.currentPage ?? 1;
-                    const size = meta?.rows ?? 10;
-                    const stt = (page - 1) * size + index + 1;
-
-                    if (!item || Object.keys(item).length === 0) {
-                        return `<td colspan="\${TABLE1_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
-                    }
-
-                    return TABLE1_COLUMNS.map((col) => `<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
-                },
-            });
-
-            await table1Instance.init();
-        }
-
-        async function renderTable2() {
-            const table = document.getElementById("table-2");
-            if (!table) return;
-
-            const thead = table.querySelector("thead");
-            const tbody = table.querySelector("tbody");
-            thead.innerHTML = "";
-            tbody.innerHTML = "";
-
-            if (table2Instance) {
-                table2Instance.destroy();
-            }
-
-            table2Instance = new DataTableLib({
-                tableId: "table-2",
-                serverSide: true,
-                rows: 9999,
-                pagination: false,
-                paginationId: null,
-                emptyMessage: "NO DATA",
-                sort: false,
-
-                buildUrl: (page) => {
-                    const params = new URLSearchParams({
-                        fieldName: "MFR",
-                        fromDate: fromDate,
-                        toDate: toDate,
-                        page: 0,
-                        size: 9999,
-                    });
-                    return `/production-system/api/iqc/top-reject?\${params}`;
-                },
-
-                formatData: (result) => {
-                    let data = result?.data || [];
-                    dataset.table2Data = data;
-
-                    const filter = lotTableFilters["table-2"];
-                    const firstColKey = TABLE2_COLUMNS[0].key; // "mfrcode"
-
-                    if (filter) {
-                        data = data.filter((row) => {
-                            const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
-                            return cellValue === filter;
-                        });
-                    }
-
-                    result.total = data.length;
-                    return data;
-                },
-
-                columnsConfig: TABLE2_COLUMNS.map((col) => ({ label: col.label })),
-
-                rowRenderer: (item, index, meta) => {
-                    const page = meta?.currentPage ?? 1;
-                    const size = meta?.rows ?? 10;
-                    const stt = (page - 1) * size + index + 1;
-
-                    if (!item || Object.keys(item).length === 0) {
-                        return `<td colspan="\${TABLE2_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
-                    }
-
-                    return TABLE2_COLUMNS.map((col) => `<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
-                },
-            });
-
-            await table2Instance.init();
-        }
-
-        async function renderTable3() {
-            const table = document.getElementById("table-3");
-            if (!table) return;
-
-            const thead = table.querySelector("thead");
-            const tbody = table.querySelector("tbody");
-            thead.innerHTML = "";
-            tbody.innerHTML = "";
-
-            if (table3Instance) {
-                table3Instance.destroy();
-            }
-
-            table3Instance = new DataTableLib({
-                tableId: "table-3",
-                serverSide: true,
-                rows: 9999,
-                pagination: false,
-                paginationId: null,
-                emptyMessage: "NO DATA",
-                sort: false,
-
-                buildUrl: (page) => {
-                    const params = new URLSearchParams({
-                        fieldName: "ModelAndMFR",
-                        fromDate: fromDate,
-                        toDate: toDate,
-                        page: 0,
-                        size: 9999,
-                    });
-                    return `/production-system/api/iqc/top-reject?\${params}`;
-                },
-
-                formatData: (result) => {
-                    let data = result?.data || [];
-                    dataset.table3Data = data;
-
-                    const filter = lotTableFilters["table-3"];
-                    const firstColKey = TABLE3_COLUMNS[0].key; // "model"
-
-                    if (filter) {
-                        data = data.filter((row) => {
-                            const cellValue = row[firstColKey] != null ? String(row[firstColKey]).trim() : "N/A";
-                            return cellValue === filter;
-                        });
-                    }
-
-                    result.total = data.length;
-                    return data;
-                },
-
-                columnsConfig: TABLE3_COLUMNS.map((col) => ({ label: col.label })),
-
-                rowRenderer: (item, index, meta) => {
-                    const page = meta?.currentPage ?? 1;
-                    const size = meta?.rows ?? 10;
-                    const stt = (page - 1) * size + index + 1;
-
-                    if (!item || Object.keys(item).length === 0) {
-                        return `<td colspan="\${TABLE3_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
-                    }
-
-                    return TABLE3_COLUMNS.map((col) => `<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`).join("");
-                },
-            });
-
-            await table3Instance.init();
-        }
-
-        async function renderTable4() {
-            const table = document.getElementById("table-4");
-            if (!table) return;
-
-            const thead = table.querySelector("thead");
-            const tbody = table.querySelector("tbody");
-
-            thead.innerHTML = "";
-            tbody.innerHTML = "";
-
-            if (table4Instance) {
-                table4Instance.destroy();
-            }
-
-            let paginationContainer = document.getElementById("pagination-table-4");
-            if (!paginationContainer) {
-                paginationContainer = document.createElement("div");
-                paginationContainer.id = "pagination-table-4";
-                paginationContainer.style.marginTop = "0.4rem";
-
-                const componentItem = table.closest(".component-item");
-                if (componentItem) {
-                    componentItem.appendChild(paginationContainer);
-                }
-            }
-
-            table4Instance = new DataTableLib({
-                tableId: "table-4",
-                serverSide: true,
-                rows: 10,
-                paginationId: "pagination-table-4",
-                emptyMessage: "NO DATA",
-                sort: false,
-
-                buildUrl: (page) => {
-                    const params = new URLSearchParams({
-                        page: page - 1,
-                        size: 10,
-                        fromDate: fromDate,
-                        toDate: toDate,
-                    });
-
-                    if (donutFilters.materialTypeNCMR) {
-                        params.append("materialType", donutFilters.materialTypeNCMR);
-                    }
-
-                    return `/production-system/api/iqc/ncmr?\${params}`;
-                },
-
-                formatData: (result) => {
-                    result.total = result?.size || 0;
-                    return result?.data || [];
-                },
-
-                columnsConfig: TABLE4_COLUMNS.map((col) => ({ label: col.label })),
-
-                rowRenderer: (item, index, meta) => {
-                    const page = meta?.currentPage ?? 1;
-                    const size = meta?.rows ?? 10;
-                    const stt = (page - 1) * size + index + 1;
-
-                    if (!item || Object.keys(item).length === 0) {
-                        return `<td colspan="\${TABLE4_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
-                    }
-
-                    const cells = [`<td>\${stt}</td>`];
-                    TABLE4_COLUMNS.forEach((col) => {
-                        if (col.key === "stt") return;
-                        const value = item?.[col.key] != null ? item[col.key] : "-";
-                        if (col.key === "rejectReason" || col.key === "improvementAction") {
-                            cells.push(
-                                `<td style="max-width: 200px; word-wrap: break-word; white-space: normal;">\${value}</td>`
-                            );
-                        } else {
-                            cells.push(`<td>\${value}</td>`);
-                        }
-                    });
-                    return cells.join("");
-                },
-            });
-
-            await table4Instance.init();
-        }
-
-        async function renderTable5() {
-            const table = document.getElementById("table-5");
-            if (!table) return;
-
-            const thead = table.querySelector("thead");
-            const tbody = table.querySelector("tbody");
-            thead.innerHTML = "";
-            tbody.innerHTML = "";
-
-            if (table5Instance) {
-                table5Instance.destroy();
-            }
-
-            table5Instance = new DataTableLib({
-                tableId: "table-5",
-                serverSide: true,
-                rows: 50,
-                paginationId: "pagination-table-5",
-                emptyMessage: "NO DATA",
-                sort: false,
-
-                buildUrl: (page) => {
-                    const params = new URLSearchParams({
-                        page: page - 1,
-                        size: 50,
-                        fromDate: fromDate,
-                        toDate: toDate,
-                    });
-
-                    if (donutFilters.materialTypeIQC) {
-                        params.append("materialType", donutFilters.materialTypeIQC);
-                    }
-
-                    if (donutFilters.iqcStatus !== undefined && donutFilters.iqcStatus !== null) {
-                        params.append("iqcStatus", donutFilters.iqcStatus);
-                    }
-
-                    return `/production-system/api/iqc/iqc-lot?\${params}`;
-                },
-
-                formatData: (result) => {
-                    result.total = result?.size || 0;
-                    dataset.table5Data = result?.data || [];
-                    return result?.data || [];
-                },
-
-                columnsConfig: TABLE5_COLUMNS.map((col) => ({ label: col.label })),
-
-                rowRenderer: (item, index, meta) => {
-                    const page = meta?.currentPage ?? 1;
-                    const size = meta?.rows ?? 10;
-                    const stt = (page - 1) * size + index + 1;
-
-                    if (!item || Object.keys(item).length === 0) {
-                        return `<td colspan="\${TABLE5_COLUMNS.length}" style="text-align:center">NO DATA</td>`;
-                    }
-
-                    const cells = [`<td>\${stt}</td>`];
-                    TABLE5_COLUMNS.forEach((col) => {
-                        if (col.key === "stt") return;
-                        cells.push(`<td>\${item[col.key] != null ? item[col.key] : "-"}</td>`);
-                    });
-                    return cells.join("");
-                },
-            });
-
-            await table5Instance.init();
-        }
-
-        async function loadAllTopReject() {
-            await Promise.all([
-                loadMaterialTypeChart(),
-                loadMFRChart(),
-                loadModelChart(),
-                renderTable1(),
-                renderTable2(),
-                renderTable3(),
-            ]);
-        }
-
-        async function getDataCPN() {
-            try {
-                const res = await fetch(`/production-system/api/iqc/event?fromDate=\${fromDate}&toDate=\${toDate}`);
-                if (!res.ok) throw new Error(`\${res.status}`);
-                const json = await res.json();
-                const result = json.result;
-                if (!result) return [];
-                document.querySelector("#be-inspected").textContent = result.toBeInspected;
-                document.querySelector("#timeout_inspect").textContent = result.timeOutToBeInspected;
-                document.querySelector("#scanned").textContent = result.toBeScanned;
-                document.querySelector("#timeout_scan").textContent = result.timeOutTobeScanned;
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
-        async function getDataLotInject() {
-            try {
-                const slTime = document.getElementById("sl-time");
-                const selected = slTime && slTime.value ? slTime.value : "today";
-
-                let fromMoment = moment();
-                let toMoment = moment();
-
-                if (selected === "today") {
-                    fromMoment = moment();
-                    toMoment = moment();
-                } else if (selected === "7") {
-                    fromMoment = moment().subtract(6, "days");
-                    toMoment = moment();
-                } else if (selected === "30") {
-                    fromMoment = moment().subtract(29, "days");
-                    toMoment = moment();
-                }
-
-                const lotFromDate = getFormattedDate(fromMoment, "00:00:00");
-                const lotToDate = getFormattedDate(toMoment, "23:59:59");
-
-                const res = await fetch(
-                    `/production-system/api/iqc/lot-reject?fromDate=\${lotFromDate}&toDate=\${lotToDate}`
+                        updateBadge("table-5");
+                    },
+                    false,
+                    materialTypes,
+                    f.materialTypeIQC
                 );
-                if (!res.ok) throw new Error(`\${res.status}`);
-                const json = await res.json();
-                const result = json.result;
-                if (!result) return [];
-                document.querySelector("#inspected").textContent = result.inspectedTotal;
-                document.querySelector("#lot-rejected").textContent = result.lotRejectedTotal;
-                document.querySelector("#lrr").textContent = `\${result.lotRejectedRate}%`;
-                return result;
-            } catch (error) {
-                console.error(error);
+                title.appendChild(badge);
             }
-        }
 
-        function getDateRangeLastWeeks(weeks) {
-            const start = moment()
-                .subtract(weeks - 1, "weeks")
-                .startOf("isoWeek");
-            const end = moment().endOf("isoWeek");
-            return {
-                from: getFormattedDate(start, "00:00:00"),
-                to: getFormattedDate(end, "23:59:59"),
-            };
-        }
-
-        function getDateRangeLastDays(days) {
-            const start = moment().subtract(days - 1, "days");
-            const end = moment();
-            return {
-                from: getFormattedDate(start, "00:00:00"),
-                to: getFormattedDate(end, "23:59:59"),
-            };
-        }
-
-        async function getLotRejectDataWithRange(from, to) {
-            try {
-                const res = await fetch(`/production-system/api/iqc/lot-reject?fromDate=\${from}&toDate=\${to}`);
-                if (!res.ok) throw new Error(`\${res.status}`);
-                const json = await res.json();
-                return json.result || null;
-            } catch (error) {
-                console.error(error);
-                return null;
-            }
-        }
-
-        async function loadLotRejectWeeklyChart() {
-            const range = getDateRangeLastWeeks(8);
-            const result = await getLotRejectDataWithRange(range.from, range.to);
-            if (!result) return;
-
-            const weeklyData = processWeekData(result);
-            renderMirrorChart("col-chart-1", weeklyData.xLabels, weeklyData.inspected, weeklyData.rejected);
-        }
-
-        async function loadLotRejectDailyChart() {
-            const range = getDateRangeLastDays(7);
-            const result = await getLotRejectDataWithRange(range.from, range.to);
-            if (!result) return;
-
-            const dailyData = processDayData(result);
-            renderMirrorChart("col-chart-2", dailyData.xLabels, dailyData.inspected, dailyData.rejected);
-        }
-
-        const processWeekData = (result) => {
-            const xLabels = [];
-            const inspected = [];
-            const rejected = [];
-
-            result.data.forEach((week) => {
-                xLabels.push(`W\${week.weekNumber}`);
-                inspected.push(week.inspectedTotal || 0);
-                rejected.push(week.lotRejectedTotal || 0);
-            });
-
-            return { xLabels, inspected, rejected };
-        };
-
-        const processDayData = (result) => {
-            const xLabels = [];
-            const inspected = [];
-            const rejected = [];
-
-            result.data.forEach((week) => {
-                week.data.forEach((day) => {
-                    const formattedDate = day.workDate.split("-").slice(1).join("-");
-                    xLabels.push(formattedDate);
-                    inspected.push(day.inspectedTotal || 0);
-                    rejected.push(day.lotRejectedTotal || 0);
-                });
-            });
-
-            return { xLabels, inspected, rejected };
-        };
-
-        const renderMirrorChart = (chartId, xLabels, checkIn, checkOut) => {
-            const container = document.getElementById(chartId);
-            if (!container) {
-                return null;
-            }
-            const maxCheckOut = checkOut.reduce((a, b) => Math.max(a, b), 0);
-            const yMaxBottom = Math.ceil(maxCheckOut * 1.5);
-            const lineData = checkIn.map((inspected, i) => {
-                const rejected = checkOut[i] || 0;
-                return inspected > 0 ? parseFloat(((rejected / inspected) * 100).toFixed(2)) : 0;
-            });
-            const yMaxLine = Math.ceil(Math.max(...lineData) * 4);
-            const chart = Highcharts.chart(chartId, {
-                chart: {
-                    type: "column",
-                    events: {
-                        load: function () {
-                            const chart = this;
-                            const legendContainer = document.getElementById(`legend-\${chartId}`);
-                            if (!legendContainer) return;
-                            legendContainer.innerHTML = "";
-
-                            chart.series.forEach((series) => {
-                                const btn = document.createElement("span");
-                                btn.textContent = series.name;
-                                btn.style.display = "flex";
-                                btn.style.alignItems = "center";
-                                btn.style.columnGap = "5px";
-                                btn.style.margin = "5px";
-                                btn.style.fontSize = "1rem";
-                                // btn.style.color = series.visible ? series.color : "#fff";
-                                btn.style.color = "#fff";
-                                btn.style.textDecoration = series.visible ? "unset" : "line-through";
-                                btn.onclick = () => {
-                                    series.setVisible(!series.visible);
-                                    btn.style.color = "#fff";
-                                    // btn.style.color = series.visible ? series.color : "#fff";
-                                    btn.style.textDecoration = series.visible ? "unset" : "line-through";
-                                };
-
-                                const circle = document.createElement("span");
-                                circle.style.display = "inline-block";
-                                circle.style.width = "10px";
-                                circle.style.height = "10px";
-                                circle.style.backgroundColor = series.visible ? series.color : "#fff";
-                                btn.prepend(circle);
-
-                                legendContainer.appendChild(btn);
-                            });
-                        },
-                        render: function () {
-                            applyScaleToChart(this);
-                        },
+            if (f.iqcStatus !== null && f.iqcStatus !== undefined) {
+                const badge = createBadge(
+                    null,
+                    () => {
+                        f.iqcStatus = 1;
+                        f.materialTypeIQC = null;
+                        renderTable5();
+                        updateBadge("table-5");
                     },
-                },
-                title: null,
-                xAxis: {
-                    categories: xLabels,
-                    lineWidth: 0,
-                    tickLength: 5,
-                    offset: -110,
-                    labels: { align: "center", y: 0, style: { fontSize: "0.75rem" } },
-                },
-
-                yAxis: [
-                    { title: null, height: "43%", offset: 0, softMax: 600 },
-                    { title: null, top: "57%", height: "43%", offset: 0, reversed: true, softMax: yMaxBottom },
-                    {
-                        title: null,
-                        top: 0,
-                        height: "43%",
-                        offset: 0,
-                        opposite: true,
-                        max: yMaxLine,
-                        labels: { enabled: false },
-                        gridLineWidth: 0,
-                    },
-                ],
-                tooltip: { enabled: false },
-                legend: {
-                    enabled: true,
-                    itemStyle: { color: "#fff" },
-                },
-                plotOptions: {
-                    column: {
-                        grouping: false,
-                        maxPointWidth: 30,
-                        dataLabels: {
-                            allowOverlap: true,
-                            style: { textOutline: "1px contrast" },
-                            // rotation: -90,
-                            rotation: 0,
-                        },
-                    },
-                },
-                series: [
-                    { name: "Inspected", color: "#fddd60", data: checkIn, yAxis: 0 },
-                    {
-                        name: "Rejected",
-                        color: "#7cffb2",
-                        data: checkOut,
-                        yAxis: 1,
-                        dataLabels: {
-                            enabled: true,
-                            formatter: function () {
-                                return this.y < 0.1 ? 0 : this.y;
-                            },
-                            align: "center",
-                        },
-                    },
-                    {
-                        name: "Ratio (Rejected/Inspected)",
-                        type: "line",
-                        color: "#38C3FE",
-                        data: checkIn.map((inspected, i) =>
-                            inspected > 0 ? parseFloat(((checkOut[i] / inspected) * 100).toFixed(2)) : 0
-                        ),
-                        yAxis: 2,
-                        dataLabels: {
-                            enabled: true,
-                            formatter: function () {
-                                return this.y + "%";
-                            },
-                            align: "center",
-                        },
-                        marker: { enabled: true, radius: 3 },
-                    },
-                ],
-            });
-            chartsList.push(chart);
-            return chart;
-        };
-
-        function setupExportButtons() {
-            const exportBtn5 = document.getElementById("export-table5-btn");
-            const exportBtn4 = document.getElementById("export-table4-btn");
-
-            if (exportBtn5) {
-                exportBtn5.addEventListener("click", () => {
-                    // ✓ Double check khi click
-                    if (donutFilters.iqcStatus === 1) {
-                        alert(
-                            "Cannot export when status is ALL. Please select a specific status (TO BE INSPECTED or FAIL)."
-                        );
-                        return;
+                    true,
+                    (val) => {
+                        f.iqcStatus = val;
+                        renderTable5();
+                        updateBadge("table-5");
                     }
-                    exportTable(5, "IqcReport");
-                });
+                );
+                title.appendChild(badge);
             }
 
-            if (exportBtn4) {
-                exportBtn4.addEventListener("click", () => {
-                    exportTable(4, "NcmrReport");
+            updateExportBtn();
+        } else if (tblId === "table-4") {
+            const f = state.filters.donut;
+            if (f.materialTypeNCMR) {
+                const materialTypes = [...new Set(state.dataset.donutNCMRData?.map((i) => i.name) || [])];
+
+                const badge = createBadge(
+                    null,
+                    () => {
+                        f.materialTypeNCMR = null;
+                        renderTable4();
+                        updateBadge("table-4");
+                    },
+                    false,
+                    materialTypes,
+                    f.materialTypeNCMR,
+                    true
+                );
+                title.appendChild(badge);
+            }
+        } else {
+            const filter = filterVal !== undefined ? filterVal : state.filters.lot[tblId];
+            if (filter) {
+                const badge = createBadge(filter, () => {
+                    state.filters.lot[tblId] = null;
+                    if (tblId === "table-1") renderTable1();
+                    else if (tblId === "table-2") renderTable2();
+                    else if (tblId === "table-3") renderTable3();
+                    updateBadge(tblId);
                 });
+                title.appendChild(badge);
             }
         }
+    };
 
-        async function exportTable(tableNum, filename) {
-            const apiUrl =
-                tableNum === 5 ? "/production-system/api/iqc/iqc-lot/export" : "/production-system/api/iqc/ncmr/export";
+    const updateExportBtn = () => {
+        const btn = document.getElementById("export-table5-btn");
+        if (!btn) return;
 
-            const params = new URLSearchParams();
-            params.append("page", 0);
-            params.append("size", 40000);
-            params.append("fromDate", fromDate);
-            params.append("toDate", toDate);
+        if (state.filters.donut.iqcStatus === 1) {
+            btn.disabled = true;
+            btn.title = "Cannot export when status is ALL. Please select a specific status.";
+            btn.style.cssText = "opacity:0.5;cursor:not-allowed;";
+        } else {
+            btn.disabled = false;
+            btn.title = "Download Excel";
+            btn.style.cssText = "opacity:1;cursor:pointer;";
+        }
+    };
 
-            if (tableNum === 5) {
-                if (donutFilters.materialTypeIQC) {
-                    params.append("materialType", donutFilters.materialTypeIQC);
-                }
-                if (donutFilters.iqcStatus !== undefined && donutFilters.iqcStatus !== null) {
-                    params.append("iqcStatus", donutFilters.iqcStatus);
-                }
-            } else if (tableNum === 4) {
-                if (donutFilters.materialTypeNCMR) {
-                    params.append("materialType", donutFilters.materialTypeNCMR);
+    const updateAllTitles = () => {
+        const timeRange = getTimeRangeText();
+
+        // Update chart titles
+        const chartTitles = {
+            "col-chart-3": "Lot Rejected By Material Type",
+            "col-chart-4": "Top Lot Rejected By MFR",
+            "col-chart-5": "Top Lot Rejected By Models",
+            "donut-chart-1": "To be Inspected Distribution by Material Type",
+            "donut-chart-2": "NCMR Status",
+        };
+
+        Object.entries(chartTitles).forEach(([chartId, baseTitle]) => {
+            const chartEl = document.getElementById(chartId);
+            if (chartEl) {
+                const titleEl = chartEl.closest(".component-item")?.querySelector(".component-title");
+                if (titleEl) {
+                    if (!titleEl.dataset.originalTitle) {
+                        titleEl.dataset.originalTitle = baseTitle;
+                    }
+
+                    const badges = titleEl.querySelectorAll(".filter-badge");
+                    const badgesHTML = Array.from(badges)
+                        .map((b) => b.outerHTML)
+                        .join("");
+
+                    titleEl.innerHTML = `<span>\${titleEl.dataset.originalTitle} <span style="font-size: 0.85rem; color: #fff; font-weight: 500;">\${timeRange}</span></span>\${badgesHTML}`;
                 }
             }
+        });
 
-            // Show loading
-            const btnId = tableNum === 5 ? "export-table5-btn" : "export-table4-btn";
+        const tableTitles = {
+            "table-4": "NCMR List",
+            "table-5": "Inspection List",
+        };
+
+        Object.entries(tableTitles).forEach(([tableId, baseTitle]) => {
+            const tableEl = document.getElementById(tableId);
+            if (tableEl) {
+                const titleEl = tableEl.closest(".component-item")?.querySelector(".component-title");
+                if (titleEl) {
+                    if (!titleEl.dataset.originalTitle) {
+                        titleEl.dataset.originalTitle = baseTitle;
+                    }
+
+                    const badges = titleEl.querySelectorAll(".filter-badge");
+                    const badgesHTML = Array.from(badges)
+                        .map((b) => b.outerHTML)
+                        .join("");
+
+                    titleEl.innerHTML = `<span>\${titleEl.dataset.originalTitle} <span style="font-size: 0.85rem; color: #fff; font-weight: 500;">\${timeRange}</span></span>\${badgesHTML}`;
+                }
+            }
+        });
+    };
+
+    // table render
+    const createTable = (id, config, urlBuilder, dataFormatter, rowBuilder) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.querySelector("thead").innerHTML = "";
+        el.querySelector("tbody").innerHTML = "";
+
+        const key = id.replace("-", "");
+        if (state.tables[key]) state.tables[key].destroy();
+
+        state.tables[key] = new DataTableLib({
+            tableId: id,
+            serverSide: true,
+            rows: config.rows || 9999,
+            pagination: config.pagination !== false,
+            paginationId: config.paginationId || null,
+            emptyMessage: "NO DATA",
+            sort: false,
+            buildUrl: urlBuilder,
+            formatData: dataFormatter,
+            columnsConfig: config.columns.map((c) => ({ label: c.label })),
+            rowRenderer: rowBuilder,
+        });
+
+        return state.tables[key].init();
+    };
+
+    const renderTable1 = () =>
+        createTable(
+            "table-1",
+            { columns: TABLE_CONFIGS.table1, pagination: false },
+            () =>
+                buildUrl(API.TOP_REJECT, {
+                    fieldName: "MaterialTypeAndMFR",
+                    fromDate: state.dates.from,
+                    toDate: state.dates.to,
+                    page: 0,
+                    size: 9999,
+                }),
+            (res) => {
+                let data = res?.data || [];
+                state.dataset.table1Data = data;
+                const f = state.filters.lot["table-1"];
+                if (f) data = data.filter((r) => (r[TABLE_CONFIGS.table1[0].key] || "N/A").trim() === f);
+                res.total = data.length;
+                return data;
+            },
+            (item) =>
+                !item
+                    ? `<td colspan="\${TABLE_CONFIGS.table1.length}" style="text-align:center">NO DATA</td>`
+                    : TABLE_CONFIGS.table1.map((c) => `<td>\${item[c.key] ?? "-"}</td>`).join("")
+        );
+
+    const renderTable2 = () =>
+        createTable(
+            "table-2",
+            { columns: TABLE_CONFIGS.table2, pagination: false },
+            () =>
+                buildUrl(API.TOP_REJECT, {
+                    fieldName: "MFR",
+                    fromDate: state.dates.from,
+                    toDate: state.dates.to,
+                    page: 0,
+                    size: 9999,
+                }),
+            (res) => {
+                let data = res?.data || [];
+                state.dataset.table2Data = data;
+                const f = state.filters.lot["table-2"];
+                if (f) data = data.filter((r) => (r[TABLE_CONFIGS.table2[0].key] || "N/A").trim() === f);
+                res.total = data.length;
+                return data;
+            },
+            (item) =>
+                !item
+                    ? `<td colspan="\${TABLE_CONFIGS.table2.length}" style="text-align:center">NO DATA</td>`
+                    : TABLE_CONFIGS.table2.map((c) => `<td>\${item[c.key] ?? "-"}</td>`).join("")
+        );
+
+    const renderTable3 = () =>
+        createTable(
+            "table-3",
+            { columns: TABLE_CONFIGS.table3, pagination: false },
+            () =>
+                buildUrl(API.TOP_REJECT, {
+                    fieldName: "ModelAndMFR",
+                    fromDate: state.dates.from,
+                    toDate: state.dates.to,
+                    page: 0,
+                    size: 9999,
+                }),
+            (res) => {
+                let data = res?.data || [];
+                state.dataset.table3Data = data;
+                const f = state.filters.lot["table-3"];
+                if (f) data = data.filter((r) => (r[TABLE_CONFIGS.table3[0].key] || "N/A").trim() === f);
+                res.total = data.length;
+                return data;
+            },
+            (item) =>
+                !item
+                    ? `<td colspan="\${TABLE_CONFIGS.table3.length}" style="text-align:center">NO DATA</td>`
+                    : TABLE_CONFIGS.table3.map((c) => `<td>\${item[c.key] ?? "-"}</td>`).join("")
+        );
+
+    const renderTable4 = async () => {
+        loader.load();
+        try {
+            const el = document.getElementById("table-4");
+            if (!el) return;
+
+            let pag = document.getElementById("pagination-table-4");
+            if (!pag) {
+                pag = document.createElement("div");
+                pag.id = "pagination-table-4";
+                pag.style.marginTop = "0.4rem";
+                el.closest(".component-item")?.appendChild(pag);
+            }
+
+            return createTable(
+                "table-4",
+                { columns: TABLE_CONFIGS.table4, rows: 10, paginationId: "pagination-table-4" },
+                (page) => {
+                    const p = { page: page - 1, size: 10, fromDate: state.dates.from, toDate: state.dates.to };
+                    if (state.filters.donut.materialTypeNCMR) p.materialType = state.filters.donut.materialTypeNCMR;
+                    return buildUrl(API.NCMR, p);
+                },
+                (res) => {
+                    res.total = res?.size || 0;
+                    return res?.data || [];
+                },
+                (item, idx, meta) => {
+                    if (!item)
+                        return `<td colspan="\${TABLE_CONFIGS.table4.length}" style="text-align:center">NO DATA</td>`;
+                    const stt = ((meta?.currentPage || 1) - 1) * 10 + idx + 1;
+                    return [
+                        `<td>\${stt}</td>`,
+                        ...TABLE_CONFIGS.table4.slice(1).map((c) => {
+                            const val = item[c.key] ?? "-";
+                            return c.key === "rejectReason" || c.key === "improvementAction"
+                                ? `<td style="max-width:200px;word-wrap:break-word;white-space:normal;">\${val}</td>`
+                                : `<td>\${val}</td>`;
+                        }),
+                    ].join("");
+                }
+            );
+        } finally {
+            updateBadge("table-4");
+            loader.unload();
+        }
+    };
+
+    const renderTable5 = async () => {
+        loader.load();
+        try {
+            const el = document.getElementById("table-5");
+            if (!el) return;
+
+            let pag = document.getElementById("pagination-table-5");
+            if (!pag) {
+                pag = document.createElement("div");
+                pag.id = "pagination-table-5";
+                pag.style.marginTop = "0.4rem";
+                el.closest(".component-item")?.appendChild(pag);
+            }
+
+            return createTable(
+                "table-5",
+                { columns: TABLE_CONFIGS.table5, rows: 50, paginationId: "pagination-table-5" },
+                (page) => {
+                    const p = { page: page - 1, size: 50, fromDate: state.dates.from, toDate: state.dates.to };
+                    const f = state.filters.donut;
+                    if (f.materialTypeIQC) p.materialType = f.materialTypeIQC;
+                    if (f.iqcStatus !== null && f.iqcStatus !== undefined) p.iqcStatus = f.iqcStatus;
+                    return buildUrl(API.IQC_LOT, p);
+                },
+                (res) => {
+                    res.total = res?.size || 0;
+                    state.dataset.table5Data = res?.data || [];
+                    return res?.data || [];
+                },
+                (item, idx, meta) => {
+                    if (!item)
+                        return `<td colspan="\${TABLE_CONFIGS.table5.length}" style="text-align:center">NO DATA</td>`;
+                    const stt = ((meta?.currentPage || 1) - 1) * 50 + idx + 1;
+                    return [
+                        `<td>\${stt}</td>`,
+                        ...TABLE_CONFIGS.table5.slice(1).map((c) => `<td>\${item[c.key] ?? "-"}</td>`),
+                    ].join("");
+                }
+            );
+        } finally {
+            loader.unload();
+        }
+    };
+
+    // export excel
+    const exportTable = async (num, name) => {
+        loader.load();
+        try {
+            const api = num === 5 ? API.IQC_EXPORT : API.NCMR_EXPORT;
+            const p = { page: 0, size: 40000, fromDate: state.dates.from, toDate: state.dates.to };
+
+            if (num === 5) {
+                const f = state.filters.donut;
+                if (f.materialTypeIQC) p.materialType = f.materialTypeIQC;
+                if (f.iqcStatus !== null && f.iqcStatus !== undefined) p.iqcStatus = f.iqcStatus;
+            } else if (num === 4 && state.filters.donut.materialTypeNCMR) {
+                p.materialType = state.filters.donut.materialTypeNCMR;
+            }
+
+            const btnId = num === 5 ? "export-table5-btn" : "export-table4-btn";
             const btn = document.getElementById(btnId);
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting...';
             }
 
-            try {
-                const response = await fetch(`\${apiUrl}?\${params.toString()}`, {
-                    method: "GET",
-                    headers: {
-                        Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    },
-                });
+            const res = await fetch(buildUrl(api, p), {
+                headers: { Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+            });
+            if (!res.ok) throw new Error(`HTTP \${res.status}`);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP \${response.status}: \${response.statusText}`);
-                }
-
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `\${filename}_\${new Date().getTime()}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-
-                setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                }, 100);
-            } catch (error) {
-                console.error("Export failed:", error);
-                alert(`Failed to export file: \${error.message}`);
-            } finally {
-                // Restore button
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-download"></i> Export';
-                }
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `\${name}_\${Date.now()}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+        } catch (err) {
+            console.error("Export failed:", err);
+            alert(`Failed to export: \${err.message}`);
+        } finally {
+            loader.unload();
+            const btnId = num === 5 ? "export-table5-btn" : "export-table4-btn";
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-download"></i> Export';
             }
         }
+    };
 
-        const loadData = async () => {
-            getDataCPN();
-            getDataLotInject();
-            loadLotRejectWeeklyChart();
-            loadLotRejectDailyChart();
-        };
-
-        const loadEvent = () => {
-            highchartsInit();
-            if (!selectElement.value) {
-                selectElement.selectedIndex = 2;
-            }
-            const initVal = selectElement.value || "30";
-            updateDates(initVal);
-            loadDonutIQC();
-            loadDonutNCMR();
-            loadAllTopReject();
-            getDataCPN();
-            renderTable4();
-            renderTable5();
-            updateTableTitleBadge("table-5");
-            setupExportButtons();
-            updateExportButtonState();
-
-            const daterangepickerChart = $("#daterangepicker-chart");
-            daterangepickerChart.daterangepicker({
-                opens: "left",
-                autoUpdateInput: false,
-                locale: {
-                    cancelLabel: "Clear",
-                    applyLabel: "Apply",
-                    format: "YYYY/MM/DD",
-                },
-                startDate: moment().subtract(29, "days"),
-                endDate: moment(),
+    const setupExport = () => {
+        const btn5 = document.getElementById("export-table5-btn");
+        const btn4 = document.getElementById("export-table4-btn");
+        if (btn5)
+            btn5.addEventListener("click", () => {
+                if (state.filters.donut.iqcStatus === 1)
+                    return alert("Cannot export when status is ALL. Please select a specific status.");
+                exportTable(5, "IqcReport");
             });
+        if (btn4) btn4.addEventListener("click", () => exportTable(4, "NcmrReport"));
+    };
 
-            daterangepickerChart.on("apply.daterangepicker", function (ev, picker) {
-                fromDate = picker.startDate.format("YYYY/MM/DD 00:00:00");
-                toDate = picker.endDate.format("YYYY/MM/DD 23:59:59");
+    // daterangepicker
+    const setupDatePicker = () => {
+        const sel = document.getElementById("sl-time-chart");
+        const picker = $("#daterangepicker-chart");
 
-                $(this).val(picker.startDate.format("YYYY/MM/DD") + " - " + picker.endDate.format("YYYY/MM/DD"));
-
-                // Reload all data
-                loadDonutIQC();
-                loadDonutNCMR();
-                loadAllTopReject();
-                getDataCPN();
-                renderTable4();
-                renderTable5();
-            });
-
-            daterangepickerChart.on("cancel.daterangepicker", function (ev, picker) {
-                $(this).val("");
-                $(this).hide();
-                selectElement.value = "30";
-                updateDates("30");
-
-                // Reload with default dates
-                loadDonutIQC();
-                loadDonutNCMR();
-                loadAllTopReject();
-                getDataCPN();
-                renderTable4();
-                renderTable5();
-            });
-
-            selectElement.addEventListener("change", function () {
-                const selectedOption = this.value;
-                const daterangepickerChartEl = document.getElementById("daterangepicker-chart");
-
-                if (selectedOption === "custom") {
-                    daterangepickerChartEl.style.display = "inline-block";
-                    $(daterangepickerChartEl).data("daterangepicker").show();
-                } else {
-                    daterangepickerChartEl.style.display = "none";
-                    daterangepickerChartEl.value = "";
-
-                    updateDates(selectedOption);
-                    loadDonutIQC();
-                    loadDonutNCMR();
-                    loadAllTopReject();
-                    getDataCPN();
-                    renderTable4();
-                    renderTable5();
-                }
-            });
-
-            const slTime = document.getElementById("sl-time");
-            if (slTime) {
-                if (!slTime.value) {
-                    slTime.selectedIndex = 0;
-                }
-                slTime.addEventListener("change", function () {
-                    getDataLotInject();
-                });
-            }
-        };
-
-        ready(() => {
-            loadEvent();
-            loadData();
+        picker.daterangepicker({
+            opens: "left",
+            autoUpdateInput: false,
+            locale: { cancelLabel: "Clear", applyLabel: "Apply", format: "YYYY/MM/DD" },
+            startDate: moment().subtract(29, "days"),
+            endDate: moment(),
         });
-    </script>
+
+        picker.on("apply.daterangepicker", async (ev, p) => {
+            state.dates.from = fmt(p.startDate, "00:00:00");
+            state.dates.to = fmt(p.endDate, "23:59:59");
+            picker.val(fmt(p.startDate, "") + " - " + fmt(p.endDate, ""));
+
+            updateAllTitles();
+
+            await loadDonutIQC();
+            await loadDonutNCMR();
+            await loadAllCharts();
+            await getEvent();
+            await renderTable4();
+            updateBadge("table-4");
+            await renderTable5();
+            updateBadge("table-5");
+        });
+
+        picker.on("cancel.daterangepicker", async () => {
+            picker.val("").hide();
+            sel.value = "30";
+            updateDates("30");
+
+            updateAllTitles();
+
+            await loadDonutIQC();
+            await loadDonutNCMR();
+            await loadAllCharts();
+            await getEvent();
+            await renderTable4();
+            updateBadge("table-4");
+            await renderTable5();
+            updateBadge("table-5");
+        });
+
+        sel.addEventListener("change", async function () {
+            const val = this.value;
+            const pickerEl = document.getElementById("daterangepicker-chart");
+
+            if (val === "custom") {
+                pickerEl.style.display = "inline-block";
+                $(pickerEl).data("daterangepicker").show();
+            } else {
+                pickerEl.style.display = "none";
+                pickerEl.value = "";
+                updateDates(val);
+
+                updateAllTitles();
+
+                loadDonutIQC();
+                loadDonutNCMR();
+                loadAllCharts();
+                getEvent();
+                renderTable4().then(() => updateBadge("table-4"));
+                renderTable5().then(() => updateBadge("table-5"));
+            }
+        });
+
+        const slTime = document.getElementById("sl-time");
+        if (slTime) {
+            if (!slTime.value) slTime.selectedIndex = 0;
+            slTime.addEventListener("change", loadLotInject);
+        }
+    };
+
+    const getTimeRangeText = () => {
+        if (!state.dates.from || !state.dates.to) return "";
+
+        const from = moment(state.dates.from, "YYYY/MM/DD HH:mm:ss");
+        const to = moment(state.dates.to, "YYYY/MM/DD HH:mm:ss");
+
+        if (from.format("YYYY/MM/DD") === to.format("YYYY/MM/DD")) {
+            return `(\${from.format("YYYY/MM/DD")})`;
+        }
+
+        return `(\${from.format("YYYY/MM/DD")} - \${to.format("YYYY/MM/DD")})`;
+    };
+
+    // init
+    const init = async () => {
+        loader.load();
+        try {
+            initHighcharts();
+
+            const sel = document.getElementById("sl-time-chart");
+            if (!sel.value) sel.selectedIndex = 2;
+
+            updateDates(sel.value || "30");
+            updateAllTitles();
+            await loadDonutIQC();
+            await loadDonutNCMR();
+            await loadAllCharts();
+            await getEvent();
+            await renderTable4();
+            await renderTable5();
+            updateBadge("table-5");
+            setupExport();
+            updateExportBtn();
+            setupDatePicker();
+        } finally {
+            loader.unload();
+        }
+    };
+
+    const loadAll = async () => {
+        await getEvent();
+        await loadLotInject();
+        await loadWeeklyChart();
+        await loadDailyChart();
+    };
+
+    ready(async () => {
+        await init();
+        await loadAll();
+    });
+</script>
