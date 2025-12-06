@@ -1,3 +1,255 @@
+async function handleTaskFileUpload() {
+    const modal = document.getElementById('taskDetailModal');
+    if (!modal) return;
+
+    const taskId = modal.dataset.taskId;
+    if (!taskId || taskId === 'null') {
+        alert('Không tìm thấy taskId!');
+        return;
+    }
+
+    const oldInput = modal.querySelector('input[type="file"][data-task-upload]');
+    if (oldInput) oldInput.remove();
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    fileInput.style.display = 'none';
+    fileInput.dataset.taskUpload = 'true';
+    modal.appendChild(fileInput);
+
+    fileInput.onchange = async function () {
+        if (!fileInput.files || fileInput.files.length === 0) return;
+
+        const formData = new FormData();
+        formData.append('id', taskId);
+
+        for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('files', fileInput.files[i]);
+        }
+
+        try {
+            const res = await fetch('/sample-system/api/tasks/upload-files', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                alert('Upload thất bại: ' + res.status + ' ' + text);
+                return;
+            }
+
+            const json = await res.json();
+
+            if (!json.result || !Array.isArray(json.result)) {
+                alert('Upload thành công');
+                return;
+            }
+
+            const list = document.getElementById('attachments-list');
+            if (list) {
+                list.innerHTML = json.result.map(f =>
+                    `<div class="attachment-item">
+                        <a href="${f.url}" target="_blank">${f.name}</a>
+                    </div>`
+                ).join('');
+            }
+
+            alert('Upload thành công!');
+        } catch (e) {
+            alert('Lỗi khi upload file: ' + e.message);
+        }
+    };
+
+    fileInput.click();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('upload');
+    if (btn) {
+        btn.addEventListener('click', handleTaskFileUpload);
+    }
+
+    try {
+        if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
+            var input = document.querySelector("#filter-created-date");
+            if (input) {
+                try {
+                    if ($(input).data('daterangepicker')) {
+                        try { $(input).data('daterangepicker').remove(); } catch (err) { }
+                        try { $(input).off('apply.daterangepicker cancel.daterangepicker'); } catch (err) { }
+                    }
+                } catch (err) { }
+
+                rangePicker($(input), null, null);
+
+                $(input).on('apply.daterangepicker', function (ev, picker) {
+                    try {
+                        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+                        $(this).trigger('change');
+                    } catch (err) { }
+                });
+
+                $(input).on('cancel.daterangepicker', function () {
+                    try { $(this).val(''); $(this).trigger('change'); } catch (err) { }
+                });
+            }
+        }
+    } catch (e) { console.warn('Failed to init created date picker:', e); }
+});
+
+async function handleTaskComment() {
+    const modal = document.getElementById('taskDetailModal');
+    if (!modal) return;
+
+    const taskId = modal.dataset.taskId;
+    if (!taskId || taskId === 'null') {
+        alert('Không tìm thấy taskId!');
+        return;
+    }
+
+    const input = document.getElementById('input-comment');
+    const comment = input ? (input.value || '').trim() : '';
+    if (!comment) {
+        alert('Vui lòng nhập bình luận');
+        return;
+    }
+
+    try {
+        const params = new URLSearchParams();
+        params.append('id', taskId);
+        params.append('comment', comment);
+
+        const res = await fetch('/sample-system/api/tasks/comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        });
+
+        if (!res.ok) {
+            const txt = await res.text().catch(() => '');
+            alert('Gửi comment thất bại: ' + res.status + ' ' + txt);
+            return;
+        }
+
+        let json = null;
+        try { json = await res.json(); } catch (e) { }
+
+        alert('Comment đã gửi');
+        if (input) input.value = '';
+
+        try { if (typeof loadTaskComments === 'function') loadTaskComments(taskId); } catch (e) { }
+    } catch (e) {
+        alert('Lỗi khi gửi comment: ' + e.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const btnComment = document.getElementById('comment');
+    if (btnComment) {
+        btnComment.addEventListener('click', handleTaskComment);
+    }
+});
+async function handleAddCustomTask() {
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const v = (el.value || '').trim();
+        return v === '' ? null : v;
+    };
+
+    const name = getVal('custom-task-name');
+    const taskCode = getVal('custom-task-id');
+    const processId = getVal('custom-sl-process') ? Number(getVal('custom-sl-process')) : null;
+    const departmentId = getVal('custom-sl-department') ? Number(getVal('custom-sl-department')) : null;
+    const typeId = getVal('custom-sl-xvt') ? Number(getVal('custom-sl-xvt')) : null;
+    const priorityRaw = getVal('custom-sl-priority');
+    const priority = priorityRaw ? priorityRaw.toUpperCase() : null;
+    const dri = getVal('custom-dri');
+    const dueDateRaw = getVal('custom-deadline');
+    const description = getVal('custom-task-description');
+
+    let dueDate = null;
+    if (dueDateRaw) {
+        try {
+            if (window.moment && typeof window.moment === 'function') {
+                const m = window.moment(dueDateRaw, [
+                    'YYYY-MM-DD HH:mm:ss',
+                    'YYYY-MM-DD HH:mm',
+                    'YYYY/MM/DD HH:mm:ss',
+                    'YYYY/MM/DD HH:mm',
+                    'YYYY-MM-DDTHH:mm:ss',
+                    'YYYY-MM-DDTHH:mm:ss.SSSZ'
+                ], true);
+                if (m && m.isValid && m.isValid()) {
+                    dueDate = m.format('YYYY/MM/DD HH:mm:ss');
+                } else {
+                    dueDate = dueDateRaw;
+                }
+            } else {
+                dueDate = dueDateRaw.replace(/-/g, '/');
+            }
+        } catch (e) {
+            dueDate = dueDateRaw.replace(/-/g, '/');
+        }
+    }
+
+    let projectId = null;
+    if (window.currentProject && window.currentProject.id) {
+        projectId = window.currentProject.id;
+    } else {
+        const pidEl = document.getElementById('pt_detail_projectId');
+        if (pidEl && pidEl.value) projectId = pidEl.value;
+    }
+    if (projectId !== null && projectId !== undefined && projectId !== '') {
+        projectId = Number(projectId);
+        if (isNaN(projectId)) projectId = null;
+    }
+
+    const payload = {
+        name,
+        taskCode,
+        processId,
+        departmentId,
+        typeId,
+        priority,
+        dri,
+        dueDate,
+        description,
+        isTemplate: false,
+        projectId,
+        step: null,
+        flag: true,
+        status: null,
+        stageId: null
+    };
+
+    try {
+        const res = await fetch('/sample-system/api/tasks/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            alert('Tạo task thất bại: ' + res.status + ' ' + text);
+            return;
+        }
+        alert('Tạo task thành công!');
+        try { bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide(); } catch (e) { }
+        try { await loadProjectList(); } catch (e) { }
+    } catch (e) {
+        alert('Lỗi khi gọi API tạo task: ' + e.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('add-custom');
+    if (btn) {
+        btn.addEventListener('click', handleAddCustomTask);
+    }
+});
 const SELECT_CONFIGS = [
     { id: 'ppapFilterStatus', endpoint: '/api/tasks/status' },
     { id: 'ppapFilterPriority', endpoint: '/api/tasks/priorities' },
@@ -38,7 +290,7 @@ function renderOptions(selectId, items) {
         return '';
     }).join('');
 
-    select.innerHTML = '<option value="">-- Select --</option>' + optionsHtml;
+    select.innerHTML = optionsHtml;
 }
 
 async function loadAllSelects() {
@@ -70,7 +322,7 @@ async function loadAllSelects() {
     try {
         const statusIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/tasks/status' || c.id === 'ppapFilterStatus');
         const priorityIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/tasks/priorities' || c.id === 'ppapFilterPriority');
-        
+
 
         if (statusIndex !== -1) {
             const statuses = results[statusIndex] || [];
@@ -170,20 +422,57 @@ let currentProject = null;
 let projectList = [];
 let selectedPPAPItems = [];
 let createModalOriginalTitleHTML = null;
-// The task object currently shown in task detail modal (full payload as returned by get-by-id)
 let currentTaskDetailObj = null;
 
-// Helper: normalize customer input to numeric id expected by backend
+function rangePicker($input, fromDate, toDate) {
+    let start = null;
+    let end = null;
+    if (window.moment) {
+        try {
+            const mStart = window.moment((fromDate || "").split(" ")[0], "YYYY/MM/DD", true);
+            if (mStart && typeof mStart.isValid === 'function' && mStart.isValid()) start = mStart;
+        } catch (e) { start = null; }
+
+        try {
+            const mEnd = window.moment((toDate || "").split(" ")[0], "YYYY/MM/DD", true);
+            if (mEnd && typeof mEnd.isValid === 'function' && mEnd.isValid()) end = mEnd;
+        } catch (e) { end = null; }
+    }
+
+    $input.daterangepicker({
+        startDate: start || new Date(Date.now() - 6 * 86400000),
+        endDate: end || new Date(),
+        autoApply: false,
+        locale: { format: "YYYY/MM/DD" },
+    });
+}
+
+function singlePicker($input, workDate) {
+    const dateOnly = (workDate || "").split(" ")[0];
+    let start = null;
+    if (window.moment) {
+        try {
+            const m = window.moment(dateOnly, "YYYY/MM/DD", true);
+            if (m && typeof m.isValid === 'function' && m.isValid()) start = m;
+        } catch (e) { start = null; }
+    }
+
+    $input.daterangepicker({
+        singleDatePicker: true,
+        startDate: start || new Date(),
+        autoApply: false,
+        locale: { format: "YYYY/MM/DD" },
+    });
+}
+
 function mapCustomerToId(cust) {
     if (cust === null || cust === undefined) return '';
     const s = String(cust).trim().toLowerCase();
     if (s === '1' || s === 'apollo') return 1;
     if (s === '2' || s === 'rhea') return 2;
     if (s === '3' || s === 'kronos') return 3;
-    // if it's numeric string, return as number
     const num = Number(s);
     if (!isNaN(num) && num > 0) return num;
-    // fallback: return original value (caller should validate)
     return cust;
 }
 
@@ -226,7 +515,9 @@ async function loadProjectList() {
                     id: p.id,
                     customer: p.customerId || 'N/A',
                     name: p.name,
+                    createdBy: p.createdBy || '',
                     createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
+                    updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
                     status: p.status || 'N/A',
                     taskCount: p.taskCount || 0,
                     tasks: []
@@ -237,6 +528,83 @@ async function loadProjectList() {
         console.warn('Failed to load projects:', e);
     }
     renderProjectListUI();
+}
+
+function buildProjectFilterParams() {
+    const params = new URLSearchParams();
+
+    try {
+        const projectName = (document.getElementById('ppapFilterProject') && document.getElementById('ppapFilterProject').value) ? document.getElementById('ppapFilterProject').value.trim() : '';
+        if (projectName) params.append('projectName', projectName);
+
+        const customerId = (document.getElementById('projectCustomerSelect') && document.getElementById('projectCustomerSelect').value) ? document.getElementById('projectCustomerSelect').value.trim() : '';
+        if (customerId) params.append('customerId', customerId);
+
+        const createBy = (document.getElementById('filter-created-by') && document.getElementById('filter-created-by').value) ? document.getElementById('filter-created-by').value.trim() : '';
+        if (createBy) params.append('createBy', createBy);
+
+        const createdDate = (document.getElementById('filter-created-date') && document.getElementById('filter-created-date').value) ? document.getElementById('filter-created-date').value.trim() : '';
+        if (createdDate) {
+            // expected format: "YYYY/MM/DD - YYYY/MM/DD" or similar
+            const parts = createdDate.split('-').map(s => s.trim()).filter(Boolean);
+            if (parts.length === 2) {
+                let start = parts[0];
+                let end = parts[1];
+                // normalize using moment if available
+                try {
+                    if (window.moment) {
+                        const ms = window.moment(start, 'YYYY/MM/DD', true);
+                        const me = window.moment(end, 'YYYY/MM/DD', true);
+                        if (ms && ms.isValid && ms.isValid()) start = ms.format('YYYY/MM/DD');
+                        if (me && me.isValid && me.isValid()) end = me.format('YYYY/MM/DD');
+                    }
+                } catch (e) { /* ignore */ }
+
+                // send as startTime/endTime; include times to cover full day
+                params.append('startTime', start + ' 00:00:00');
+                params.append('endTime', end + ' 23:59:59');
+            }
+        }
+    } catch (e) {
+        console.warn('buildProjectFilterParams error', e);
+    }
+
+    return params;
+}
+
+async function filterProjects() {
+    try {
+        const params = buildProjectFilterParams();
+        const base = '/sample-system/api/projects';
+        const url = params.toString() ? (base + '?' + params.toString()) : base;
+
+        const res = await fetch(url);
+        if (!res.ok) {
+            console.warn('filterProjects: server returned', res.status, res.statusText);
+            alert('Filtering failed: ' + res.status);
+            return;
+        }
+
+        const json = await res.json();
+        const data = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+
+        projectList = data.map(p => ({
+            id: p.id,
+            customer: p.customerId || 'N/A',
+            name: p.name,
+            createdBy: p.createdBy || '',
+            createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
+            updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
+            status: p.status || 'N/A',
+            taskCount: p.taskCount || 0,
+            tasks: Array.isArray(p.tasks) ? p.tasks.slice() : []
+        }));
+
+        renderProjectListUI();
+    } catch (e) {
+        console.error('filterProjects failed', e);
+        alert('Lọc thất bại. Kiểm tra console.');
+    }
 }
 
 function renderProjectListUI() {
@@ -258,12 +626,12 @@ function renderProjectListUI() {
                 const custName = getCustomerDisplay(project.customer);
                 return `
                 <tr data-project-id="${project.id}" data-section="waiting" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
-                    <td class="drag-handle"><i class="bi bi-grip-vertical"></i></td>
-                    <td>${project.id}</td>
                     <td>${custName}</td>
+                    <td>${project.createdBy || ''}</td>
                     <td><strong>${project.name}</strong></td>
                     <td>${project.createdDate}</td>
                     <td><span class="badge badge-warning">Waiting Approval</span></td>
+                    <td>${project.updatedAt || ''}</td>
                     <td>
                         <button class="action-btn-sm btn-success" onclick="event.stopPropagation(); approveProject('${project.id}')">
                             <i class="bi bi-check-circle"></i> Approve
@@ -283,7 +651,7 @@ function renderProjectListUI() {
     if (otherBody) {
         if (otherProjects.length === 0) {
             otherBody.innerHTML = `
-                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                <tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">
                     No Data!
                 </td></tr>
             `;
@@ -293,11 +661,12 @@ function renderProjectListUI() {
                 const custName = getCustomerDisplay(project.customer);
                 return `
                     <tr data-project-id="${project.id}" data-section="other" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
-                        <td class="drag-handle"><i class="bi bi-grip-vertical"></i></td>
                         <td>${custName}</td>
+                        <td>${project.createdBy || ''}</td>
                         <td><strong>${project.name}</strong></td>
                         <td>${project.createdDate}</td>
                         <td>${statusBadge}</td>
+                        <td>${project.updatedAt || ''}</td>
                         <td>
                             <button class="action-btn-sm" onclick="event.stopPropagation(); showProjectTasksModal('${project.id}')" title="View tasks">
                                 <i class="bi bi-eye"></i>
@@ -588,7 +957,6 @@ async function showTaskDetailModal(projectId, taskId) {
         const modalRoot = document.getElementById('taskDetailModal');
         if (!modalRoot) return;
 
-        // store project/task identifiers on modal and keep a copy of full task JSON
         try {
             modalRoot.dataset.projectId = String(projectId || '');
             modalRoot.dataset.taskId = String(taskId || '');
@@ -614,13 +982,26 @@ async function showTaskDetailModal(projectId, taskId) {
             const driInput = document.getElementById('dri');
             if (driInput) {
                 const driVal = task.dri ?? task.assignee ?? null;
-                driInput.value = driVal ? driVal : '-';
+                driInput.value = driVal ? driVal : '';
             }
 
             const deadLineInput = document.getElementById('deadLine');
-            const dueVal = task.dueDate ?? task.deadline ?? null;
+            const dueVal = task.dueDate || task.deadline || null;
             if (deadLineInput) {
-                deadLineInput.value = dueVal ? dueVal : '-';
+                if (dueVal) {
+                    let normalized = String(dueVal).trim();
+
+                    if (normalized.match(/^\d{4}-\d{2}-\d{2}/)) {
+                        normalized = normalized.replace(/^(\d{4})-(\d{2})-(\d{2})/, '$1/$2/$3');
+                    }
+
+                    deadLineInput.value = normalized;
+
+                    deadLineInput.dataset.initialValue = normalized;
+                } else {
+                    deadLineInput.value = '';
+                    deadLineInput.dataset.initialValue = '';
+                }
             }
         }
         catch (e) {
@@ -654,13 +1035,11 @@ async function showTaskDetailModal(projectId, taskId) {
             const ensureAndSet = (selectEl, value) => {
                 if (!selectEl) return;
                 const val = (value === null || value === undefined || String(value).trim() === '') ? 'N/A' : String(value);
-                // Check if option exists
                 const hasOption = Array.from(selectEl.options).some(o => String(o.value) === val);
                 if (!hasOption) {
                     const opt = document.createElement('option');
                     opt.value = val;
                     opt.text = val === 'N/A' ? 'N/A' : val;
-                    // insert at top after placeholder if present
                     if (selectEl.options.length > 0) selectEl.add(opt, selectEl.options[0]);
                     else selectEl.add(opt);
                 }
@@ -703,23 +1082,20 @@ async function showTaskDetailModal(projectId, taskId) {
                     } catch (err) {
                         console.warn('Failed to adjust z-index for stacked modal', err);
                     }
-                    // Initialize daterangepicker after modal is shown
                     initDeadlinePicker();
                 }, 50);
             } else {
                 const modal = new bootstrap.Modal(modalRoot);
                 modal.show();
-                
-                // Initialize daterangepicker after modal is shown
+
                 setTimeout(() => {
                     initDeadlinePicker();
                 }, 50);
             }
         } catch (e) {
             if (modalRoot) modalRoot.classList.add('active');
-            // Try to init daterangepicker anyway
             setTimeout(() => {
-                try { initDeadlinePicker(); } catch (err) {}
+                try { initDeadlinePicker(); } catch (err) { }
             }, 50);
         }
 
@@ -780,7 +1156,6 @@ function saveEditedTask() {
     alert('Task saved');
 }
 
-// Save changes made in the Task Detail modal: send full task JSON to update API
 async function saveTaskDetailChanges() {
     const modalRoot = document.getElementById('taskDetailModal');
     if (!modalRoot) { alert('taskDetailModal not found'); return; }
@@ -792,7 +1167,6 @@ async function saveTaskDetailChanges() {
     if (currentTaskDetailObj && String(currentTaskDetailObj.id) === String(taskId || currentTaskDetailObj.id)) {
         taskPayload = JSON.parse(JSON.stringify(currentTaskDetailObj));
     } else {
-        // try to fetch the full task if we don't have it
         try {
             const res = await fetch(`/sample-system/api/tasks/get-by-id?id=${encodeURIComponent(taskId)}`);
             if (res.ok) {
@@ -806,51 +1180,40 @@ async function saveTaskDetailChanges() {
 
     if (!taskPayload) { alert('Task data not available for update'); return; }
 
-    // read selects inside modal
     const statusSelect = modalRoot.querySelector('#sl-status');
     const prioritySelect = modalRoot.querySelector('#sl-priority');
     const newStatus = statusSelect ? statusSelect.value : taskPayload.status;
     const newPriority = prioritySelect ? prioritySelect.value : taskPayload.priority;
 
-    // Read DRI and deadline inputs
     const driInput = document.getElementById('dri');
     const deadlineInput = document.getElementById('deadLine');
-    
+
     let newDri = driInput ? driInput.value : taskPayload.dri;
     let newDeadline = deadlineInput ? deadlineInput.value : taskPayload.dueDate;
-    
-    // Normalize 'N/A' to null
     if (newDri === 'N/A' || newDri === '-' || !newDri || newDri.trim() === '') newDri = null;
     if (newDeadline === 'N/A' || newDeadline === '-' || !newDeadline || newDeadline.trim() === '') newDeadline = null;
-    
-    // Format deadline to YYYY/MM/DD HH:mm:ss if it exists
+
     if (newDeadline) {
         try {
-            // Handle various date formats and convert to YYYY/MM/DD HH:mm:ss
             const dateStr = String(newDeadline).trim();
-            
-            // Split date and time parts
+
             const parts = dateStr.split(' ');
             const datePart = parts[0]; // YYYY-MM-DD
             const timePart = parts[1] || '00:00:00'; // HH:mm or HH:mm:ss, default to 00:00:00
-            
-            // Replace - with / in date part
+
             const formattedDate = datePart.replace(/-/g, '/');
-            
-            // Ensure time has seconds (HH:mm:ss format)
+
             let formattedTime = timePart;
             if (timePart.split(':').length === 2) {
-                // If only HH:mm, add :00 for seconds
                 formattedTime = timePart + ':00';
             }
-            
+
             newDeadline = `${formattedDate} ${formattedTime}`;
         } catch (e) {
             console.warn('Failed to format deadline:', e);
         }
     }
 
-    // Normalize 'N/A' to null (based on app conventions)
     taskPayload.status = (newStatus === 'N/A' ? null : newStatus);
     taskPayload.priority = (newPriority === 'N/A' ? null : newPriority);
     taskPayload.dri = newDri;
@@ -1029,10 +1392,10 @@ async function removeTaskFromProject(projectId, taskId) {
         // Update local data
         project.tasks = (project.tasks || []).filter(t => String(t.id) !== String(taskId));
         project.taskCount = project.tasks.length;
-        
+
         // Refresh the project list in the background
         loadProjectList();
-        
+
         // Refresh only the modal content without closing/reopening the modal
         const container = document.getElementById('projectTasksContent');
         if (container) {
@@ -1204,7 +1567,7 @@ function closeCreateProjectModal() {
     resetToProjectList();
 }
 
-function saveProjectBasicInfoModal() {
+async function saveProjectBasicInfoModal() {
     const customer = document.getElementById('newProjectCustomer').value;
     const name = document.getElementById('newProjectName').value;
 
@@ -1213,14 +1576,31 @@ function saveProjectBasicInfoModal() {
         return;
     }
 
+    const created = await createProject(customer, name);
+
+    if (!created) {
+        alert('Failed to create project. Please try again.');
+        return;
+    }
+
     currentProject = {
-        id: generateProjectId(),
-        customer: customer,
-        name: name,
-        createdDate: new Date().toISOString().split('T')[0],
-        status: 'draft',
-        taskCount: 0
+        id: created.id || created.projectId,
+        customer: created.customerId || customer,
+        name: created.name || name,
+        createdDate: created.createdAt ? created.createdAt.split(' ')[0] : new Date().toISOString().split('T')[0],
+        status: created.status || 'draft',
+        taskCount: 0,
+        tasks: []
     };
+
+    const existingIndex = projectList.findIndex(p => String(p.id) === String(currentProject.id));
+    if (existingIndex !== -1) {
+        projectList[existingIndex] = currentProject;
+    } else {
+        projectList.push(currentProject);
+    }
+
+    await loadProjectList();
 
     safeSetDisplay('createProjectStep1', 'none');
     safeSetDisplay('createProjectStep2', 'block');
@@ -1229,14 +1609,17 @@ function saveProjectBasicInfoModal() {
     safeSetDisplay('createSaveBtn', 'inline-flex');
 
     const metaEl = getEl('createProjectModalMeta');
-    if (metaEl) { metaEl.textContent = `${customer} - ${name}`; if (metaEl.style) metaEl.style.display = 'inline'; }
+    if (metaEl) {
+        metaEl.textContent = `${customer} - ${name}`;
+        if (metaEl.style) metaEl.style.display = 'inline';
+    }
 
     const labelEl = getEl('createProjectModalLabel');
     if (labelEl) {
-        labelEl.innerHTML = `<span><i class="bi bi-plus-square"></i></span><span>Create ${customer} - ${name}</span>`;
+        labelEl.innerHTML = `<span><i class="bi bi-plus-square"></i></span><span>Add Tasks to ${customer} - ${name}</span>`;
     }
 
-    alert('Basic info saved');
+    alert('Project created successfully! Now you can add tasks.');
 
     renderSelectedTasksInModal();
 }
@@ -1751,10 +2134,12 @@ async function showCustomTask() {
     var modal = document.getElementById("customTaskModal");
     try {
         await loadCustomTaskSelects();
-        openModalAbove(modal);
+        const bs = openModalAbove(modal);
+        // initialize deadline picker for custom-deadline after modal opens
+        try { setTimeout(() => initDeadlinePicker(), 60); } catch (e) { }
     } catch (e) {
         console.error(e);
-        try { if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } } catch(err) { /* ignore */ }
+        try { if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } } catch (err) { /* ignore */ }
     }
 }
 
@@ -1765,7 +2150,6 @@ async function loadCustomTaskSelects() {
         const priorities = SELECT_CACHE['/api/tasks/priorities'] || await fetchOptions('/api/tasks/priorities');
         const stages = SELECT_CACHE['/api/stages'] || await fetchOptions('/api/stages');
 
-        // write back to cache in case we had to fetch
         SELECT_CACHE['/api/departments'] = departments;
         SELECT_CACHE['/api/processes'] = processes;
         SELECT_CACHE['/api/tasks/priorities'] = priorities;
@@ -1838,10 +2222,8 @@ function approveProject(projectId) {
 
     const project = projectList.find(p => p.id === projectId);
     if (project) {
-        project.status = 'approved'; // Đổi thành 'approved'
+        project.status = 'approved'; 
         project.approvedDate = new Date().toISOString().split('T')[0];
-
-
 
         loadProjectList();
     }
@@ -1919,104 +2301,70 @@ async function deleteProject(projectId) {
     }
 }
 
-function editProject(projectId) {
-    console.log('Edit project:', projectId);
-}
-
-// ===================================
-// EXPORT TO GLOBAL SCOPE
-// ===================================
-window.showCreateProjectForm = showCreateProjectForm;
-window.cancelCreateProject = cancelCreateProject;
-window.saveProjectBasicInfo = saveProjectBasicInfo;
-window.cancelProjectCreation = cancelProjectCreation;
-window.submitProject = submitProject;
-window.showStandardPPAP = showStandardPPAP;
-window.closeStandardPPAP = closeStandardPPAP;
-window.selectAllPPAP = selectAllPPAP;
-window.deselectAllPPAP = deselectAllPPAP;
-window.confirmPPAPSelection = confirmPPAPSelection;
-window.showCustomTask = showCustomTask;
-window.closeCustomTask = closeCustomTask;
-window.showCopyTemplate = showCopyTemplate;
-window.closeCopyTemplate = closeCopyTemplate;
-window.showRACIMatrix = showRACIMatrix;
-window.closeRACIMatrix = closeRACIMatrix;
-window.approveProject = approveProject;
-window.rejectProject = rejectProject;
-window.editProject = editProject;
-window.deleteProject = deleteProject;
-window.createProject = createProject;
-window.saveProjectBasicInfoModal = saveProjectBasicInfoModal;
-window.createModalBackToStep1 = createModalBackToStep1;
-window.closeCreateProjectModal = closeCreateProjectModal;
-window.submitProjectFromModal = submitProjectFromModal;
-window.renderSelectedTasksInModal = renderSelectedTasksInModal;
-window.removeSelectedTask = removeSelectedTask;
-window.initSelectedTasksDragAndDrop = initSelectedTasksDragAndDrop;
-window.handleTaskDrop = handleTaskDrop;
-window.handleTaskDragStart = handleTaskDragStart;
-window.showAddTaskModal = showAddTaskModal;
-window.saveProjectTaskQuantity = saveProjectTaskQuantity;
-window.removeTaskFromProject = removeTaskFromProject;
-
 function initDeadlinePicker() {
-    const el = document.getElementById('deadLine');
-    if (!el) return;
+    const ids = ['deadLine', 'custom-deadline'];
 
-    if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
-        try { el.type = 'text'; } catch (e) {}
+    ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
 
-        $(el).daterangepicker({
-            singleDatePicker: true,
-            timePicker: true,
-            timePicker24Hour: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            opens: 'right',
-            locale: { format: 'YYYY-MM-DD HH:mm' }
-        });
-
-        $(el).on('apply.daterangepicker', function (ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm'));
-        });
-
-        $(el).on('cancel.daterangepicker', function () {
-        });
-
-        return;
-    }
-
-    if (typeof flatpickr === 'function') {
         try {
-            try { el.type = 'text'; } catch (e) {}
-            flatpickr(el, {
-                enableTime: true,
-                time_24hr: true,
-                dateFormat: 'Y-m-d H:i',
-                allowInput: true,
-                clickOpens: true,
-                onClose: function(selectedDates) {
-                    if (selectedDates && selectedDates[0]) {
-                        // ensure formatted value
-                        el.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d H:i');
-                    }
+            const raw = String(el.value || '').trim();
+            if (raw === '-' || raw.toUpperCase() === 'N/A') el.value = '';
+        } catch (e) { /* ignore */ }
+
+        try {
+            if (window.jQuery && $(el).data('daterangepicker')) {
+                try { $(el).data('daterangepicker').remove(); } catch (err) { }
+                try { $(el).off('apply.daterangepicker cancel.daterangepicker'); } catch (err) { }
+            }
+        } catch (e) { }
+
+        try {
+            if (el._flatpickr) {
+                try { el._flatpickr.destroy(); } catch (err) { }
+            }
+        } catch (e) { }
+
+        if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
+            try { el.type = 'text'; } catch (e) { }
+
+            const currentValue = el.value || '';
+            singlePicker($(el), currentValue);
+
+            $(el).on('apply.daterangepicker', function (ev, picker) {
+                try {
+                    $(this).val(picker.startDate.format('YYYY/MM/DD'));
+                } catch (err) {
+                    $(this).val('');
                 }
             });
-            return;
-        } catch (e) {
-            console.warn('flatpickr init failed for #deadLine', e);
-        }
-    }
 
-    el.addEventListener('focus', function onFocus() {
-        try {
-            el.type = 'datetime-local';
-        } catch (e) {}
-        el.removeEventListener('focus', onFocus);
+            $(el).on('cancel.daterangepicker', function () {
+                try { $(this).val(''); } catch (err) { }
+            });
+
+            return;
+        }
+
+        try { el.type = 'date'; } catch (e) { }
+
+        el.addEventListener('focus', function onFocus() {
+            try { el.type = 'datetime-local'; } catch (e) { }
+            el.removeEventListener('focus', onFocus);
+        });
     });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    try { initDeadlinePicker(); } catch (e) {  }
+    try { initDeadlinePicker(); } catch (e) { }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        const fb = document.getElementById('filter_button');
+        if (fb) fb.addEventListener('click', function (ev) {
+            try { filterProjects(); } catch (e) { console.warn('filter_button handler error', e); }
+        });
+    } catch (e) { console.warn('Failed to attach filter_button listener', e); }
 });
