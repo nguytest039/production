@@ -1,3 +1,284 @@
+// ========== UTILITY: Date Formatter ==========
+const DateFormatter = {
+    toAPIFormat(dateStr) {
+        if (!dateStr || dateStr === '-' || String(dateStr).toUpperCase() === 'N/A') {
+            return null;
+        }
+
+        const str = String(dateStr).trim();
+        
+        if (/^\d{4}\/\d{2}\/\d{2}/.test(str)) {
+            return str.substring(0, 10);
+        }
+        
+        if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+            return str.substring(0, 10).replace(/-/g, '/');
+        }
+
+        if (window.moment) {
+            const m = window.moment(str, ['YYYY/MM/DD', 'YYYY-MM-DD'], true);
+            if (m && m.isValid && m.isValid()) {
+                return m.format('YYYY/MM/DD');
+            }
+        }
+
+        return str.substring(0, 10).replace(/-/g, '/');
+    },
+
+    toDisplayFormat(dateStr) {
+        return this.toAPIFormat(dateStr) || '-';
+    }
+};
+
+// ========== UTILITY: ID Comparison ==========
+function safeCompareIds(id1, id2) {
+    if (id1 == null || id2 == null) {
+        return id1 === id2;
+    }
+    
+    const str1 = String(id1);
+    const str2 = String(id2);
+    if (str1 === 'null' || str1 === 'undefined' || str2 === 'null' || str2 === 'undefined') {
+        return false;
+    }
+    
+    return str1 === str2;
+}
+
+// ========== UTILITY: Project Finder ==========
+function findProjectById(projectId) {
+    if (!projectId) return null;
+    return projectList.find(p => safeCompareIds(p.id, projectId)) || null;
+}
+
+// ========== UTILITY: Validators ==========
+const Validators = {
+    required(value, fieldName) {
+        const val = value ? String(value).trim() : '';
+        if (!val) {
+            throw new Error(`${fieldName} is required`);
+        }
+        return val;
+    },
+    
+    maxLength(value, max, fieldName) {
+        if (String(value).length > max) {
+            throw new Error(`${fieldName} must be less than ${max} characters`);
+        }
+        return value;
+    }
+};
+
+// ========== UTILITY: Modal Helper ==========
+function openModal(modalId) {
+    const modalEl = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (!modalEl) {
+        return null;
+    }
+    
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        return modal;
+    } catch (e) {
+        modalEl.classList.add('active');
+        return null;
+    }
+}
+
+async function handleTaskFileUpload() {
+    const modal = document.getElementById('taskDetailModal');
+    if (!modal) return;
+
+    const taskId = modal.dataset.taskId;
+    if (!taskId || taskId === 'null') {
+        alert('Không tìm thấy taskId!');
+        return;
+    }
+
+    const oldInput = modal.querySelector('input[type="file"][data-task-upload]');
+    if (oldInput) oldInput.remove();
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    fileInput.style.display = 'none';
+    fileInput.dataset.taskUpload = 'true';
+    modal.appendChild(fileInput);
+
+    fileInput.onchange = async function () {
+        if (!fileInput.files || fileInput.files.length === 0) return;
+
+        const formData = new FormData();
+        formData.append('id', taskId);
+
+        for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('files', fileInput.files[i]);
+        }
+
+        try {
+            const res = await fetch('/sample-system/api/tasks/upload-files', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                alert('Upload thất bại: ' + res.status + ' ' + text);
+                return;
+            }
+
+            const json = await res.json();
+
+            if (!json.result || !Array.isArray(json.result)) {
+                alert('Upload thành công');
+                return;
+            }
+
+            const list = document.getElementById('attachments-list');
+            if (list) {
+                list.innerHTML = json.result.map(f =>
+                    `<div class="attachment-item">
+                        <a href="${f.url}" target="_blank">${f.name}</a>
+                    </div>`
+                ).join('');
+            }
+
+            alert('Upload thành công!');
+        } catch (e) {
+            alert('Lỗi khi upload file: ' + e.message);
+        }
+    };
+
+    fileInput.click();
+}
+
+async function handleTaskComment() {
+    const modal = document.getElementById('taskDetailModal');
+    if (!modal) return;
+
+    const taskId = modal.dataset.taskId;
+    if (!taskId || taskId === 'null') {
+        alert('Không tìm thấy taskId!');
+        return;
+    }
+
+    const input = document.getElementById('input-comment');
+    const comment = input ? (input.value || '').trim() : '';
+    if (!comment) {
+        alert('Vui lòng nhập bình luận');
+        return;
+    }
+
+    try {
+        const params = new URLSearchParams();
+        params.append('id', taskId);
+        params.append('comment', comment);
+
+        const res = await fetch('/sample-system/api/tasks/comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        });
+
+        if (!res.ok) {
+            const txt = await res.text().catch(() => '');
+            alert('Gửi comment thất bại: ' + res.status + ' ' + txt);
+            return;
+        }
+
+        let json = null;
+        try { json = await res.json(); } catch (e) { }
+
+        alert('Comment đã gửi');
+        if (input) input.value = '';
+
+        try { if (typeof loadTaskComments === 'function') loadTaskComments(taskId); } catch (e) { }
+    } catch (e) {
+        alert('Lỗi khi gửi comment: ' + e.message);
+    }
+}
+
+
+async function handleAddCustomTask() {
+    try {
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            const v = (el.value || '').trim();
+            return v === '' ? null : v;
+        };
+
+        const name = Validators.required(getVal('custom-task-name'), 'Task name');
+        const taskCode = Validators.required(getVal('custom-task-id'), 'Task code');
+        
+        Validators.maxLength(name, 200, 'Task name');
+        Validators.maxLength(taskCode, 50, 'Task code');
+        
+        const processId = getVal('custom-sl-process') ? Number(getVal('custom-sl-process')) : null;
+        const departmentId = getVal('custom-sl-department') ? Number(getVal('custom-sl-department')) : null;
+        const typeId = getVal('custom-sl-xvt') ? Number(getVal('custom-sl-xvt')) : null;
+        const priorityRaw = getVal('custom-sl-priority');
+        const priority = priorityRaw ? priorityRaw.toUpperCase() : null;
+        const dri = getVal('custom-dri');
+        const dueDateRaw = getVal('custom-deadline');
+        const description = getVal('custom-task-description');
+
+        let dueDate = null;
+        if (dueDateRaw) {
+            dueDate = DateFormatter.toAPIFormat(dueDateRaw);
+        }
+
+        let projectId = null;
+        if (window.currentProject && window.currentProject.id) {
+            projectId = window.currentProject.id;
+        } else {
+            const pidEl = document.getElementById('pt_detail_projectId');
+            if (pidEl && pidEl.value) projectId = pidEl.value;
+        }
+        if (projectId !== null && projectId !== undefined && projectId !== '') {
+            projectId = Number(projectId);
+            if (isNaN(projectId)) projectId = null;
+        }
+
+        const payload = {
+            name,
+            taskCode,
+            processId,
+            departmentId,
+            typeId,
+            priority,
+            dri,
+            dueDate,
+            description,
+            isTemplate: false,
+            projectId,
+            step: null,
+            flag: true,
+            status: null,
+            stageId: null
+        };
+
+        const res = await fetch('/sample-system/api/tasks/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            alert('Tạo task thất bại: ' + res.status + ' ' + text);
+            return;
+        }
+        alert('Tạo task thành công!');
+        try { bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide(); } catch (e) { }
+        try { await loadProjectList(); } catch (e) { }
+    } catch (e) {
+        alert(e.message);
+        return;
+    }
+}
+
+
 const SELECT_CONFIGS = [
     { id: 'ppapFilterStatus', endpoint: '/api/tasks/status' },
     { id: 'ppapFilterPriority', endpoint: '/api/tasks/priorities' },
@@ -38,7 +319,7 @@ function renderOptions(selectId, items) {
         return '';
     }).join('');
 
-    select.innerHTML = '<option value="">-- Select --</option>' + optionsHtml;
+    select.innerHTML = optionsHtml;
 }
 
 async function loadAllSelects() {
@@ -70,7 +351,7 @@ async function loadAllSelects() {
     try {
         const statusIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/tasks/status' || c.id === 'ppapFilterStatus');
         const priorityIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/tasks/priorities' || c.id === 'ppapFilterPriority');
-        
+
 
         if (statusIndex !== -1) {
             const statuses = results[statusIndex] || [];
@@ -164,7 +445,6 @@ async function saveTasksForProject(tasks, customerId, name) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadAllSelects);
 
 let currentProject = null;
 let projectList = [];
@@ -172,161 +452,76 @@ let selectedPPAPItems = [];
 let createModalOriginalTitleHTML = null;
 let currentTaskDetailObj = null;
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
+function rangePicker($input, fromDate, toDate) {
+    let start = null;
+    let end = null;
+    if (window.moment) {
+        try {
+            const mStart = window.moment((fromDate || "").split(" ")[0], "YYYY/MM/DD", true);
+            if (mStart && typeof mStart.isValid === 'function' && mStart.isValid()) start = mStart;
+        } catch (e) { start = null; }
 
-// Customer mapping configuration
-const CUSTOMERS = {
-    1: { id: 1, name: 'Apollo' },
-    2: { id: 2, name: 'Rhea' },
-    3: { id: 3, name: 'Kronos' }
-};
-
-// Normalize customer input to numeric ID
-function mapCustomerToId(input) {
-    if (!input) return '';
-    const str = String(input).trim().toLowerCase();
-    for (const [id, data] of Object.entries(CUSTOMERS)) {
-        if (str === String(id) || str === data.name.toLowerCase()) return Number(id);
+        try {
+            const mEnd = window.moment((toDate || "").split(" ")[0], "YYYY/MM/DD", true);
+            if (mEnd && typeof mEnd.isValid === 'function' && mEnd.isValid()) end = mEnd;
+        } catch (e) { end = null; }
     }
-    const num = Number(str);
-    return !isNaN(num) && num > 0 ? num : input;
+
+    $input.daterangepicker({
+        startDate: start || new Date(Date.now() - 6 * 86400000),
+        endDate: end || new Date(),
+        autoApply: false,
+        locale: { format: "YYYY/MM/DD" },
+    });
 }
 
-// Get customer display name from ID or name
-function getCustomerDisplay(input) {
-    if (!input || String(input).toLowerCase() === 'n/a') return 'N/A';
-    const id = mapCustomerToId(input);
-    return CUSTOMERS[id]?.name || String(input);
-}
-
-// Normalize value (convert empty/N/A/- to null)
-function normalizeValue(val) {
-    if (!val || val === 'N/A' || val === '-' || String(val).trim() === '') return null;
-    return val;
-}
-
-// Format date string to API format (YYYY/MM/DD HH:mm:ss)
-function formatDateToAPI(dateStr) {
-    if (!dateStr) return null;
-    try {
-        const parts = String(dateStr).trim().split(' ');
-        const datePart = parts[0].replace(/-/g, '/');
-        const timePart = parts[1] || '00:00:00';
-        const formattedTime = timePart.split(':').length === 2 ? `${timePart}:00` : timePart;
-        return `${datePart} ${formattedTime}`;
-    } catch (e) {
-        console.warn('Failed to format date:', e);
-        return null;
+function singlePicker($input, workDate) {
+    const dateOnly = (workDate || "").split(" ")[0];
+    let start = null;
+    if (window.moment) {
+        try {
+            const m = window.moment(dateOnly, "YYYY/MM/DD", true);
+            if (m && typeof m.isValid === 'function' && m.isValid()) start = m;
+        } catch (e) { start = null; }
     }
+
+    $input.daterangepicker({
+        singleDatePicker: true,
+        startDate: start || new Date(),
+        autoApply: false,
+        locale: { format: "YYYY/MM/DD" },
+    });
 }
 
-// Normalize task payload for API
-function normalizeTaskPayload(task) {
-    return {
-        name: task.name || task.taskName || '',
-        description: task.description || '',
-        taskCode: task.taskCode || task.id || '',
-        processId: task.processId || null,
-        typeId: task.typeId || null,
-        departmentId: task.departmentId || null,
-        priority: task.priority || null,
-        dri: task.dri || null,
-        dueDate: task.dueDate || task.deadline || null
-    };
+function mapCustomerToId(cust) {
+    if (cust === null || cust === undefined) return '';
+    const s = String(cust).trim().toLowerCase();
+    if (s === '1' || s === 'apollo') return 1;
+    if (s === '2' || s === 'rhea') return 2;
+    if (s === '3' || s === 'kronos') return 3;
+    const num = Number(s);
+    if (!isNaN(num) && num > 0) return num;
+    return cust;
 }
 
-// DOM helper functions
-function getEl(id) { 
-    return document.getElementById(id); 
-}
-
-function safeSetDisplay(id, value) { 
-    const el = getEl(id); 
-    if (el?.style) el.style.display = value; 
-}
-
-function safeSetText(id, text) { 
-    const el = getEl(id); 
-    if (el) el.textContent = text; 
-}
+function getEl(id) { return document.getElementById(id); }
+function safeSetDisplay(id, value) { const e = getEl(id); if (e && e.style) e.style.display = value; }
+function safeSetText(id, text) { const e = getEl(id); if (e) e.textContent = text; }
 
 function getElValue(el) {
     if (!el) return '';
-    const tag = el.tagName?.toLowerCase();
-    if (['input', 'select', 'textarea'].includes(tag)) return el.value || '';
+    const t = el.tagName ? el.tagName.toLowerCase() : '';
+    if (t === 'input' || t === 'select' || t === 'textarea') return el.value || '';
     return el.textContent || '';
 }
 
 function setElValue(el, value) {
     if (!el) return;
-    const tag = el.tagName?.toLowerCase();
-    if (['input', 'select', 'textarea'].includes(tag)) el.value = value || '';
+    const t = el.tagName ? el.tagName.toLowerCase() : '';
+    if (t === 'input' || t === 'select' || t === 'textarea') el.value = value || '';
     else el.textContent = value || '';
 }
 
-// Modal management helpers
-function showModal(modalId) {
-    const el = typeof modalId === 'string' ? getEl(modalId) : modalId;
-    if (!el) return null;
-    try {
-        const modal = new bootstrap.Modal(el);
-        modal.show();
-        return modal;
-    } catch (e) {
-        el?.classList.add('active');
-        return null;
-    }
-}
-
-function hideModal(modalId) {
-    const el = typeof modalId === 'string' ? getEl(modalId) : modalId;
-    if (!el) return;
-    try {
-        const inst = bootstrap.Modal.getInstance(el);
-        if (inst) inst.hide();
-        else el.classList.remove('active');
-    } catch (e) {
-        el?.classList.remove('active');
-    }
-}
-
-// Open modal with proper z-index stacking
-function openModalWithStacking(modalEl) {
-    if (!modalEl) return null;
-    
-    const shown = Array.from(document.querySelectorAll('.modal.show'));
-    let topZ = 1040;
-    shown.forEach(m => {
-        const z = parseInt(window.getComputedStyle(m).zIndex, 10);
-        if (!isNaN(z) && z > topZ) topZ = z;
-    });
-
-    const modalZ = topZ + 20;
-    const backdropZ = modalZ - 10;
-    modalEl.style.zIndex = modalZ;
-
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-
-    setTimeout(() => {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        if (backdrops.length) backdrops[backdrops.length - 1].style.zIndex = backdropZ;
-    }, 50);
-
-    return modal;
-}
-
-// Error handling helper
-function handleAPIError(context, error, showAlert = true) {
-    console.error(`[${context}]`, error);
-    if (showAlert) alert(`Error: ${context}. Please try again.`);
-}
-
-document.addEventListener("DOMContentLoaded", async function () {
-    await loadProjectList();
-});
 
 async function loadProjectList() {
     const waitingBody = getEl('waitingApprovalBody') || (getEl('waitingApprovalSection') && getEl('waitingApprovalSection').querySelector('tbody')) || null;
@@ -345,7 +540,9 @@ async function loadProjectList() {
                     id: p.id,
                     customer: p.customerId || 'N/A',
                     name: p.name,
+                    createdBy: p.createdBy || '',
                     createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
+                    updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
                     status: p.status || 'N/A',
                     taskCount: p.taskCount || 0,
                     tasks: []
@@ -356,6 +553,83 @@ async function loadProjectList() {
         console.warn('Failed to load projects:', e);
     }
     renderProjectListUI();
+}
+
+function buildProjectFilterParams() {
+    const params = new URLSearchParams();
+
+    try {
+        const projectName = (document.getElementById('ppapFilterProject') && document.getElementById('ppapFilterProject').value) ? document.getElementById('ppapFilterProject').value.trim() : '';
+        if (projectName) params.append('projectName', projectName);
+
+        const customerId = (document.getElementById('projectCustomerSelect') && document.getElementById('projectCustomerSelect').value) ? document.getElementById('projectCustomerSelect').value.trim() : '';
+        if (customerId) params.append('customerId', customerId);
+
+        const createBy = (document.getElementById('filter-created-by') && document.getElementById('filter-created-by').value) ? document.getElementById('filter-created-by').value.trim() : '';
+        if (createBy) params.append('createBy', createBy);
+
+        const createdDate = (document.getElementById('filter-created-date') && document.getElementById('filter-created-date').value) ? document.getElementById('filter-created-date').value.trim() : '';
+        if (createdDate) {
+            // expected format: "YYYY/MM/DD - YYYY/MM/DD" or similar
+            const parts = createdDate.split('-').map(s => s.trim()).filter(Boolean);
+            if (parts.length === 2) {
+                let start = parts[0];
+                let end = parts[1];
+                // normalize using moment if available
+                try {
+                    if (window.moment) {
+                        const ms = window.moment(start, 'YYYY/MM/DD', true);
+                        const me = window.moment(end, 'YYYY/MM/DD', true);
+                        if (ms && ms.isValid && ms.isValid()) start = ms.format('YYYY/MM/DD');
+                        if (me && me.isValid && me.isValid()) end = me.format('YYYY/MM/DD');
+                    }
+                } catch (e) { /* ignore */ }
+
+                // send as startTime/endTime; include times to cover full day
+                params.append('startTime', start + ' 00:00:00');
+                params.append('endTime', end + ' 23:59:59');
+            }
+        }
+    } catch (e) {
+        console.warn('buildProjectFilterParams error', e);
+    }
+
+    return params;
+}
+
+async function filterProjects() {
+    try {
+        const params = buildProjectFilterParams();
+        const base = '/sample-system/api/projects';
+        const url = params.toString() ? (base + '?' + params.toString()) : base;
+
+        const res = await fetch(url);
+        if (!res.ok) {
+            console.warn('filterProjects: server returned', res.status, res.statusText);
+            alert('Filtering failed: ' + res.status);
+            return;
+        }
+
+        const json = await res.json();
+        const data = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+
+        projectList = data.map(p => ({
+            id: p.id,
+            customer: p.customerId || 'N/A',
+            name: p.name,
+            createdBy: p.createdBy || '',
+            createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
+            updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
+            status: p.status || 'N/A',
+            taskCount: p.taskCount || 0,
+            tasks: Array.isArray(p.tasks) ? p.tasks.slice() : []
+        }));
+
+        renderProjectListUI();
+    } catch (e) {
+        console.error('filterProjects failed', e);
+        alert('Lọc thất bại. Kiểm tra console.');
+    }
 }
 
 function renderProjectListUI() {
@@ -377,12 +651,12 @@ function renderProjectListUI() {
                 const custName = getCustomerDisplay(project.customer);
                 return `
                 <tr data-project-id="${project.id}" data-section="waiting" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
-                    <td class="drag-handle"><i class="bi bi-grip-vertical"></i></td>
-                    <td>${project.id}</td>
                     <td>${custName}</td>
+                    <td>${project.createdBy || ''}</td>
                     <td><strong>${project.name}</strong></td>
                     <td>${project.createdDate}</td>
                     <td><span class="badge badge-warning">Waiting Approval</span></td>
+                    <td>${project.updatedAt || ''}</td>
                     <td>
                         <button class="action-btn-sm btn-success" onclick="event.stopPropagation(); approveProject('${project.id}')">
                             <i class="bi bi-check-circle"></i> Approve
@@ -402,7 +676,7 @@ function renderProjectListUI() {
     if (otherBody) {
         if (otherProjects.length === 0) {
             otherBody.innerHTML = `
-                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                <tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">
                     No Data!
                 </td></tr>
             `;
@@ -412,11 +686,12 @@ function renderProjectListUI() {
                 const custName = getCustomerDisplay(project.customer);
                 return `
                     <tr data-project-id="${project.id}" data-section="other" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
-                        <td class="drag-handle"><i class="bi bi-grip-vertical"></i></td>
                         <td>${custName}</td>
+                        <td>${project.createdBy || ''}</td>
                         <td><strong>${project.name}</strong></td>
                         <td>${project.createdDate}</td>
                         <td>${statusBadge}</td>
+                        <td>${project.updatedAt || ''}</td>
                         <td>
                             <button class="action-btn-sm" onclick="event.stopPropagation(); showProjectTasksModal('${project.id}')" title="View tasks">
                                 <i class="bi bi-eye"></i>
@@ -445,79 +720,108 @@ function getStatusBadge(status) {
     return badges[status] || `<span class="badge">${status}</span>`;
 }
 
+
+function getCustomerDisplay(cust) {
+    if (cust === null || cust === undefined || cust === '' || String(cust).toLowerCase() === 'n/a') return 'N/A';
+    const s = String(cust).trim();
+    if (s === '1' || s.toLowerCase() === 'apollo') return 'Apollo';
+    if (s === '2' || s.toLowerCase() === 'rhea') return 'Rhea';
+    if (s === '3' || s.toLowerCase() === 'kronos') return 'Kronos';
+    return s;
+}
+// ========== UNIFIED DRAG & DROP FACTORY ==========
+function createDragSystem(selector, options = {}) {
+    let dragged = null;
+    const { checkSection = false, onReorder = null, tableId = null } = options;
+    
+    function getRows() {
+        return tableId 
+            ? document.querySelectorAll(`#${tableId} tr[draggable="true"]`)
+            : document.querySelectorAll(selector);
+    }
+    
+    function start(e) {
+        dragged = this;
+        this.style.opacity = '0.4';
+        e.dataTransfer.effectAllowed = 'move';
+    }
+    
+    function over(e) {
+        e.preventDefault();
+        if (!dragged) return false;
+        
+        if (checkSection) {
+            const dragSec = dragged.dataset.section;
+            const targetSec = this.dataset.section;
+            if (dragSec !== targetSec) return false;
+        }
+        
+        const rect = this.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        this.style.borderTop = e.clientY < mid ? '2px solid #2196F3' : '';
+        this.style.borderBottom = e.clientY >= mid ? '2px solid #2196F3' : '';
+        return false;
+    }
+    
+    function drop(e) {
+        e.stopPropagation();
+        if (!dragged || dragged === this) return false;
+        
+        if (checkSection) {
+            const dragSec = dragged.dataset.section;
+            const targetSec = this.dataset.section;
+            if (dragSec !== targetSec) return false;
+        }
+        
+        const rect = this.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        if (e.clientY < mid) {
+            this.parentNode.insertBefore(dragged, this);
+        } else {
+            this.parentNode.insertBefore(dragged, this.nextSibling);
+        }
+        
+        if (onReorder) onReorder(checkSection ? dragged.dataset.section : null);
+        clearBorders();
+        return false;
+    }
+    
+    function end() {
+        this.style.opacity = '1';
+        clearBorders();
+        dragged = null;
+    }
+    
+    function clearBorders() {
+        getRows().forEach(r => {
+            r.style.borderTop = '';
+            r.style.borderBottom = '';
+        });
+    }
+    
+    return {
+        init() {
+            getRows().forEach(row => {
+                row.ondragstart = start;
+                row.ondragover = over;
+                row.ondrop = drop;
+                row.ondragend = end;
+            });
+        }
+    };
+}
+
+// Project list drag system
+const projectListDrag = createDragSystem('tr[draggable="true"]', {
+    checkSection: true,
+    onReorder: updateProjectOrder
+});
 let draggedElement = null;
-
-function initDragAndDrop() {
-    const rows = document.querySelectorAll('tr[draggable="true"]');
-
-    rows.forEach(row => {
-        row.addEventListener('dragstart', handleDragStart);
-        row.addEventListener('dragover', handleDragOver);
-        row.addEventListener('drop', handleDrop);
-        row.addEventListener('dragend', handleDragEnd);
-    });
-}
-
-function handleDragStart(e) {
-    draggedElement = this;
-    this.style.opacity = '0.4';
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleDragOver(e) {
-    if (e.preventDefault) e.preventDefault();
-
-    const draggedSection = draggedElement.dataset.section;
-    const targetSection = this.dataset.section;
-
-    if (draggedSection === targetSection) {
-        e.dataTransfer.dropEffect = 'move';
-
-        const rect = this.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-
-        if (e.clientY < midpoint) {
-            this.style.borderTop = '2px solid #2196F3';
-            this.style.borderBottom = '';
-        } else {
-            this.style.borderBottom = '2px solid #2196F3';
-            this.style.borderTop = '';
-        }
-    }
-
-    return false;
-}
-
-function handleDrop(e) {
-    if (e.stopPropagation) e.stopPropagation();
-
-    const draggedSection = draggedElement.dataset.section;
-    const targetSection = this.dataset.section;
-
-    if (draggedSection === targetSection && draggedElement !== this) {
-        const rect = this.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-
-        if (e.clientY < midpoint) {
-            this.parentNode.insertBefore(draggedElement, this);
-        } else {
-            this.parentNode.insertBefore(draggedElement, this.nextSibling);
-        }
-
-        updateProjectOrder(draggedSection);
-    }
-
-    return false;
-}
-
-function handleDragEnd(e) {
-    this.style.opacity = '1';
-
-    document.querySelectorAll('tr[draggable="true"]').forEach(row => {
-        row.style.borderTop = '';
-        row.style.borderBottom = '';
-    });
-}
+function initDragAndDrop() { projectListDrag.init(); }
+function handleDragStart(e) { draggedElement = this; this.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
+function handleDragOver(e) { e.preventDefault(); return false; }
+function handleDrop(e) { e.stopPropagation(); return false; }
+function handleDragEnd(e) { this.style.opacity = '1'; }
 
 function updateProjectOrder(section) {
     const tbody = section === 'waiting'
@@ -539,17 +843,34 @@ function viewProjectDetails(projectId) {
 
 
 async function showProjectTasksModal(projectId) {
-    const project = projectList.find(p => String(p.id) === String(projectId));
+    if (!projectId || projectId === 'null' || projectId === 'undefined') {
+        alert('Invalid project ID');
+        return;
+    }
+    
+    const parsedId = parseInt(projectId, 10);
+    if (isNaN(parsedId)) {
+        alert('Invalid project ID');
+        return;
+    }
+    
+    const project = findProjectById(projectId);
 
     try {
-        const pidEl = getEl('pt_detail_projectId');
+        const pidEl = document.getElementById('pt_detail_projectId');
         const setAndDisable = (id, val) => {
-            const el = getEl(id);
+            const el = document.getElementById(id);
             if (el) { el.value = val || ''; el.disabled = true; }
         };
 
         if (project) {
-            const customerName = getCustomerDisplay(project.customer);
+            const cust = project.customer;
+            let customerName = 'N/A';
+            if (cust === 1 || cust === '1' || String(cust).toLowerCase() === 'apollo') customerName = 'Apollo';
+            else if (cust === 2 || cust === '2' || String(cust).toLowerCase() === 'rhea') customerName = 'Rhea';
+            else if (cust === 3 || cust === '3' || String(cust).toLowerCase() === 'kronos') customerName = 'Kronos';
+            else if (cust) customerName = String(cust);
+
             if (pidEl) pidEl.value = project.id;
             setAndDisable('pt_detail_customer', customerName);
             setAndDisable('pt_detail_projectName', project.name || '');
@@ -557,7 +878,7 @@ async function showProjectTasksModal(projectId) {
             setAndDisable('pt_detail_status', project.status || '');
         } else {
             const ids = ['pt_detail_projectId', 'pt_detail_customer', 'pt_detail_projectName', 'pt_detail_createdDate', 'pt_detail_status'];
-            ids.forEach(id => { const el = getEl(id); if (el) { el.value = ''; el.disabled = true; } });
+            ids.forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = true; } });
         }
     } catch (e) {
         console.warn('Failed to populate project detail pane:', e);
@@ -603,9 +924,13 @@ function renderProjectTasksContent(tasks, projectId) {
     if (tasks.length === 0) {
         container.innerHTML = `<div style="color:var(--text-secondary)">This project has no tasks.</div>`;
     } else {
-        const rows = tasks.map(t => `
-            <tr data-task-id="${t.id}" style="cursor:pointer" onclick="showTaskDetailModal(${projectId}, '${t.id}')">
-                <td>${t.id}</td>
+        const rows = tasks.map((t, index) => `
+            <tr draggable="true" 
+                data-task-id="${t.id}" 
+                data-task-index="${index}"
+                style="cursor:move" 
+                onclick="showTaskDetailModal(${projectId}, '${t.id}')">
+                <td><i class="bi bi-grip-vertical" style="color:var(--text-secondary); margin-right:8px"></i>${t.id}</td>
                 <td>${t.name || ''}</td>
                 <td>${t.taskCode || ''}</td>
                 <td>${t.processId || ''}</td>
@@ -622,7 +947,7 @@ function renderProjectTasksContent(tasks, projectId) {
         `).join('');
 
         container.innerHTML = `
-            <table class="task-list-table" style="margin-top:12px">
+            <table id="projectTasksTable" class="task-list-table" style="margin-top:12px">
                 <thead>
                     <tr>
                         <th>ID</th><th>Name</th><th>Task Code</th><th>Process</th>
@@ -632,7 +957,39 @@ function renderProjectTasksContent(tasks, projectId) {
                 <tbody>${rows}</tbody>
             </table>
         `;
+        
+        initProjectTasksDragAndDrop(projectId);
     }
+}
+
+// Project tasks drag system
+let projectTasksDrag = null;
+let draggedProjectTask = null;
+
+function initProjectTasksDragAndDrop(projectId) {
+    projectTasksDrag = createDragSystem('tr[draggable="true"]', {
+        tableId: 'projectTasksTable',
+        onReorder: () => updateProjectTaskOrder(projectId)
+    });
+    projectTasksDrag.init();
+}
+
+function handleProjectTaskDragStart(e) { draggedProjectTask = this; this.style.opacity = '0.4'; }
+function handleProjectTaskDragOver(e) { e.preventDefault(); return false; }
+function handleProjectTaskDrop(e, projectId) { e.stopPropagation(); return false; }
+function handleProjectTaskDragEnd(e) { this.style.opacity = '1'; draggedProjectTask = null; }
+
+function updateProjectTaskOrder(projectId) {
+    const project = findProjectById(projectId);
+    if (!project || !project.tasks) return;
+    
+    const tbody = document.querySelector('#projectTasksTable tbody');
+    if (!tbody) return;
+    
+    const newOrder = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.dataset.taskId);
+    const taskMap = {};
+    project.tasks.forEach(t => { taskMap[String(t.id)] = t; });
+    project.tasks = newOrder.map(id => taskMap[String(id)]).filter(Boolean);
 }
 
 function openProjectTasksModal() {
@@ -659,13 +1016,19 @@ function showEditTaskModal(projectId, taskId) {
     getEl('editTaskStatus').value = task.status || '';
     getEl('editTaskPriority').value = task.priority || '';
 
-    showModal('editTaskModal');
+    try { new bootstrap.Modal(document.getElementById('editTaskModal')).show(); }
+    catch (e) { const el = document.getElementById('editTaskModal'); if (el) el.classList.add('active'); }
 }
 
 async function showTaskDetailModal(projectId, taskId) {
+    if (!taskId || taskId === 'null' || taskId === 'undefined') {
+        alert('Invalid task ID');
+        return;
+    }
+    
     let task = null;
     try {
-        const project = projectList.find(p => String(p.id) === String(projectId));
+        const project = findProjectById(projectId);
 
         try {
             const res = await fetch(`/sample-system/api/tasks/get-by-id?id=${encodeURIComponent(taskId)}`);
@@ -691,7 +1054,6 @@ async function showTaskDetailModal(projectId, taskId) {
         const modalRoot = document.getElementById('taskDetailModal');
         if (!modalRoot) return;
 
-        // store project/task identifiers on modal and keep a copy of full task JSON
         try {
             modalRoot.dataset.projectId = String(projectId || '');
             modalRoot.dataset.taskId = String(taskId || '');
@@ -717,13 +1079,20 @@ async function showTaskDetailModal(projectId, taskId) {
             const driInput = document.getElementById('dri');
             if (driInput) {
                 const driVal = task.dri ?? task.assignee ?? null;
-                driInput.value = driVal ? driVal : '-';
+                driInput.value = driVal ? driVal : '';
             }
 
             const deadLineInput = document.getElementById('deadLine');
-            const dueVal = task.dueDate ?? task.deadline ?? null;
+            const dueVal = task.dueDate || task.deadline || null;
             if (deadLineInput) {
-                deadLineInput.value = dueVal ? dueVal : '-';
+                if (dueVal) {
+                    const normalized = DateFormatter.toDisplayFormat(dueVal);
+                    deadLineInput.value = normalized;
+                    deadLineInput.dataset.initialValue = normalized;
+                } else {
+                    deadLineInput.value = '';
+                    deadLineInput.dataset.initialValue = '';
+                }
             }
         }
         catch (e) {
@@ -757,13 +1126,11 @@ async function showTaskDetailModal(projectId, taskId) {
             const ensureAndSet = (selectEl, value) => {
                 if (!selectEl) return;
                 const val = (value === null || value === undefined || String(value).trim() === '') ? 'N/A' : String(value);
-                // Check if option exists
                 const hasOption = Array.from(selectEl.options).some(o => String(o.value) === val);
                 if (!hasOption) {
                     const opt = document.createElement('option');
                     opt.value = val;
                     opt.text = val === 'N/A' ? 'N/A' : val;
-                    // insert at top after placeholder if present
                     if (selectEl.options.length > 0) selectEl.add(opt, selectEl.options[0]);
                     else selectEl.add(opt);
                 }
@@ -806,23 +1173,20 @@ async function showTaskDetailModal(projectId, taskId) {
                     } catch (err) {
                         console.warn('Failed to adjust z-index for stacked modal', err);
                     }
-                    // Initialize daterangepicker after modal is shown
                     initDeadlinePicker();
                 }, 50);
             } else {
                 const modal = new bootstrap.Modal(modalRoot);
                 modal.show();
-                
-                // Initialize daterangepicker after modal is shown
+
                 setTimeout(() => {
                     initDeadlinePicker();
                 }, 50);
             }
         } catch (e) {
             if (modalRoot) modalRoot.classList.add('active');
-            // Try to init daterangepicker anyway
             setTimeout(() => {
-                try { initDeadlinePicker(); } catch (err) {}
+                try { initDeadlinePicker(); } catch (err) { }
             }, 50);
         }
 
@@ -883,7 +1247,6 @@ function saveEditedTask() {
     alert('Task saved');
 }
 
-// Save changes made in the Task Detail modal: send full task JSON to update API
 async function saveTaskDetailChanges() {
     const modalRoot = document.getElementById('taskDetailModal');
     if (!modalRoot) { alert('taskDetailModal not found'); return; }
@@ -895,7 +1258,6 @@ async function saveTaskDetailChanges() {
     if (currentTaskDetailObj && String(currentTaskDetailObj.id) === String(taskId || currentTaskDetailObj.id)) {
         taskPayload = JSON.parse(JSON.stringify(currentTaskDetailObj));
     } else {
-        // try to fetch the full task if we don't have it
         try {
             const res = await fetch(`/sample-system/api/tasks/get-by-id?id=${encodeURIComponent(taskId)}`);
             if (res.ok) {
@@ -909,22 +1271,27 @@ async function saveTaskDetailChanges() {
 
     if (!taskPayload) { alert('Task data not available for update'); return; }
 
-    // read selects inside modal
     const statusSelect = modalRoot.querySelector('#sl-status');
     const prioritySelect = modalRoot.querySelector('#sl-priority');
     const newStatus = statusSelect ? statusSelect.value : taskPayload.status;
     const newPriority = prioritySelect ? prioritySelect.value : taskPayload.priority;
 
-    // Read DRI and deadline inputs
-    const driInput = getEl('dri');
-    const deadlineInput = getEl('deadLine');
-    
-    const newDri = normalizeValue(driInput?.value || taskPayload.dri);
-    const newDeadline = formatDateToAPI(deadlineInput?.value || taskPayload.dueDate);
+    const driInput = document.getElementById('dri');
+    const deadlineInput = document.getElementById('deadLine');
 
-    // Update payload
-    taskPayload.status = normalizeValue(newStatus);
-    taskPayload.priority = normalizeValue(newPriority);
+    let newDri = driInput ? driInput.value : taskPayload.dri;
+    let newDeadline = deadlineInput ? deadlineInput.value : taskPayload.dueDate;
+    if (newDri === 'N/A' || newDri === '-' || !newDri || newDri.trim() === '') newDri = null;
+    if (newDeadline === 'N/A' || newDeadline === '-' || !newDeadline || newDeadline.trim() === '') newDeadline = null;
+
+    if (newDeadline === 'N/A' || newDeadline === '-' || !newDeadline || newDeadline.trim() === '') {
+        newDeadline = null;
+    } else {
+        newDeadline = DateFormatter.toAPIFormat(newDeadline);
+    }
+
+    taskPayload.status = (newStatus === 'N/A' ? null : newStatus);
+    taskPayload.priority = (newPriority === 'N/A' ? null : newPriority);
     taskPayload.dri = newDri;
     taskPayload.dueDate = newDeadline;
 
@@ -1013,7 +1380,17 @@ async function saveProjectTaskQuantity() {
     if (v !== null && !isNaN(v) && v >= 0) project.taskCount = v;
 
     try {
-        const tasksToSave = Array.isArray(project.tasks) ? project.tasks.map(normalizeTaskPayload) : [];
+        const tasksToSave = Array.isArray(project.tasks) ? project.tasks.map(item => ({
+            name: item.name || item.taskName || '',
+            description: item.description || '',
+            taskCode: item.taskCode || item.id || '',
+            processId: item.processId || null,
+            typeId: item.typeId || null,
+            departmentId: item.departmentId || null,
+            priority: item.priority || null,
+            dri: item.dri || null,
+            dueDate: item.dueDate || item.deadline || null
+        })) : [];
 
         if (tasksToSave.length > 0) {
             const customerIdForSave = mapCustomerToId(project.customer);
@@ -1091,10 +1468,10 @@ async function removeTaskFromProject(projectId, taskId) {
         // Update local data
         project.tasks = (project.tasks || []).filter(t => String(t.id) !== String(taskId));
         project.taskCount = project.tasks.length;
-        
+
         // Refresh the project list in the background
         loadProjectList();
-        
+
         // Refresh only the modal content without closing/reopening the modal
         const container = document.getElementById('projectTasksContent');
         if (container) {
@@ -1266,7 +1643,7 @@ function closeCreateProjectModal() {
     resetToProjectList();
 }
 
-function saveProjectBasicInfoModal() {
+async function saveProjectBasicInfoModal() {
     const customer = document.getElementById('newProjectCustomer').value;
     const name = document.getElementById('newProjectName').value;
 
@@ -1275,14 +1652,31 @@ function saveProjectBasicInfoModal() {
         return;
     }
 
+    const created = await createProject(customer, name);
+
+    if (!created) {
+        alert('Failed to create project. Please try again.');
+        return;
+    }
+
     currentProject = {
-        id: generateProjectId(),
-        customer: customer,
-        name: name,
-        createdDate: new Date().toISOString().split('T')[0],
-        status: 'draft',
-        taskCount: 0
+        id: created.id || created.projectId,
+        customer: created.customerId || customer,
+        name: created.name || name,
+        createdDate: created.createdAt ? created.createdAt.split(' ')[0] : new Date().toISOString().split('T')[0],
+        status: created.status || 'draft',
+        taskCount: 0,
+        tasks: []
     };
+
+    const existingIndex = projectList.findIndex(p => String(p.id) === String(currentProject.id));
+    if (existingIndex !== -1) {
+        projectList[existingIndex] = currentProject;
+    } else {
+        projectList.push(currentProject);
+    }
+
+    await loadProjectList();
 
     safeSetDisplay('createProjectStep1', 'none');
     safeSetDisplay('createProjectStep2', 'block');
@@ -1291,14 +1685,17 @@ function saveProjectBasicInfoModal() {
     safeSetDisplay('createSaveBtn', 'inline-flex');
 
     const metaEl = getEl('createProjectModalMeta');
-    if (metaEl) { metaEl.textContent = `${customer} - ${name}`; if (metaEl.style) metaEl.style.display = 'inline'; }
+    if (metaEl) {
+        metaEl.textContent = `${customer} - ${name}`;
+        if (metaEl.style) metaEl.style.display = 'inline';
+    }
 
     const labelEl = getEl('createProjectModalLabel');
     if (labelEl) {
-        labelEl.innerHTML = `<span><i class="bi bi-plus-square"></i></span><span>Create ${customer} - ${name}</span>`;
+        labelEl.innerHTML = `<span><i class="bi bi-plus-square"></i></span><span>Add Tasks to ${customer} - ${name}</span>`;
     }
 
-    alert('Basic info saved');
+    alert('Project created successfully! Now you can add tasks.');
 
     renderSelectedTasksInModal();
 }
@@ -1316,48 +1713,54 @@ function createModalBackToStep1() {
 }
 
 async function submitProjectFromModal() {
-    if (!currentProject) { alert('Please save basic project info first'); return; }
-    if (!selectedPPAPItems || selectedPPAPItems.length === 0) { alert('Please select at least one PPAP item or add a custom task'); return; }
+    if (!currentProject || !currentProject.id) {
+        alert('Please save basic project info first');
+        return;
+    }
+    
+    if (!selectedPPAPItems || selectedPPAPItems.length === 0) {
+        alert('Please select at least one task');
+        return;
+    }
 
-    currentProject.taskCount = selectedPPAPItems.length;
-    currentProject.status = 'waiting';
+    const tasksPayload = selectedPPAPItems.map(item => ({
+        name: item.name || item.taskName || '',
+        description: item.description || '',
+        taskCode: item.taskCode || item.id || '',
+        processId: item.processId || null,
+        typeId: item.typeId || null,
+        departmentId: item.departmentId || null,
+        priority: item.priority || null,
+        dri: item.dri || null,
+        dueDate: item.dueDate || item.deadline || null,
+        projectId: currentProject.id
+    }));
 
-    const created = await createProject(currentProject.customer, currentProject.name);
-    if (created) {
-        const finalProject = Object.assign({}, created || {}, {
-            tasks: selectedPPAPItems.slice(),
-            taskCount: selectedPPAPItems.length,
-            status: 'waiting'
-        });
-
-        finalProject.tasks = selectedPPAPItems.map(item => ({
-            ...item,
-            projectId: finalProject.id
-        }));
-
-        if (!finalProject.name && currentProject && currentProject.name) finalProject.name = currentProject.name;
-
-        const tasksPayload = selectedPPAPItems.map(normalizeTaskPayload);
-
-        const customerIdForSave = mapCustomerToId(finalProject.customer || currentProject.customer);
-        const saveOk = await saveTasksForProject(tasksPayload, customerIdForSave, finalProject.name || currentProject.name);
-        if (!saveOk) {
-            console.warn('Tasks were not persisted to server. They may be lost after reload.');
+    try {
+        const customerIdForSave = mapCustomerToId(currentProject.customer);
+        const updateOk = await saveTasksForProject(tasksPayload, customerIdForSave, currentProject.name);
+        
+        if (!updateOk) {
+            alert('Failed to add tasks to project');
+            return;
         }
 
-        projectList.push(finalProject);
+        currentProject.tasks = selectedPPAPItems.slice();
+        currentProject.taskCount = selectedPPAPItems.length;
+        currentProject.status = 'waiting';
 
-        alert(`Project "${finalProject.name || currentProject.name || 'N/A'}" created successfully, containing ${selectedPPAPItems.length} tasks`);
+        const existingIndex = projectList.findIndex(p => safeCompareIds(p.id, currentProject.id));
+        if (existingIndex !== -1) {
+            projectList[existingIndex] = currentProject;
+        }
 
-        const labelEl = getEl('createProjectModalLabel');
-        if (labelEl && createModalOriginalTitleHTML) labelEl.innerHTML = createModalOriginalTitleHTML;
-
+        alert(`Tasks added successfully! Project "${currentProject.name}" is now pending approval.`);
+        
         closeCreateProjectModal();
-        safeSetDisplay('projectListSection', 'block');
-        safeSetDisplay('createProjectSection', 'none');
-        renderProjectListUI();
-    } else {
-        alert('Failed to create project. Please try again.');
+        await loadProjectList();
+        
+    } catch (e) {
+        alert('Failed to add tasks. Please try again.');
     }
 }
 
@@ -1443,67 +1846,31 @@ function removeSelectedTask(taskId) {
     renderSelectedTasksInModal();
 }
 
+// Selected tasks drag system
+let selectedTasksDrag = null;
 let draggedTaskRow = null;
+
 function initSelectedTasksDragAndDrop() {
-    const rows = document.querySelectorAll('#selectedTasksTable tbody tr');
-    rows.forEach(row => {
-        row.addEventListener('dragstart', handleTaskDragStart);
-        row.addEventListener('dragover', handleTaskDragOver);
-        row.addEventListener('drop', handleTaskDrop);
-        row.addEventListener('dragend', handleTaskDragEnd);
+    selectedTasksDrag = createDragSystem('tr', {
+        tableId: 'selectedTasksTable',
+        onReorder: updateSelectedTasksOrder
     });
+    selectedTasksDrag.init();
 }
 
-function handleTaskDragStart(e) {
-    draggedTaskRow = this;
-    this.style.opacity = '0.4';
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleTaskDragOver(e) {
-    if (e.preventDefault) e.preventDefault();
-    if (!draggedTaskRow) return;
-
-    const rect = this.getBoundingClientRect();
-    const midpoint = rect.top + rect.height / 2;
-    if (e.clientY < midpoint) {
-        this.style.borderTop = '2px solid #2196F3';
-        this.style.borderBottom = '';
-    } else {
-        this.style.borderBottom = '2px solid #2196F3';
-        this.style.borderTop = '';
-    }
-    return false;
-}
-
-function handleTaskDrop(e) {
-    if (e.stopPropagation) e.stopPropagation();
-    if (!draggedTaskRow || draggedTaskRow === this) return false;
-
-    const rect = this.getBoundingClientRect();
-    const midpoint = rect.top + rect.height / 2;
-    if (e.clientY < midpoint) {
-        this.parentNode.insertBefore(draggedTaskRow, this);
-    } else {
-        this.parentNode.insertBefore(draggedTaskRow, this.nextSibling);
-    }
-
+function updateSelectedTasksOrder() {
     const tbody = document.querySelector('#selectedTasksTable tbody');
+    if (!tbody) return;
     const newOrder = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.dataset.taskId);
     const map = {};
     selectedPPAPItems.forEach(item => { if (item && item.id) map[String(item.id)] = item; });
     selectedPPAPItems = newOrder.map(id => map[String(id)]).filter(Boolean);
-
-    document.querySelectorAll('#selectedTasksTable tbody tr').forEach(r => { r.style.borderTop = ''; r.style.borderBottom = ''; });
-
-    return false;
 }
 
-function handleTaskDragEnd(e) {
-    this.style.opacity = '1';
-    document.querySelectorAll('#selectedTasksTable tbody tr').forEach(r => { r.style.borderTop = ''; r.style.borderBottom = ''; });
-    draggedTaskRow = null;
-}
+function handleTaskDragStart(e) { draggedTaskRow = this; this.style.opacity = '0.4'; }
+function handleTaskDragOver(e) { e.preventDefault(); return false; }
+function handleTaskDrop(e) { e.stopPropagation(); return false; }
+function handleTaskDragEnd(e) { this.style.opacity = '1'; draggedTaskRow = null; }
 
 function saveProjectBasicInfo() {
     const customer = document.getElementById('newProjectCustomer').value;
@@ -1549,7 +1916,17 @@ async function submitProject() {
     const created = await createProject(currentProject.customer, currentProject.name);
     if (created) {
         currentProject.id = created.id;
-        const tasksPayload = selectedPPAPItems.map(normalizeTaskPayload);
+        const tasksPayload = selectedPPAPItems.map(item => ({
+            name: item.name || item.taskName || '',
+            description: item.description || '',
+            taskCode: item.taskCode || item.id || '',
+            processId: item.processId || null,
+            typeId: item.typeId || null,
+            departmentId: item.departmentId || null,
+            priority: item.priority || null,
+            dri: item.dri || null,
+            dueDate: item.dueDate || item.deadline || null
+        }));
 
         const customerIdForSave = mapCustomerToId(currentProject.customer);
         const saveOk = await saveTasksForProject(tasksPayload, customerIdForSave, currentProject.name);
@@ -1793,10 +2170,12 @@ async function showCustomTask() {
     var modal = document.getElementById("customTaskModal");
     try {
         await loadCustomTaskSelects();
-        openModalAbove(modal);
+        const bs = openModalAbove(modal);
+        // initialize deadline picker for custom-deadline after modal opens
+        try { setTimeout(() => initDeadlinePicker(), 60); } catch (e) { }
     } catch (e) {
         console.error(e);
-        try { if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } } catch(err) { /* ignore */ }
+        try { if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } } catch (err) { /* ignore */ }
     }
 }
 
@@ -1807,7 +2186,6 @@ async function loadCustomTaskSelects() {
         const priorities = SELECT_CACHE['/api/tasks/priorities'] || await fetchOptions('/api/tasks/priorities');
         const stages = SELECT_CACHE['/api/stages'] || await fetchOptions('/api/stages');
 
-        // write back to cache in case we had to fetch
         SELECT_CACHE['/api/departments'] = departments;
         SELECT_CACHE['/api/processes'] = processes;
         SELECT_CACHE['/api/tasks/priorities'] = priorities;
@@ -1880,10 +2258,8 @@ function approveProject(projectId) {
 
     const project = projectList.find(p => p.id === projectId);
     if (project) {
-        project.status = 'approved'; // Đổi thành 'approved'
+        project.status = 'approved'; 
         project.approvedDate = new Date().toISOString().split('T')[0];
-
-
 
         loadProjectList();
     }
@@ -1961,104 +2337,107 @@ async function deleteProject(projectId) {
     }
 }
 
-function editProject(projectId) {
-    console.log('Edit project:', projectId);
-}
-
-// ===================================
-// EXPORT TO GLOBAL SCOPE
-// ===================================
-window.showCreateProjectForm = showCreateProjectForm;
-window.cancelCreateProject = cancelCreateProject;
-window.saveProjectBasicInfo = saveProjectBasicInfo;
-window.cancelProjectCreation = cancelProjectCreation;
-window.submitProject = submitProject;
-window.showStandardPPAP = showStandardPPAP;
-window.closeStandardPPAP = closeStandardPPAP;
-window.selectAllPPAP = selectAllPPAP;
-window.deselectAllPPAP = deselectAllPPAP;
-window.confirmPPAPSelection = confirmPPAPSelection;
-window.showCustomTask = showCustomTask;
-window.closeCustomTask = closeCustomTask;
-window.showCopyTemplate = showCopyTemplate;
-window.closeCopyTemplate = closeCopyTemplate;
-window.showRACIMatrix = showRACIMatrix;
-window.closeRACIMatrix = closeRACIMatrix;
-window.approveProject = approveProject;
-window.rejectProject = rejectProject;
-window.editProject = editProject;
-window.deleteProject = deleteProject;
-window.createProject = createProject;
-window.saveProjectBasicInfoModal = saveProjectBasicInfoModal;
-window.createModalBackToStep1 = createModalBackToStep1;
-window.closeCreateProjectModal = closeCreateProjectModal;
-window.submitProjectFromModal = submitProjectFromModal;
-window.renderSelectedTasksInModal = renderSelectedTasksInModal;
-window.removeSelectedTask = removeSelectedTask;
-window.initSelectedTasksDragAndDrop = initSelectedTasksDragAndDrop;
-window.handleTaskDrop = handleTaskDrop;
-window.handleTaskDragStart = handleTaskDragStart;
-window.showAddTaskModal = showAddTaskModal;
-window.saveProjectTaskQuantity = saveProjectTaskQuantity;
-window.removeTaskFromProject = removeTaskFromProject;
-
 function initDeadlinePicker() {
-    const el = document.getElementById('deadLine');
-    if (!el) return;
+    const ids = ['deadLine', 'custom-deadline'];
 
-    if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
-        try { el.type = 'text'; } catch (e) {}
+    ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
 
-        $(el).daterangepicker({
-            singleDatePicker: true,
-            timePicker: true,
-            timePicker24Hour: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            opens: 'right',
-            locale: { format: 'YYYY-MM-DD HH:mm' }
-        });
-
-        $(el).on('apply.daterangepicker', function (ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm'));
-        });
-
-        $(el).on('cancel.daterangepicker', function () {
-        });
-
-        return;
-    }
-
-    if (typeof flatpickr === 'function') {
         try {
-            try { el.type = 'text'; } catch (e) {}
-            flatpickr(el, {
-                enableTime: true,
-                time_24hr: true,
-                dateFormat: 'Y-m-d H:i',
-                allowInput: true,
-                clickOpens: true,
-                onClose: function(selectedDates) {
-                    if (selectedDates && selectedDates[0]) {
-                        // ensure formatted value
-                        el.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d H:i');
-                    }
+            const raw = String(el.value || '').trim();
+            if (raw === '-' || raw.toUpperCase() === 'N/A') el.value = '';
+        } catch (e) { /* ignore */ }
+
+        try {
+            if (window.jQuery && $(el).data('daterangepicker')) {
+                try { $(el).data('daterangepicker').remove(); } catch (err) { }
+                try { $(el).off('apply.daterangepicker cancel.daterangepicker'); } catch (err) { }
+            }
+        } catch (e) { }
+
+        try {
+            if (el._flatpickr) {
+                try { el._flatpickr.destroy(); } catch (err) { }
+            }
+        } catch (e) { }
+
+        if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
+            try { el.type = 'text'; } catch (e) { }
+
+            const currentValue = el.value || '';
+            singlePicker($(el), currentValue);
+
+            $(el).on('apply.daterangepicker', function (ev, picker) {
+                try {
+                    $(this).val(picker.startDate.format('YYYY/MM/DD'));
+                } catch (err) {
+                    $(this).val('');
                 }
             });
-            return;
-        } catch (e) {
-            console.warn('flatpickr init failed for #deadLine', e);
-        }
-    }
 
-    el.addEventListener('focus', function onFocus() {
-        try {
-            el.type = 'datetime-local';
-        } catch (e) {}
-        el.removeEventListener('focus', onFocus);
+            $(el).on('cancel.daterangepicker', function () {
+                try { $(this).val(''); } catch (err) { }
+            });
+
+            return;
+        }
+
+        try { el.type = 'date'; } catch (e) { }
+
+        el.addEventListener('focus', function onFocus() {
+            try { el.type = 'datetime-local'; } catch (e) { }
+            el.removeEventListener('focus', onFocus);
+        });
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    try { initDeadlinePicker(); } catch (e) {  }
-});
+// ========== MAIN INIT ==========
+function initCreatedDatePicker() {
+    if (!window.jQuery || typeof window.jQuery.fn.daterangepicker !== 'function') return;
+    
+    var input = document.querySelector("#filter-created-date");
+    if (!input) return;
+    
+    try {
+        if ($(input).data('daterangepicker')) {
+            $(input).data('daterangepicker').remove();
+            $(input).off('apply.daterangepicker cancel.daterangepicker');
+        }
+    } catch (e) { }
+
+    rangePicker($(input), null, null);
+
+    $(input).on('apply.daterangepicker', function (ev, picker) {
+        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+        $(this).trigger('change');
+    });
+
+    $(input).on('cancel.daterangepicker', function () {
+        $(this).val('');
+        $(this).trigger('change');
+    });
+}
+
+function bindBtn(id, handler) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', handler);
+}
+
+async function init() {
+    // Bind button handlers
+    bindBtn('upload', handleTaskFileUpload);
+    bindBtn('comment', handleTaskComment);
+    bindBtn('add-custom', handleAddCustomTask);
+    bindBtn('filter_button', filterProjects);
+    
+    // Init date pickers
+    try { initCreatedDatePicker(); } catch (e) { }
+    try { initDeadlinePicker(); } catch (e) { }
+    
+    // Load data
+    await loadAllSelects();
+    await loadProjectList();
+}
+
+document.addEventListener('DOMContentLoaded', init);
