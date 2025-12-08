@@ -1,3 +1,127 @@
+const DateFormatter = {
+    toAPIFormat(dateStr) {
+        if (!dateStr || dateStr === '-' || String(dateStr).toUpperCase() === 'N/A') {
+            return null;
+        }
+
+        const str = String(dateStr).trim();
+
+        if (window.moment) {
+            const m = window.moment(str, [
+                'YYYY/MM/DD',
+                'YYYY-MM-DD',
+                'YYYY/MM/DD HH:mm',
+                'YYYY-MM-DD HH:mm',
+                'YYYY/MM/DD HH:mm:ss',
+                'YYYY-MM-DD HH:mm:ss'
+            ], true);
+
+            if (m && typeof m.isValid === 'function' && m.isValid()) {
+                return m.format('YYYY/MM/DD HH:mm:ss');
+            }
+        }
+
+        const parts = str.split(' ');
+        let datePart = parts[0] || '';
+        let timePart = parts[1] || '00:00:00';
+
+        datePart = datePart.substring(0, 10).replace(/-/g, '/');
+
+        const tPieces = timePart.split(':');
+        if (tPieces.length === 1) {
+            timePart = `${tPieces[0] || '00'}:00:00`;
+        } else if (tPieces.length === 2) {
+            timePart = `${tPieces[0] || '00'}:${tPieces[1] || '00'}:00`;
+        } else {
+            timePart = `${tPieces[0] || '00'}:${tPieces[1] || '00'}:${tPieces[2] || '00'}`;
+        }
+
+        return `${datePart} ${timePart}`;
+    },
+
+    toDisplayFormat(dateStr) {
+        return this.toAPIFormat(dateStr) || '-';
+    }
+};
+
+function safeCompareIds(id1, id2) {
+    if (id1 == null || id2 == null) {
+        return id1 === id2;
+    }
+    
+    const str1 = String(id1);
+    const str2 = String(id2);
+    if (str1 === 'null' || str1 === 'undefined' || str2 === 'null' || str2 === 'undefined') {
+        return false;
+    }
+    
+    return str1 === str2;
+}
+
+function findProjectById(projectId) {
+    if (!projectId) return null;
+    return projectList.find(p => safeCompareIds(p.id, projectId)) || null;
+}
+
+const Validators = {
+    required(value, fieldName) {
+        const val = value ? String(value).trim() : '';
+        if (!val) {
+            throw new Error(`${fieldName} is required`);
+        }
+        return val;
+    },
+    
+    maxLength(value, max, fieldName) {
+        if (String(value).length > max) {
+            throw new Error(`${fieldName} must be less than ${max} characters`);
+        }
+        return value;
+    }
+};
+
+function openModal(modalId) {
+    const modalEl = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (!modalEl) {
+        return null;
+    }
+    
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        return modal;
+    } catch (e) {
+        modalEl.classList.add('active');
+        return null;
+    }
+}
+
+function safeHideModal(modalEl) {
+    if (!modalEl) return;
+    try {
+        if (window.bootstrap && bootstrap.Modal) {
+            const inst = bootstrap.Modal.getInstance(modalEl);
+            if (inst && typeof inst.hide === 'function') {
+                inst.hide();
+            } else {
+                try { new bootstrap.Modal(modalEl).hide(); } catch (e) { modalEl.classList.remove('show', 'active'); }
+            }
+        } else {
+            modalEl.classList.remove('show', 'active');
+        }
+    } catch (e) {
+        try { modalEl.classList.remove('show', 'active'); } catch (e2) { }
+    }
+
+    try {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(b => { if (b && b.parentNode) b.parentNode.removeChild(b); });
+    } catch (e) { }
+
+    try { document.body.classList.remove('modal-open'); } catch (e) { }
+    try { document.body.style.paddingRight = ''; } catch (e) { }
+}
+
 async function handleTaskFileUpload() {
     const modal = document.getElementById('taskDetailModal');
     if (!modal) return;
@@ -118,10 +242,9 @@ async function handleTaskComment() {
 
     try {
         const params = new URLSearchParams();
-        params.append('id', taskId);
         params.append('comment', comment);
 
-        const res = await fetch('/sample-system/api/tasks/comment', {
+        const res = await fetch(`/sample-system/api/tasks/${taskId}/comment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params.toString()
@@ -151,81 +274,69 @@ document.addEventListener('DOMContentLoaded', function () {
         btnComment.addEventListener('click', handleTaskComment);
     }
 });
+
 async function handleAddCustomTask() {
-    const getVal = (id) => {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        const v = (el.value || '').trim();
-        return v === '' ? null : v;
-    };
-
-    const name = getVal('custom-task-name');
-    const taskCode = getVal('custom-task-id');
-    const processId = getVal('custom-sl-process') ? Number(getVal('custom-sl-process')) : null;
-    const departmentId = getVal('custom-sl-department') ? Number(getVal('custom-sl-department')) : null;
-    const typeId = getVal('custom-sl-xvt') ? Number(getVal('custom-sl-xvt')) : null;
-    const priorityRaw = getVal('custom-sl-priority');
-    const priority = priorityRaw ? priorityRaw.toUpperCase() : null;
-    const dri = getVal('custom-dri');
-    const dueDateRaw = getVal('custom-deadline');
-    const description = getVal('custom-task-description');
-
-    let dueDate = null;
-    if (dueDateRaw) {
-        try {
-            if (window.moment && typeof window.moment === 'function') {
-                const m = window.moment(dueDateRaw, [
-                    'YYYY-MM-DD HH:mm:ss',
-                    'YYYY-MM-DD HH:mm',
-                    'YYYY/MM/DD HH:mm:ss',
-                    'YYYY/MM/DD HH:mm',
-                    'YYYY-MM-DDTHH:mm:ss',
-                    'YYYY-MM-DDTHH:mm:ss.SSSZ'
-                ], true);
-                if (m && m.isValid && m.isValid()) {
-                    dueDate = m.format('YYYY/MM/DD HH:mm:ss');
-                } else {
-                    dueDate = dueDateRaw;
-                }
-            } else {
-                dueDate = dueDateRaw.replace(/-/g, '/');
-            }
-        } catch (e) {
-            dueDate = dueDateRaw.replace(/-/g, '/');
-        }
-    }
-
-    let projectId = null;
-    if (window.currentProject && window.currentProject.id) {
-        projectId = window.currentProject.id;
-    } else {
-        const pidEl = document.getElementById('pt_detail_projectId');
-        if (pidEl && pidEl.value) projectId = pidEl.value;
-    }
-    if (projectId !== null && projectId !== undefined && projectId !== '') {
-        projectId = Number(projectId);
-        if (isNaN(projectId)) projectId = null;
-    }
-
-    const payload = {
-        name,
-        taskCode,
-        processId,
-        departmentId,
-        typeId,
-        priority,
-        dri,
-        dueDate,
-        description,
-        isTemplate: false,
-        projectId,
-        step: null,
-        flag: true,
-        status: null,
-        stageId: null
-    };
-
     try {
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            const v = (el.value || '').trim();
+            return v === '' ? null : v;
+        };
+
+        const name = Validators.required(getVal('custom-task-name'), 'Task name');
+        const taskCode = getVal('custom-task-id') || null;
+
+        Validators.maxLength(name, 200, 'Task name');
+        if (taskCode !== null) {
+            Validators.maxLength(taskCode, 50, 'Task code');
+        }
+        
+        const processId = getVal('custom-sl-process') ? Number(getVal('custom-sl-process')) : null;
+        const departmentId = getVal('custom-sl-department') ? Number(getVal('custom-sl-department')) : null;
+        const typeId = getVal('custom-sl-xvt') ? Number(getVal('custom-sl-xvt')) : null;
+        const priorityRaw = getVal('custom-sl-priority');
+        const priority = priorityRaw ? priorityRaw.toUpperCase() : null;
+        const dri = getVal('custom-dri');
+        const dueDateRaw = getVal('custom-deadline');
+        const description = getVal('custom-task-description');
+
+        // Gửi luôn dạng chuẩn YYYY/MM/DD HH:mm:ss
+        let dueDate = null;
+        if (dueDateRaw) {
+            dueDate = DateFormatter.toAPIFormat(dueDateRaw);
+        }
+
+        let projectId = null;
+        if (window.currentProject && window.currentProject.id) {
+            projectId = window.currentProject.id;
+        } else {
+            const pidEl = document.getElementById('pt_detail_projectId');
+            if (pidEl && pidEl.value) projectId = pidEl.value;
+        }
+        if (projectId !== null && projectId !== undefined && projectId !== '') {
+            projectId = Number(projectId);
+            if (isNaN(projectId)) projectId = null;
+        }
+
+        const payload = {
+            name,
+            taskCode,
+            processId,
+            departmentId,
+            typeId,
+            priority,
+            dri,
+            dueDate,
+            description,
+            isTemplate: false,
+            projectId,
+            step: null,
+            flag: true,
+            status: null,
+            stageId: null
+        };
+
         const res = await fetch('/sample-system/api/tasks/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -240,7 +351,8 @@ async function handleAddCustomTask() {
         try { bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide(); } catch (e) { }
         try { await loadProjectList(); } catch (e) { }
     } catch (e) {
-        alert('Lỗi khi gọi API tạo task: ' + e.message);
+        alert(e.message);
+        return;
     }
 }
 
@@ -260,7 +372,6 @@ const SELECT_CONFIGS = [
     { id: 'ppapFilterProcess', endpoint: '/api/processes' }
 ];
 
-// Cache for results fetched on page load so other modals can reuse without refetching
 const SELECT_CACHE = {};
 
 async function fetchOptions(endpoint) {
@@ -396,19 +507,43 @@ async function createProject(customerId, name) {
     }
 }
 
-async function saveTasksForProject(tasks, customerId, name) {
-    if (!Array.isArray(tasks) || tasks.length === 0) return true;
+async function saveTasksForProject(taskIds, customerId, name, projectId) {
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+        console.warn('saveTasksForProject: taskIds is empty or not an array', taskIds);
+        return true;
+    }
+    if (!projectId || projectId === null || projectId === undefined || String(projectId).trim() === '') {
+        console.error('saveTasksForProject: projectId is required');
+        return false;
+    }
+    
+    const projectIdStr = String(projectId);
+    if (projectIdStr.startsWith('TEMP-')) {
+        console.warn('saveTasksForProject: Skipping update for temporary project ID:', projectId);
+        return true;
+    }
+    
+    const projectIdInt = parseInt(projectId, 10);
+    if (isNaN(projectIdInt)) {
+        console.error('saveTasksForProject: projectId must be a valid integer, got:', projectId);
+        return false;
+    }
+    
     try {
-        const url = `/sample-system/api/projects/update?customerId=${encodeURIComponent(customerId)}&name=${encodeURIComponent(name)}`;
+        const url = `/sample-system/api/projects/${projectIdInt}/update`;
+        console.log('saveTasksForProject: Sending to', url, 'with taskIds:', taskIds);
         const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(tasks)
+            body: JSON.stringify(taskIds)
         });
         if (!res.ok) {
-            console.warn('saveTasksForProject: server returned', res.status, res.statusText);
+            const errorText = await res.text().catch(() => '');
+            console.error('saveTasksForProject: server returned', res.status, res.statusText, errorText);
             return false;
         }
+        const result = await res.json().catch(() => null);
+        console.log('saveTasksForProject: Success response:', result);
         return true;
     } catch (e) {
         console.error('saveTasksForProject failed', e);
@@ -560,9 +695,12 @@ function buildProjectFilterParams() {
                     }
                 } catch (e) { /* ignore */ }
 
-                // send as startTime/endTime; include times to cover full day
-                params.append('startTime', start + ' 00:00:00');
-                params.append('endTime', end + ' 23:59:59');
+                // Chuẩn hóa full datetime cho API: YYYY/MM/DD HH:mm:ss
+                const startFull = DateFormatter.toAPIFormat(start + ' 00:00:00');
+                const endFull = DateFormatter.toAPIFormat(end + ' 23:59:59');
+
+                params.append('startTime', startFull);
+                params.append('endTime', endFull);
             }
         }
     } catch (e) {
@@ -710,6 +848,11 @@ function initDragAndDrop() {
     const rows = document.querySelectorAll('tr[draggable="true"]');
 
     rows.forEach(row => {
+        row.removeEventListener('dragstart', handleDragStart);
+        row.removeEventListener('dragover', handleDragOver);
+        row.removeEventListener('drop', handleDrop);
+        row.removeEventListener('dragend', handleDragEnd);
+        
         row.addEventListener('dragstart', handleDragStart);
         row.addEventListener('dragover', handleDragOver);
         row.addEventListener('drop', handleDrop);
@@ -798,7 +941,18 @@ function viewProjectDetails(projectId) {
 
 
 async function showProjectTasksModal(projectId) {
-    const project = projectList.find(p => String(p.id) === String(projectId));
+    if (!projectId || projectId === 'null' || projectId === 'undefined') {
+        alert('Invalid project ID');
+        return;
+    }
+    
+    const parsedId = parseInt(projectId, 10);
+    if (isNaN(parsedId)) {
+        alert('Invalid project ID');
+        return;
+    }
+    
+    const project = findProjectById(projectId);
 
     try {
         const pidEl = document.getElementById('pt_detail_projectId');
@@ -834,7 +988,7 @@ async function showProjectTasksModal(projectId) {
     openProjectTasksModal();
 
     try {
-        const res = await fetch(`/sample-system/api/tasks/get-by-project-id?projectId=${parseInt(projectId, 10)}`);
+        const res = await fetch(`/sample-system/api/project/${projectId}/tasks`);
 
         if (!res.ok) throw new Error(`Status ${res.status} ${res.statusText}`);
 
@@ -868,11 +1022,15 @@ function renderProjectTasksContent(tasks, projectId) {
     if (tasks.length === 0) {
         container.innerHTML = `<div style="color:var(--text-secondary)">This project has no tasks.</div>`;
     } else {
-        const rows = tasks.map(t => `
-            <tr data-task-id="${t.id}" style="cursor:pointer" onclick="showTaskDetailModal(${projectId}, '${t.id}')">
-                <td>${t.id}</td>
-                <td>${t.name || ''}</td>
+        const rows = tasks.map((t, index) => `
+            <tr draggable="true" 
+                data-task-id="${t.id}" 
+                data-task-index="${index}"
+                style="cursor:move" 
+                onclick="showTaskDetailModal(${projectId}, '${t.id}')">
+                <td><i class="bi bi-grip-vertical" style="color:var(--text-secondary); margin-right:8px"></i>${t.id}</td>
                 <td>${t.taskCode || ''}</td>
+                <td>${t.name || ''}</td>
                 <td>${t.processId || ''}</td>
                 <td>${t.status || ''}</td>
                 <td>${t.priority || ''}</td>
@@ -887,17 +1045,110 @@ function renderProjectTasksContent(tasks, projectId) {
         `).join('');
 
         container.innerHTML = `
-            <table class="task-list-table" style="margin-top:12px">
+            <table id="projectTasksTable" class="task-list-table" style="margin-top:12px">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Name</th><th>Task Code</th><th>Process</th>
+                        <th>ID</th><th>Task Name</th><th>Name</th><th>Process</th>
                         <th>Status</th><th>Priority</th><th>DRI</th><th>Deadline</th><th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
         `;
+        
+        initProjectTasksDragAndDrop(projectId);
     }
+}
+
+let draggedProjectTask = null;
+
+function initProjectTasksDragAndDrop(projectId) {
+    const table = document.getElementById('projectTasksTable');
+    if (!table) return;
+    
+    const rows = table.querySelectorAll('tbody tr[draggable="true"]');
+    
+    rows.forEach(row => {
+        row.removeEventListener('dragstart', handleProjectTaskDragStart);
+        row.removeEventListener('dragover', handleProjectTaskDragOver);
+        row.removeEventListener('drop', handleProjectTaskDrop);
+        row.removeEventListener('dragend', handleProjectTaskDragEnd);
+        
+        row.addEventListener('dragstart', handleProjectTaskDragStart);
+        row.addEventListener('dragover', handleProjectTaskDragOver);
+        row.addEventListener('drop', function (e) { return handleProjectTaskDrop.call(this, e, projectId); });
+        row.addEventListener('dragend', handleProjectTaskDragEnd);
+    });
+}
+
+function handleProjectTaskDragStart(e) {
+    draggedProjectTask = this;
+    this.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleProjectTaskDragOver(e) {
+    if (e.preventDefault) e.preventDefault();
+    if (!draggedProjectTask) return false;
+
+    const rect = this.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    if (e.clientY < midpoint) {
+        this.style.borderTop = '2px solid #2196F3';
+        this.style.borderBottom = '';
+    } else {
+        this.style.borderBottom = '2px solid #2196F3';
+        this.style.borderTop = '';
+    }
+    
+    return false;
+}
+
+function handleProjectTaskDrop(e, projectId) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (!draggedProjectTask || draggedProjectTask === this) return false;
+
+    const rect = this.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    if (e.clientY < midpoint) {
+        this.parentNode.insertBefore(draggedProjectTask, this);
+    } else {
+        this.parentNode.insertBefore(draggedProjectTask, this.nextSibling);
+    }
+
+    updateProjectTaskOrder(projectId);
+    
+    document.querySelectorAll('#projectTasksTable tbody tr').forEach(r => {
+        r.style.borderTop = '';
+        r.style.borderBottom = '';
+    });
+    
+    return false;
+}
+
+function handleProjectTaskDragEnd(e) {
+    this.style.opacity = '1';
+    document.querySelectorAll('#projectTasksTable tbody tr').forEach(r => {
+        r.style.borderTop = '';
+        r.style.borderBottom = '';
+    });
+    draggedProjectTask = null;
+}
+
+function updateProjectTaskOrder(projectId) {
+    const project = findProjectById(projectId);
+    if (!project || !project.tasks) return;
+    
+    const tbody = document.querySelector('#projectTasksTable tbody');
+    if (!tbody) return;
+    
+    const newOrder = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.dataset.taskId);
+    
+    const taskMap = {};
+    project.tasks.forEach(t => { taskMap[String(t.id)] = t; });
+    project.tasks = newOrder.map(id => taskMap[String(id)]).filter(Boolean);
 }
 
 function openProjectTasksModal() {
@@ -929,12 +1180,17 @@ function showEditTaskModal(projectId, taskId) {
 }
 
 async function showTaskDetailModal(projectId, taskId) {
+    if (!taskId || taskId === 'null' || taskId === 'undefined') {
+        alert('Invalid task ID');
+        return;
+    }
+    
     let task = null;
     try {
-        const project = projectList.find(p => String(p.id) === String(projectId));
+        const project = findProjectById(projectId);
 
         try {
-            const res = await fetch(`/sample-system/api/tasks/get-by-id?id=${encodeURIComponent(taskId)}`);
+            const res = await fetch(`/sample-system/api/tasks/${taskId}`);
             if (res.ok) {
                 const json = await res.json();
                 task = json.data || json.result || null;
@@ -965,6 +1221,19 @@ async function showTaskDetailModal(projectId, taskId) {
             console.warn('Failed to attach task metadata to modal', e);
         }
 
+        // Cập nhật URL để mỗi task có link riêng dạng ?taskId={id}
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('taskId', taskId);
+            window.history.pushState(
+                { taskId: taskId, projectId: projectId || null },
+                '',
+                url.toString()
+            );
+        } catch (e) {
+            console.warn('Failed to pushState for task deep-link', e);
+        }
+
         const setText = (selector, value) => {
             const el = modalRoot.querySelector(selector);
             if (el) el.textContent = value || '';
@@ -989,14 +1258,8 @@ async function showTaskDetailModal(projectId, taskId) {
             const dueVal = task.dueDate || task.deadline || null;
             if (deadLineInput) {
                 if (dueVal) {
-                    let normalized = String(dueVal).trim();
-
-                    if (normalized.match(/^\d{4}-\d{2}-\d{2}/)) {
-                        normalized = normalized.replace(/^(\d{4})-(\d{2})-(\d{2})/, '$1/$2/$3');
-                    }
-
+                    const normalized = DateFormatter.toDisplayFormat(dueVal);
                     deadLineInput.value = normalized;
-
                     deadLineInput.dataset.initialValue = normalized;
                 } else {
                     deadLineInput.value = '';
@@ -1195,20 +1458,8 @@ async function saveTaskDetailChanges() {
 
     if (newDeadline) {
         try {
-            const dateStr = String(newDeadline).trim();
-
-            const parts = dateStr.split(' ');
-            const datePart = parts[0]; // YYYY-MM-DD
-            const timePart = parts[1] || '00:00:00'; // HH:mm or HH:mm:ss, default to 00:00:00
-
-            const formattedDate = datePart.replace(/-/g, '/');
-
-            let formattedTime = timePart;
-            if (timePart.split(':').length === 2) {
-                formattedTime = timePart + ':00';
-            }
-
-            newDeadline = `${formattedDate} ${formattedTime}`;
+            // Chuẩn hóa deadline về format YYYY/MM/DD HH:mm:ss
+            newDeadline = DateFormatter.toAPIFormat(newDeadline);
         } catch (e) {
             console.warn('Failed to format deadline:', e);
         }
@@ -1237,7 +1488,6 @@ async function saveTaskDetailChanges() {
         try { json = await res.json(); } catch (e) { /* ignore parse */ }
         const updatedTask = (json && (json.data || json.result)) || taskPayload;
 
-        // update local projectList if possible
         if (projectId && projectList && Array.isArray(projectList)) {
             const proj = projectList.find(p => String(p.id) === String(projectId));
             if (proj && Array.isArray(proj.tasks)) {
@@ -1248,7 +1498,6 @@ async function saveTaskDetailChanges() {
             }
         }
 
-        // update modal UI (badges and selects)
         try {
             const statusBadge = modalRoot.querySelector('.task-status-badge');
             const priorityBadge = modalRoot.querySelector('.priority-badge');
@@ -1258,11 +1507,14 @@ async function saveTaskDetailChanges() {
             if (prioritySelect) prioritySelect.value = updatedTask.priority || (updatedTask.priority === null ? 'N/A' : '');
         } catch (e) { console.warn('Failed to refresh badges after update', e); }
 
-        try { bootstrap.Modal.getInstance(modalRoot).hide(); } catch (e) { modalRoot.classList.remove('active'); }
+        try {
+            safeHideModal(modalRoot);
+        } catch (e) {
+            try { bootstrap.Modal.getInstance(modalRoot).hide(); } catch (err) { modalRoot.classList.remove('active'); }
+        }
 
         alert('Task updated successfully');
 
-        // refresh project tasks view if open
         try {
             if (projectId) showProjectTasksModal(projectId);
         } catch (e) { /* ignore */ }
@@ -1273,7 +1525,6 @@ async function saveTaskDetailChanges() {
     }
 }
 
-// Export to global scope for button onclicks
 window.saveTaskDetailChanges = saveTaskDetailChanges;
 
 async function saveProjectTaskQuantity() {
@@ -1304,21 +1555,13 @@ async function saveProjectTaskQuantity() {
     if (v !== null && !isNaN(v) && v >= 0) project.taskCount = v;
 
     try {
-        const tasksToSave = Array.isArray(project.tasks) ? project.tasks.map(item => ({
-            name: item.name || item.taskName || '',
-            description: item.description || '',
-            taskCode: item.taskCode || item.id || '',
-            processId: item.processId || null,
-            typeId: item.typeId || null,
-            departmentId: item.departmentId || null,
-            priority: item.priority || null,
-            dri: item.dri || null,
-            dueDate: item.dueDate || item.deadline || null
-        })) : [];
+        const taskIds = Array.isArray(project.tasks)
+            ? project.tasks.map(item => parseInt(item.id, 10)).filter(id => !isNaN(id))
+            : [];
 
-        if (tasksToSave.length > 0) {
+        if (taskIds.length > 0) {
             const customerIdForSave = mapCustomerToId(project.customer);
-            const saveOk = await saveTasksForProject(tasksToSave, customerIdForSave, project.name);
+            const saveOk = await saveTasksForProject(taskIds, customerIdForSave, project.name, project.id);
             if (!saveOk) {
             } else {
                 alert('Project details and tasks updated successfully');
@@ -1389,14 +1632,11 @@ async function removeTaskFromProject(projectId, taskId) {
             return;
         }
 
-        // Update local data
         project.tasks = (project.tasks || []).filter(t => String(t.id) !== String(taskId));
         project.taskCount = project.tasks.length;
 
-        // Refresh the project list in the background
         loadProjectList();
 
-        // Refresh only the modal content without closing/reopening the modal
         const container = document.getElementById('projectTasksContent');
         if (container) {
             renderProjectTasksContent(project.tasks, projectId);
@@ -1561,7 +1801,7 @@ function closeCreateProjectModal() {
         else modalEl.classList.remove('active');
     } catch (e) {
         console.error('Failed to close create project modal', e);
-    }
+    }   
     const metaEl = getEl('createProjectModalMeta');
     if (metaEl) { metaEl.textContent = ''; if (metaEl.style) metaEl.style.display = 'none'; }
     resetToProjectList();
@@ -1637,58 +1877,46 @@ function createModalBackToStep1() {
 }
 
 async function submitProjectFromModal() {
-    if (!currentProject) { alert('Please save basic project info first'); return; }
-    if (!selectedPPAPItems || selectedPPAPItems.length === 0) { alert('Please select at least one PPAP item or add a custom task'); return; }
+    if (!currentProject || !currentProject.id) {
+        alert('Please save basic project info first');
+        return;
+    }
+    
+    if (!selectedPPAPItems || selectedPPAPItems.length === 0) {
+        alert('Please select at least one task');
+        return;
+    }
 
-    currentProject.taskCount = selectedPPAPItems.length;
-    currentProject.status = 'waiting';
+    const taskIds = selectedPPAPItems.map(item => parseInt(item.id, 10)).filter(id => !isNaN(id));
 
-    const created = await createProject(currentProject.customer, currentProject.name);
-    if (created) {
-        const finalProject = Object.assign({}, created || {}, {
-            tasks: selectedPPAPItems.slice(),
-            taskCount: selectedPPAPItems.length,
-            status: 'waiting'
-        });
-
-        finalProject.tasks = selectedPPAPItems.map(item => ({
-            ...item,
-            projectId: finalProject.id
-        }));
-
-        if (!finalProject.name && currentProject && currentProject.name) finalProject.name = currentProject.name;
-
-        const tasksPayload = selectedPPAPItems.map(item => ({
-            name: item.name || item.taskName || '',
-            description: item.description || '',
-            taskCode: item.taskCode || item.id || '',
-            processId: item.processId || null,
-            typeId: item.typeId || null,
-            departmentId: item.departmentId || null,
-            priority: item.priority || null,
-            dri: item.dri || null,
-            dueDate: item.dueDate || item.deadline || null
-        }));
-
-        const customerIdForSave = mapCustomerToId(finalProject.customer || currentProject.customer);
-        const saveOk = await saveTasksForProject(tasksPayload, customerIdForSave, finalProject.name || currentProject.name);
+    try {
+        // Step 1: Update tasks (include project id when available)
+        const customerIdForSave = mapCustomerToId(currentProject.customer);
+        const saveOk = await saveTasksForProject(taskIds, customerIdForSave, currentProject.name, currentProject.id);
         if (!saveOk) {
-            console.warn('Tasks were not persisted to server. They may be lost after reload.');
+            alert('Failed to add tasks. Please try again.');
+            return;
         }
 
-        projectList.push(finalProject);
+        // Update local data (do not call submit endpoint here)
+        currentProject.tasks = selectedPPAPItems.slice();
+        currentProject.taskCount = selectedPPAPItems.length;
 
-        alert(`Project "${finalProject.name || currentProject.name || 'N/A'}" created successfully, containing ${selectedPPAPItems.length} tasks`);
+        const existingIndex = projectList.findIndex(p => String(p.id) === String(currentProject.id));
+        if (existingIndex !== -1) {
+            projectList[existingIndex] = currentProject;
+        } else {
+            projectList.push(currentProject);
+        }
 
-        const labelEl = getEl('createProjectModalLabel');
-        if (labelEl && createModalOriginalTitleHTML) labelEl.innerHTML = createModalOriginalTitleHTML;
+        alert(`Project "${currentProject.name}" saved successfully with ${selectedPPAPItems.length} tasks.`);
 
         closeCreateProjectModal();
-        safeSetDisplay('projectListSection', 'block');
-        safeSetDisplay('createProjectSection', 'none');
-        renderProjectListUI();
-    } else {
-        alert('Failed to create project. Please try again.');
+        await loadProjectList();
+
+    } catch (e) {
+        console.error('Failed to submit project:', e);
+        alert('Failed to submit project. Please try again.');
     }
 }
 
@@ -1774,10 +2002,14 @@ function removeSelectedTask(taskId) {
     renderSelectedTasksInModal();
 }
 
-let draggedTaskRow = null;
 function initSelectedTasksDragAndDrop() {
     const rows = document.querySelectorAll('#selectedTasksTable tbody tr');
     rows.forEach(row => {
+        row.removeEventListener('dragstart', handleTaskDragStart);
+        row.removeEventListener('dragover', handleTaskDragOver);
+        row.removeEventListener('drop', handleTaskDrop);
+        row.removeEventListener('dragend', handleTaskDragEnd);
+        
         row.addEventListener('dragstart', handleTaskDragStart);
         row.addEventListener('dragover', handleTaskDragOver);
         row.addEventListener('drop', handleTaskDrop);
@@ -1880,20 +2112,10 @@ async function submitProject() {
     const created = await createProject(currentProject.customer, currentProject.name);
     if (created) {
         currentProject.id = created.id;
-        const tasksPayload = selectedPPAPItems.map(item => ({
-            name: item.name || item.taskName || '',
-            description: item.description || '',
-            taskCode: item.taskCode || item.id || '',
-            processId: item.processId || null,
-            typeId: item.typeId || null,
-            departmentId: item.departmentId || null,
-            priority: item.priority || null,
-            dri: item.dri || null,
-            dueDate: item.dueDate || item.deadline || null
-        }));
+        const taskIds = selectedPPAPItems.map(item => parseInt(item.id, 10)).filter(id => !isNaN(id));
 
         const customerIdForSave = mapCustomerToId(currentProject.customer);
-        const saveOk = await saveTasksForProject(tasksPayload, customerIdForSave, currentProject.name);
+        const saveOk = await saveTasksForProject(taskIds, customerIdForSave, currentProject.name, currentProject.id);
         if (!saveOk) {
             console.warn('Tasks were not persisted to server. They may be lost after reload.');
             alert('Project created but saving tasks failed. Tasks may be lost after reload.');
@@ -1914,11 +2136,18 @@ async function showStandardPPAP() {
 
     if (grid) grid.innerHTML = '<div class="ppap-loading">載入中...</div>';
 
+    const pidEl = getEl('pt_detail_projectId');
+    if (pidEl && pidEl.value) {
+        const project = projectList.find(p => String(p.id) === String(pidEl.value));
+        if (project && Array.isArray(project.tasks) && project.tasks.length > 0) {
+            selectedPPAPItems = project.tasks.slice();
+        }
+    }
+
     const preservedIds = new Set();
     try {
         (selectedPPAPItems || []).forEach(i => { if (i && i.id) preservedIds.add(String(i.id)); });
         if (currentProject && Array.isArray(currentProject.tasks)) currentProject.tasks.forEach(i => { if (i && i.id) preservedIds.add(String(i.id)); });
-        const pidEl = getEl('pt_detail_projectId');
         if (pidEl && pidEl.value) {
             const project = projectList.find(p => String(p.id) === String(pidEl.value));
             if (project && Array.isArray(project.tasks)) project.tasks.forEach(i => { if (i && i.id) preservedIds.add(String(i.id)); });
@@ -1990,7 +2219,7 @@ function openModalAbove(modalRef) {
     if (!modalEl) return null;
 
     const shown = Array.from(document.querySelectorAll('.modal.show'));
-    let topZ = 1040; // bootstrap default backdrop ~ 1040-1050
+    let topZ = 1040; 
     shown.forEach(m => {
         const z = parseInt(window.getComputedStyle(m).zIndex, 10);
         if (!isNaN(z) && z > topZ) topZ = z;
@@ -2041,12 +2270,16 @@ function handlePPAPCheckboxChange(e) {
         priority: priority
     };
 
+    const map = {};
+    (selectedPPAPItems || []).forEach(i => { if (i && i.id) map[String(i.id)] = i; });
+
     if (cb.checked) {
-        const exists = (selectedPPAPItems || []).some(i => String(i.id) === String(item.id));
-        if (!exists) selectedPPAPItems = (selectedPPAPItems || []).concat([item]);
+        map[String(item.id)] = item;
     } else {
-        selectedPPAPItems = (selectedPPAPItems || []).filter(i => String(i.id) !== String(item.id));
+        delete map[String(item.id)];
     }
+
+    selectedPPAPItems = Object.values(map);
 
     try { renderSelectedTasksInModal(); } catch (err) { console.warn('renderSelectedTasksInModal failed', err); }
 
@@ -2135,7 +2368,6 @@ async function showCustomTask() {
     try {
         await loadCustomTaskSelects();
         const bs = openModalAbove(modal);
-        // initialize deadline picker for custom-deadline after modal opens
         try { setTimeout(() => initDeadlinePicker(), 60); } catch (e) { }
     } catch (e) {
         console.error(e);
@@ -2358,6 +2590,80 @@ function initDeadlinePicker() {
 
 document.addEventListener('DOMContentLoaded', function () {
     try { initDeadlinePicker(); } catch (e) { }
+});
+
+function getTaskIdFromLocation() {
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        const qTaskId = params.get('taskId');
+        if (qTaskId) return qTaskId;
+
+        const hash = window.location.hash || '';
+        const m = hash.match(/\/tasks\/(\d+)/);
+        if (m && m[1]) return m[1];
+
+        return null;
+    } catch (e) {
+        console.warn('getTaskIdFromLocation error', e);
+        return null;
+    }
+}
+
+async function openTaskFromUrlIfNeeded() {
+    const taskId = getTaskIdFromLocation();
+    if (!taskId) return;
+
+    try {
+        const res = await fetch(`/sample-system/api/tasks/${encodeURIComponent(taskId)}`);
+        if (!res.ok) {
+            console.warn('openTaskFromUrlIfNeeded: task api error', res.status, res.statusText);
+            await showTaskDetailModal(null, taskId);
+            return;
+        }
+
+        const json = await res.json();
+        const task = json.data || json.result || null;
+        if (!task) {
+            console.warn('openTaskFromUrlIfNeeded: task not found in response');
+            await showTaskDetailModal(null, taskId);
+            return;
+        }
+
+        const projectId = task.projectId || task.project_id || task.project_id_fk || null;
+
+        if (projectId) {
+            await showProjectTasksModal(projectId);
+            await showTaskDetailModal(projectId, taskId);
+        } else {
+            await showTaskDetailModal(null, taskId);
+        }
+    } catch (e) {
+        console.error('openTaskFromUrlIfNeeded error:', e);
+        try {
+            await showTaskDetailModal(null, taskId);
+        } catch (err) {
+            console.error('Fallback showTaskDetailModal failed', err);
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    try { openTaskFromUrlIfNeeded(); } catch (e) { console.warn('Failed to open task from URL', e); }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('taskDetailModal');
+    if (!modalEl) return;
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('taskId');
+            window.history.pushState({}, '', url.toString());
+        } catch (e) {
+            console.warn('Failed to clean taskId from URL', e);
+        }
+    });
 });
 
 document.addEventListener('DOMContentLoaded', function () {
