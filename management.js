@@ -1243,25 +1243,26 @@ async function showProjectTasksModal(projectId) {
 
             let approveBtn = footer ? footer.querySelector('#pt_approve_btn') : null;
             let rejectBtn = footer ? footer.querySelector('#pt_reject_btn') : null;
-            if (footer && !approveBtn) {
-                approveBtn = document.createElement('button');
-                approveBtn.id = 'pt_approve_btn';
-                approveBtn.className = 'btn btn-success action-btn';
-                approveBtn.type = 'button';
-                approveBtn.innerHTML = '<i class="bi bi-check-circle"></i> Approve';
-                approveBtn.style.display = 'none';
-                approveBtn.addEventListener('click', function (ev) { ev.stopPropagation(); if (project && project.id) approveProject(project.id); });
-                footer.appendChild(approveBtn);
-            }
             if (footer && !rejectBtn) {
                 rejectBtn = document.createElement('button');
                 rejectBtn.id = 'pt_reject_btn';
-                rejectBtn.className = 'btn btn-danger action-btn';
+                rejectBtn.className = 'btn secondary-btn';
                 rejectBtn.type = 'button';
                 rejectBtn.innerHTML = '<i class="bi bi-x-circle"></i> Reject';
                 rejectBtn.style.display = 'none';
                 rejectBtn.addEventListener('click', function (ev) { ev.stopPropagation(); if (project && project.id) rejectProject(project.id); });
                 footer.appendChild(rejectBtn);
+            }
+
+            if (footer && !approveBtn) {
+                approveBtn = document.createElement('button');
+                approveBtn.id = 'pt_approve_btn';
+                approveBtn.className = 'btn action-btn';
+                approveBtn.type = 'button';
+                approveBtn.innerHTML = '<i class="bi bi-check-circle"></i> Approve';
+                approveBtn.style.display = 'none';
+                approveBtn.addEventListener('click', function (ev) { ev.stopPropagation(); if (project && project.id) approveProject(project.id); });
+                footer.appendChild(approveBtn);
             }
 
             if (waiting) {
@@ -1338,9 +1339,11 @@ function renderProjectTasksContent(tasks, projectId) {
             <tr draggable="true" 
                 data-task-id="${t.id}" 
                 data-task-index="${index}"
-                style="cursor:move" 
                 onclick="showTaskDetailModal(${projectId}, '${t.id}')">
-                <td>${t.step || (index + 1)}</td>
+                <td class="drag-handle" style="width:36px;text-align:center;cursor:grab" onmousedown="event.stopPropagation()">
+                    <i class="bi bi-grip-vertical" title="Drag" aria-hidden="true"></i>
+                </td>
+                <td style="width:48px">${t.step || (index + 1)}</td>
                 <td>${t.taskCode || ''}</td>
                 <td>${t.name || ''}</td>
                 <td>${t.processId || ''}</td>
@@ -1357,16 +1360,33 @@ function renderProjectTasksContent(tasks, projectId) {
         `}).join('');
 
         container.innerHTML = `
-            <table id="projectTasksTable" class="task-list-table mt-0">
+            <table id="projectTasksTable" class="table mt-0">
                 <thead>
                     <tr>
-                        <th>#</th><th>Task Name</th><th>Name</th><th>Process</th>
-                        <th>Status</th><th>Priority</th><th>DRI</th><th>Deadline</th><th>Actions</th>
+                        <th></th>
+                        <th>#</th>
+                        <th>Task Name</th>
+                        <th>Name</th>
+                        <th>Process</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>DRI</th>
+                        <th>Deadline</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
         `;
+
+        try {
+            if (!document.getElementById('ppap-drag-handle-style')) {
+                const style = document.createElement('style');
+                style.id = 'ppap-drag-handle-style';
+                style.innerHTML = `.drag-handle { cursor: grab; } .drag-handle:active { cursor: grabbing; }`;
+                document.head.appendChild(style);
+            }
+        } catch (e) { /* ignore */ }
 
         initProjectTasksDragAndDrop(projectId);
     }
@@ -1921,13 +1941,14 @@ async function saveProjectTaskQuantity() {
 
         if (taskIds.length > 0) {
             const resolvedId = await ensureProjectPersisted(project);
-                if (!resolvedId) {
+            if (!resolvedId) {
                 showAlertError('Failed', 'Không thể lưu tasks cho project: không tìm được project id trên server');
             } else {
                 const customerIdForSave = mapCustomerToId(project.customer);
                 const saveOk = await saveTasksForProject(taskIds, customerIdForSave, project.name, resolvedId);
-                    if (saveOk) {
+                if (saveOk) {
                     showAlertSuccess('Success', 'Project details and tasks updated successfully');
+                    await loadProjectList();
                     try {
                         if (project && project.id) {
                             await showProjectTasksModal(project.id);
@@ -1937,8 +1958,9 @@ async function saveProjectTaskQuantity() {
                     }
                 }
             }
-            } else {
+        } else {
             showAlertSuccess('Success', 'Project details updated successfully (no tasks to save)');
+            await loadProjectList();
             try {
                 if (project && project.id) {
                     await showProjectTasksModal(project.id);
@@ -1953,8 +1975,6 @@ async function saveProjectTaskQuantity() {
         console.error('Error while saving project tasks:', e);
         showAlertError('Error', 'Project details updated locally but saving tasks failed. See console for details.');
     }
-
-    loadProjectList();
 }
 
 function showAddTaskModal(projectId) {
@@ -2898,7 +2918,7 @@ async function approveProject(projectId) {
         const project = projectList.find(p => String(p.id) === String(projectId));
         if (project) project.status = 'approved';
         await loadProjectList();
-        try { if (document.getElementById('projectTasksModal') && bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))) bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide(); } catch(e) { /* ignore */ }
+        try { if (document.getElementById('projectTasksModal') && bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))) bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide(); } catch (e) { /* ignore */ }
     } catch (e) {
         console.error('Approve API error', e);
         showAlertError('Failed', 'Failed to call approve API: ' + (e && e.message ? e.message : e));
@@ -2923,7 +2943,7 @@ async function rejectProject(projectId) {
         const project = projectList.find(p => String(p.id) === String(projectId));
         if (project) project.status = 'rejected';
         await loadProjectList();
-        try { if (document.getElementById('projectTasksModal') && bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))) bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide(); } catch(e) { /* ignore */ }
+        try { if (document.getElementById('projectTasksModal') && bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))) bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide(); } catch (e) { /* ignore */ }
     } catch (e) {
         console.error('Return API error', e);
         showAlertError('Failed', 'Failed to call return API: ' + (e && e.message ? e.message : e));
