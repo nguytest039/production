@@ -2053,3 +2053,44 @@ tbody {
   padding: 0.75rem !important;
   font-size: 0.875rem !important;
 }
+
+/* Fix select2 dropdown gây tăng kích thước page */
+.select2-container--open .select2-dropdown {
+  position: absolute !important;
+}
+
+/* Đảm bảo select2 dropdown container không ảnh hưởng đến layout */
+.select2-container--open {
+  z-index: 9999 !important;
+}
+
+/* Giới hạn chiều cao của dropdown results để tránh overflow */
+.select2-results__options {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+/* Đảm bảo dropdown luôn hiển thị phía trên và không đẩy layout */
+.select2-dropdown--below,
+.select2-dropdown--above {
+  position: absolute !important;
+  z-index: 9999 !important;
+}
+
+/* Prevent select2 from affecting parent container size */
+.select2-container {
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure the hidden dropdown doesn't take space */
+.select2-hidden-accessible {
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
