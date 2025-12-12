@@ -446,7 +446,8 @@ const SELECT_CONFIGS = [
     { id: 'ppapFilterModel', endpoint: '/api/models' },
     { id: 'ppapFilterStage', endpoint: '/api/stages' },
     { id: 'ppapFilterDepartment', endpoint: '/api/departments' },
-    { id: 'ppapFilterProcess', endpoint: '/api/processes' }
+    { id: 'ppapFilterProcess', endpoint: '/api/processes' },
+    { id: 'ppapFilterProjectStatus', endpoint: '/api/projects/status' }
 ];
 
 const SELECT_CACHE = {};
@@ -469,7 +470,10 @@ function renderOptions(selectId, items) {
     const select = document.getElementById(selectId);
     if (!select) return;
 
-    let optionsHtml = items.map(item => {
+    let optionsHtml = '';
+    // prepend empty option
+    optionsHtml += `<option value="">--Select--</option>`;
+    optionsHtml += items.map(item => {
         if (typeof item === 'string' || typeof item === 'number') {
             return `<option value="${item}">${item}</option>`;
         } else if (item && typeof item === 'object' && item.id && item.name) {
@@ -520,6 +524,22 @@ async function loadAllSelects() {
             const statuses = await fetchOptions('/api/tasks/status');
             renderOptions('sl-status', statuses);
             SELECT_CACHE['/api/tasks/status'] = statuses;
+        }
+
+        // project status list
+        try {
+            const projStatusIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/projects/status' || c.id === 'ppapFilterProjectStatus');
+            if (projStatusIndex !== -1) {
+                const projStatuses = results[projStatusIndex] || [];
+                renderOptions('ppapFilterProjectStatus', projStatuses);
+                SELECT_CACHE['/api/projects/status'] = projStatuses;
+            } else {
+                const projStatuses = await fetchOptions('/api/projects/status');
+                renderOptions('ppapFilterProjectStatus', projStatuses);
+                SELECT_CACHE['/api/projects/status'] = projStatuses;
+            }
+        } catch (e) {
+            console.warn('Failed to load project status select:', e);
         }
 
         if (priorityIndex !== -1) {
@@ -830,6 +850,14 @@ function buildProjectFilterParams() {
                 params.append('endTime', endFull);
             }
         }
+
+        // project status filter (string)
+        try {
+            const projectStatusEl = document.getElementById('ppapFilterProjectStatus');
+            const projectStatus = projectStatusEl && projectStatusEl.value ? projectStatusEl.value.trim() : '';
+            if (projectStatus) params.append('status', projectStatus);
+        } catch (e) { /* ignore */ }
+
     } catch (e) {
         console.warn('buildProjectFilterParams error', e);
     }
@@ -858,9 +886,12 @@ async function filterProjects() {
             customer: p.customerId || 'N/A',
             name: p.name,
             createdBy: p.createdBy || '',
-            createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
-            updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
+            // keep full datetime string from API so we can display date+time
+            createdDate: p.createdAt || '',
+            updatedAt: p.updatedAt || '',
             status: p.status || 'N/A',
+            approvedBy: p.approvedBy || '',
+            approvedAt: p.approvedAt || '',
             taskCount: p.taskCount || 0,
             tasks: Array.isArray(p.tasks) ? p.tasks.slice() : []
         }));
@@ -927,21 +958,23 @@ function renderProjectListUI() {
     if (waitingBody) {
         if (waitingProjects.length === 0) {
             waitingBody.innerHTML = `
-                <tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 20px;">
                     目前沒有等待審核的專案
                 </td></tr>
             `;
         } else {
             waitingBody.innerHTML = waitingProjects.map(project => {
                 const custName = getCustomerDisplay(project.customer);
+                const statusBadge = getStatusBadge(project.status);
                 return `
                 <tr data-project-id="${project.id}" data-section="waiting" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
                     <td>${custName}</td>
-                    <td>${project.createdBy || ''}</td>
                     <td><strong>${project.name}</strong></td>
-                    <td>${project.createdDate}</td>
-                    <td><span class="badge badge-warning">Waiting Approval</span></td>
-                    <td>${project.updatedAt || ''}</td>
+                    <td>${statusBadge}</td>
+                    <td>${project.createdBy || ''}</td>
+                    <td>${(project.createdDate && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.createdDate) : (project.createdDate || '')}</td>
+                    <td>${project.approvedBy || ''}</td>
+                    <td>${(project.approvedAt && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.approvedAt) : (project.approvedAt || '')}</td>
                     <td>
                         <button class="action-btn-sm btn-success" onclick="event.stopPropagation(); approveProject('${project.id}')">
                             <i class="bi bi-check-circle"></i> Approve
@@ -961,7 +994,7 @@ function renderProjectListUI() {
     if (otherBody) {
         if (otherProjects.length === 0) {
             otherBody.innerHTML = `
-                <tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 20px;">
                     No Data!
                 </td></tr>
             `;
@@ -972,11 +1005,12 @@ function renderProjectListUI() {
                 return `
                     <tr data-project-id="${project.id}" data-section="other" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
                         <td>${custName}</td>
-                        <td>${project.createdBy || ''}</td>
                         <td><strong>${project.name}</strong></td>
-                        <td>${project.createdDate}</td>
                         <td>${statusBadge}</td>
-                        <td>${project.updatedAt || ''}</td>
+                        <td>${project.createdBy || ''}</td>
+                        <td>${(project.createdDate && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.createdDate) : (project.createdDate || '')}</td>
+                        <td>${project.approvedBy || ''}</td>
+                        <td>${(project.approvedAt && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.approvedAt) : (project.approvedAt || '')}</td>
                         <td>
                             <button class="action-btn-sm" onclick="event.stopPropagation(); showProjectTasksModal('${project.id}')" title="View tasks">
                                 <i class="bi bi-eye"></i>
