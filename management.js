@@ -54,6 +54,149 @@ function escapeHtml(input) {
         .replace(/'/g, '&#39;');
 }
 
+// ===== USER CACHE & DRI SELECT2 SEARCH =====
+let USERS_CACHE = [];
+
+async function fetchUsers() {
+    try {
+        const res = await fetch('/sample-system/api/users');
+        if (!res.ok) {
+            throw new Error(`Failed to fetch users: ${res.status} ${res.statusText}`);
+        }
+        const json = await res.json();
+        return json.result || [];
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        return [];
+    }
+}
+
+function filterUsers(keyword) {
+    if (!keyword || keyword.length === 0) {
+        return USERS_CACHE;
+    }
+    
+    const lowerKeyword = keyword.toLowerCase();
+    return USERS_CACHE.filter(user => {
+        const idCard = (user.idCard || '').toLowerCase();
+        const fullName = (user.fullName || '').toLowerCase();
+        const displayName = (user.displayName || '').toLowerCase();
+        
+        return idCard.includes(lowerKeyword) ||
+               fullName.includes(lowerKeyword) ||
+               displayName.includes(lowerKeyword);
+    });
+}
+
+function populateDriSelectOptions(selectEl, selectedValue) {
+    if (!selectEl) return;
+    
+    selectEl.innerHTML = '<option value="">-- Select DRI --</option>';
+    
+    USERS_CACHE.forEach(user => {
+        const idCard = user.idCard || '';
+        const fullName = user.fullName || '';
+        const displayName = user.displayName || '';
+        const option = document.createElement('option');
+        option.value = idCard;
+        option.textContent = `${idCard} - ${fullName} - ${displayName}`;
+        if (selectedValue && idCard === selectedValue) {
+            option.selected = true;
+        }
+        selectEl.appendChild(option);
+    });
+}
+
+function initDriSelect2(selectEl, dropdownParent) {
+    if (!selectEl || !window.jQuery || typeof $.fn.select2 !== 'function') {
+        console.warn('initDriSelect2: jQuery or select2 not available');
+        return;
+    }
+    
+    // If the element is an INPUT, convert it to SELECT
+    let targetEl = selectEl;
+    if (selectEl.tagName === 'INPUT') {
+        const currentVal = selectEl.value || '';
+        const newSelect = document.createElement('select');
+        newSelect.id = selectEl.id;
+        newSelect.className = selectEl.className;
+        newSelect.name = selectEl.name || selectEl.id;
+        
+        // Copy relevant attributes
+        if (selectEl.dataset) {
+            Object.keys(selectEl.dataset).forEach(key => {
+                newSelect.dataset[key] = selectEl.dataset[key];
+            });
+        }
+        
+        // Replace input with select
+        selectEl.parentNode.replaceChild(newSelect, selectEl);
+        targetEl = newSelect;
+        
+        // Populate options
+        populateDriSelectOptions(targetEl, currentVal);
+    } else {
+        // Populate options for existing select
+        const currentVal = selectEl.value || '';
+        populateDriSelectOptions(targetEl, currentVal);
+    }
+    
+    const $select = $(targetEl);
+    
+    // Destroy existing select2 if any
+    if ($select.data('select2')) {
+        try { $select.select2('destroy'); } catch (e) { }
+    }
+    
+    // Initialize select2 with search
+    const config = {
+        placeholder: 'Search user...',
+        allowClear: true,
+        width: '100%'
+    };
+    
+    // Set dropdownParent to modal if provided (fixes dropdown appearing behind modal)
+    if (dropdownParent) {
+        config.dropdownParent = $(dropdownParent);
+    }
+    
+    $select.select2(config);
+    
+    // Restore value after select2 init
+    const savedVal = targetEl.value || (selectEl !== targetEl ? selectEl.value : '') || '';
+    if (savedVal) {
+        $select.val(savedVal).trigger('change.select2');
+    }
+}
+
+async function loadUsersAndInitDriSelects() {
+    if (USERS_CACHE.length === 0) {
+        USERS_CACHE = await fetchUsers();
+    }
+    
+    // Init filter-created-by in main page (không cần dropdownParent)
+    const filterCreatedBy = document.getElementById('filter-created-by');
+    if (filterCreatedBy) {
+        initDriSelect2(filterCreatedBy, null);
+    }
+}
+
+function initCustomDriSelect2() {
+    const customDri = document.getElementById('custom-dri');
+    const modal = document.getElementById('customTaskModal');
+    if (customDri && modal) {
+        initDriSelect2(customDri, modal);
+    }
+}
+
+function initTaskDetailDriSelect2() {
+    const driInput = document.getElementById('dri');
+    const modal = document.getElementById('taskDetailModal');
+    if (driInput && modal) {
+        initDriSelect2(driInput, modal);
+    }
+}
+
 function safeCompareIds(id1, id2) {
     if (id1 == null || id2 == null) {
         return id1 === id2;
@@ -390,16 +533,41 @@ async function handleAddCustomTask() {
             dueDate = DateFormatter.toAPIFormat(dueDateRaw);
         }
 
+        // Đảm bảo có projectId hợp lệ
         let projectId = null;
-        if (window.currentProject && window.currentProject.id) {
-            projectId = window.currentProject.id;
+        
+        // Ưu tiên lấy từ currentProject nếu đang trong flow tạo mới
+        if (currentProject && currentProject.id) {
+            projectId = currentProject.id;
+            
+            // Nếu là TEMP ID, persist project trước
+            if (String(projectId).startsWith('TEMP-')) {
+                const persistedId = await ensureProjectPersisted(currentProject);
+                if (!persistedId) {
+                    showAlertError('Failed', 'Không thể lưu project. Vui lòng thử lại.');
+                    return;
+                }
+                projectId = persistedId;
+                currentProject.id = persistedId;
+            }
         } else {
+            // Fallback: lấy từ modal project tasks nếu đang xem project
             const pidEl = document.getElementById('pt_detail_projectId');
-            if (pidEl && pidEl.value) projectId = pidEl.value;
+            if (pidEl && pidEl.value) {
+                projectId = pidEl.value;
+            }
         }
+
+        // Validate projectId
         if (projectId !== null && projectId !== undefined && projectId !== '') {
             projectId = Number(projectId);
-            if (isNaN(projectId)) projectId = null;
+            if (isNaN(projectId) || projectId <= 0) {
+                showAlertError('Failed', 'Project ID không hợp lệ');
+                return;
+            }
+        } else {
+            showAlertError('Failed', 'Vui lòng chọn project trước khi thêm task');
+            return;
         }
 
         const payload = {
@@ -417,24 +585,134 @@ async function handleAddCustomTask() {
             step: null,
             flag: true,
             status: null,
-            stageId: null
+            stageId: typeId
         };
+
+        console.log('Creating custom task with payload:', payload);
 
         const res = await fetch('/sample-system/api/tasks/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        
         if (!res.ok) {
             const text = await res.text().catch(() => '');
-            showAlertError('Failed', 'Tạo task thất bại: ' + res.status + ' ' + text);
+            console.error('Create task failed:', res.status, text);
+            showAlertError('Failed', `Tạo task thất bại: ${res.status} - ${text}`);
             return;
         }
+        
+        // Parse response và lấy task mới được tạo
+        let newTask = null;
+        try {
+            const json = await res.json();
+            newTask = json.data || json.result || json;
+        } catch (e) {
+            console.warn('Failed to parse create task response', e);
+        }
+        
         showAlertSuccess('Success', 'Tạo task thành công!');
-        try { bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide(); } catch (e) { }
-        try { await loadProjectList(); } catch (e) { }
+        
+        // Đóng modal custom task
+        try { 
+            bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide(); 
+        } catch (e) { 
+            const customModal = document.getElementById('customTaskModal');
+            if (customModal) {
+                customModal.classList.remove('show', 'active');
+            }
+        }
+        
+        // Thêm task mới vào danh sách và cập nhật UI
+        if (newTask && newTask.id) {
+            const taskToAdd = {
+                id: newTask.id,
+                taskCode: newTask.taskCode || taskCode,
+                name: newTask.name || name,
+                description: newTask.description || description,
+                status: newTask.status || 'NEW',
+                priority: newTask.priority || priority,
+                dri: newTask.dri || dri,
+                dueDate: newTask.dueDate || dueDate,
+                deadline: newTask.dueDate || dueDate,
+                processId: newTask.processId || processId,
+                departmentId: newTask.departmentId || departmentId,
+                stageId: newTask.stageId || typeId,
+                step: 0
+            };
+            
+            // Thêm vào selectedPPAPItems
+            selectedPPAPItems.push(taskToAdd);
+            
+            // Tìm và cập nhật project trong projectList
+            const project = findProjectById(projectId);
+            if (project) {
+                project.tasks = project.tasks || [];
+                project.tasks.push(taskToAdd);
+                project.taskCount = project.tasks.length;
+                
+                // Cập nhật lại step cho tất cả tasks
+                project.tasks.forEach((t, idx) => {
+                    if (t) t.step = idx + 1;
+                });
+                
+                // Kiểm tra xem projectTasksModal có đang mở không
+                const projectModal = document.getElementById('projectTasksModal');
+                if (projectModal && projectModal.classList.contains('show')) {
+                    // Render lại bảng tasks ngay lập tức
+                    renderProjectTasksContent(project.tasks, projectId);
+                }
+            }
+            
+            // Cập nhật currentProject nếu trùng khớp
+            if (currentProject && String(currentProject.id) === String(projectId)) {
+                currentProject.tasks = currentProject.tasks || [];
+                currentProject.tasks.push(taskToAdd);
+                currentProject.taskCount = currentProject.tasks.length;
+                
+                // Cập nhật step
+                currentProject.tasks.forEach((t, idx) => {
+                    if (t) t.step = idx + 1;
+                });
+            }
+            
+            // Render lại modal create project nếu đang mở
+            try {
+                const createModal = document.getElementById('createProjectModal');
+                if (createModal && createModal.classList.contains('show')) {
+                    renderSelectedTasksInModal();
+                }
+            } catch (e) {
+                console.warn('Failed to render in create modal', e);
+            }
+        }
+        
+        // Reset form
+        try {
+            document.getElementById('custom-task-name').value = '';
+            document.getElementById('custom-task-id').value = '';
+            document.getElementById('custom-task-description').value = '';
+            document.getElementById('custom-sl-process').value = '';
+            document.getElementById('custom-sl-department').value = '';
+            document.getElementById('custom-sl-priority').value = '';
+            document.getElementById('custom-sl-xvt').value = '';
+            document.getElementById('custom-dri').value = '';
+            document.getElementById('custom-deadline').value = '';
+        } catch (e) {
+            console.warn('Failed to reset custom task form', e);
+        }
+        
+        // Reload project list để đồng bộ dữ liệu
+        try { 
+            await loadProjectList(); 
+        } catch (e) { 
+            console.warn('Failed to reload project list', e);
+        }
+        
     } catch (e) {
-        return;
+        console.error('handleAddCustomTask error:', e);
+        showAlertError('Error', e.message || 'Đã xảy ra lỗi khi tạo task');
     }
 }
 
@@ -801,6 +1079,8 @@ async function loadProjectList() {
                     createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
                     updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
                     status: p.status || 'N/A',
+                    approvedBy: p.approvedBy || '',
+                    approvedAt: p.approvedAt || '',
                     taskCount: p.taskCount || 0,
                     tasks: []
                 }));
@@ -886,7 +1166,6 @@ async function filterProjects() {
             customer: p.customerId || 'N/A',
             name: p.name,
             createdBy: p.createdBy || '',
-            // keep full datetime string from API so we can display date+time
             createdDate: p.createdAt || '',
             updatedAt: p.updatedAt || '',
             status: p.status || 'N/A',
@@ -1723,6 +2002,7 @@ async function showTaskDetailModal(projectId, taskId) {
                         console.warn('Failed to adjust z-index for stacked modal', err);
                     }
                     initDeadlinePicker();
+                    initTaskDetailDriSelect2();
                 }, 50);
             } else {
                 const modal = new bootstrap.Modal(modalRoot);
@@ -1730,12 +2010,14 @@ async function showTaskDetailModal(projectId, taskId) {
 
                 setTimeout(() => {
                     initDeadlinePicker();
+                    initTaskDetailDriSelect2();
                 }, 50);
             }
         } catch (e) {
             if (modalRoot) modalRoot.classList.add('active');
             setTimeout(() => {
                 try { initDeadlinePicker(); } catch (err) { }
+                try { initTaskDetailDriSelect2(); } catch (err) { }
             }, 50);
         }
 
@@ -1993,7 +2275,7 @@ async function saveProjectTaskQuantity() {
                 }
             }
         } else {
-            showAlertSuccess('Success', 'Project details updated successfully (no tasks to save)');
+            showAlertSuccess('Success', 'Project details updated successfully');
             await loadProjectList();
             try {
                 if (project && project.id) {
@@ -2360,7 +2642,7 @@ function renderSelectedTasksInModal() {
     if (!container) return;
     if (!selectedPPAPItems || selectedPPAPItems.length === 0) {
         container.innerHTML = `
-            <table class="task-list-table">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -2386,7 +2668,7 @@ function renderSelectedTasksInModal() {
         <h5 style="margin-bottom: 12px; color: var(--text-primary);">
             <i class="bi bi-list-task"></i> List Tasks
         </h5>
-        <table id="selectedTasksTable" class="task-list-table">
+        <table id="selectedTasksTable" class="table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -2853,7 +3135,12 @@ async function showCustomTask() {
     try {
         await loadCustomTaskSelects();
         const bs = openModalAbove(modal);
-        try { setTimeout(() => initDeadlinePicker(), 60); } catch (e) { }
+        try { 
+            setTimeout(() => {
+                initDeadlinePicker();
+                initCustomDriSelect2();
+            }, 60); 
+        } catch (e) { }
     } catch (e) {
         console.error(e);
         try { if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } } catch (err) { /* ignore */ }
@@ -3286,6 +3573,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await loadAllSelects();
     await loadProjectList();
+    await loadUsersAndInitDriSelects();
 
     try { initDeadlinePicker(); } catch (e) { }
 
