@@ -1,4 +1,5 @@
 let uploadBlockCounter = 0;
+let USERS_CACHE = [];
 const SELECT_CACHE = {}
 const SELECT_CONFIGS = [
     { id: 'sl-customer', endpoint: '/api/customers' },
@@ -9,8 +10,6 @@ const SELECT_CONFIGS = [
     { id: 'sl-process', endpoint: '/api/processes' },
     { id: 'sl-doc-type', endpoint: '/api/documents/types' },
 ];
-
-let USERS_CACHE = [];
 
 function showAlertSuccess(title, text) {
     Swal.fire({
@@ -60,25 +59,25 @@ function filterUsers(keyword) {
     if (!keyword || keyword.length === 0) {
         return USERS_CACHE;
     }
-    
+
     const lowerKeyword = keyword.toLowerCase();
     return USERS_CACHE.filter(user => {
         const idCard = (user.idCard || '').toLowerCase();
         const fullName = (user.fullName || '').toLowerCase();
         const displayName = (user.displayName || '').toLowerCase();
-        
+
         return idCard.includes(lowerKeyword) ||
-               fullName.includes(lowerKeyword) ||
-               displayName.includes(lowerKeyword);
+            fullName.includes(lowerKeyword) ||
+            displayName.includes(lowerKeyword);
     });
 }
 
 function updateUploaderSelect() {
     const select = document.querySelector('#sl-uploader');
     if (!select) return;
-    
+
     select.innerHTML = '<option value="">-- Select Uploader --</option>';
-    
+
     USERS_CACHE.forEach(user => {
         const idCard = user.idCard || '';
         const fullName = user.fullName || '';
@@ -88,7 +87,7 @@ function updateUploaderSelect() {
         option.textContent = `${idCard} - ${fullName} - ${displayName}`;
         select.appendChild(option);
     });
-    
+
     $(select).select2({
         placeholder: 'Search uploader...',
         allowClear: true,
@@ -277,7 +276,7 @@ function createUploadBlock() {
     uploadArea.append(icon, uploadText, fileInput);
 
     const fileList = document.createElement('div');
-    fileList.className = 'mt-3';
+    fileList.className = 'file-list-container mt-3';
     fileList.dataset.block = blockId;
     fileList.style.cssText = 'max-height: 200px; overflow-y: auto;';
 
@@ -407,7 +406,7 @@ function handleFileSelect(files, blockId) {
     const block = document.getElementById(blockId);
     if (!block) return;
 
-    const filesList = block.querySelector(`div[data-block="${blockId}"].mt-3`);
+    const filesList = block.querySelector(`div[data-block="${blockId}"].file-list-container`);
     const fileInput = block.querySelector(`.file-input-hidden[data-block="${blockId}"]`);
     if (!filesList || !fileInput) return;
 
@@ -421,9 +420,10 @@ function handleFileSelect(files, blockId) {
         const fileItem = el('div', { className: 'attachment-item' });
 
         const attachInfo = el('div', { className: 'attachment-info' });
+        attachInfo.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; overflow: hidden; flex: 1;';
         attachInfo.append(
             el('span', { className: 'attachment-icon', innerHTML: '<i class="bi bi-file-earmark"></i>' }),
-            el('span', { className: 'attachment-name', textContent: file.name })
+            el('span', { className: 'attachment-name', textContent: file.name, title: file.name })
         );
 
         const removeBtn = el('button', {
@@ -436,7 +436,7 @@ function handleFileSelect(files, blockId) {
                 fileItem.remove();
             }
         });
-        removeBtn.style.cssText = 'background: var(--accent-red); border-color: var(--accent-red);';
+        removeBtn.style.cssText = 'background: var(--accent-red); border-color: var(--accent-red); padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.5rem;';
 
         fileItem.append(attachInfo, removeBtn);
         filesList.append(fileItem);
@@ -498,6 +498,8 @@ async function submitAllUploads() {
         showAlertSuccess('Upload Successful', 'All files have been uploaded successfully.');
         bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
 
+        await renderDocumentsList();
+
     } catch (error) {
         console.error('Upload error:', error);
         showAlertError('Upload Failed', error.message || 'An error occurred while uploading files.');
@@ -511,7 +513,7 @@ function findNameById(list, id) {
 
 function buildSearchParams() {
     const params = new URLSearchParams();
-    
+
     const slCustomer = document.querySelector('#sl-customer')?.value;
     const slModel = document.querySelector('#sl-model')?.value;
     const pjNum = document.querySelector('#pjNum')?.value;
@@ -522,7 +524,7 @@ function buildSearchParams() {
     const uploadedDate = document.querySelector('#uploaded-date')?.value;
     const slUploader = document.querySelector('#sl-uploader')?.value;
     const searchDocument = document.querySelector('#search-document')?.value;
-    
+
     if (slDocType) params.append('typeId', slDocType);
     if (slStage) params.append('stageId', slStage);
     if (slDepartment) params.append('departmentId', slDepartment);
@@ -532,7 +534,7 @@ function buildSearchParams() {
     if (pjNum) params.append('projectId', pjNum);
     if (slUploader) params.append('createdBy', slUploader);
     if (searchDocument) params.append('name', searchDocument);
-    
+
     if (uploadedDate) {
         const dates = uploadedDate.split(' - ');
         if (dates.length === 2) {
@@ -542,10 +544,10 @@ function buildSearchParams() {
             params.append('endTime', endDate);
         }
     }
-    
+
     params.append('page', '1');
     params.append('size', '20');
-    
+
     return params;
 }
 
@@ -555,7 +557,7 @@ async function fetchDocuments(searchParams = null) {
         if (searchParams && Array.from(searchParams.entries()).length > 2) {
             url += '?' + searchParams.toString();
         }
-        
+
         const res = await fetch(url);
         if (!res.ok) {
             throw new Error(`Failed to fetch documents: ${res.status} ${res.statusText}`);
@@ -602,7 +604,7 @@ function renderDocumentsTable(documents) {
             <td>${doc.createdAt}</td>
             <td>
                 <button class="action-icon-btn" onclick="downloadDocument('${doc.url}', '${doc.name}')" title="Download">
-                    <i class="bi bi-download"></i>
+                    <i class="bi bi-download" style="color: #fff;"></i>
                 </button>
             </td>
         </tr>
@@ -620,7 +622,7 @@ function resetFilters() {
         '#sl-stage', '#sl-department', '#sl-process', '#uploaded-date',
         '#sl-uploader', '#search-document'
     ];
-    
+
     filterInputs.forEach(selector => {
         const element = document.querySelector(selector);
         if (element) {
@@ -634,7 +636,7 @@ function resetFilters() {
             }
         }
     });
-    
+
     renderDocumentsList();
 }
 
@@ -668,6 +670,7 @@ async function loadUsersData() {
 }
 
 function loadEvent() {
+    initScrollBars();
     const slCustomer = document.querySelector('#sl-customer');
     const slModel = document.querySelector('#sl-model');
     const btnReset = document.querySelector('#reset');
@@ -680,11 +683,11 @@ function loadEvent() {
     if (slModel) {
         slModel.addEventListener('change', loadProjectNumbers);
     }
-    
+
     if (btnReset) {
         btnReset.addEventListener('click', resetFilters);
     }
-    
+
     if (btnSearch) {
         btnSearch.addEventListener('click', handleSearch);
     }
@@ -695,3 +698,14 @@ document.addEventListener("DOMContentLoaded", function () {
     loadEvent();
 })
 
+function initScrollBars() {
+    const target = document.querySelector(".table-box");
+    if (target) {
+        OverlayScrollbarsGlobal.OverlayScrollbars(target, {
+            className: ".os-scrollbar",
+            scrollbars: {
+                autoHide: "scroll",
+            }
+        });
+    }
+}
